@@ -6,7 +6,8 @@ import {
   Inter_700Bold,
 } from '@expo-google-fonts/inter';
 import { useFonts } from 'expo-font';
-import { DarkTheme, Stack, ThemeProvider } from 'expo-router';
+import { DarkTheme, ThemeProvider } from 'expo-router';
+import { NativeTabs } from 'expo-router/native-tabs';
 import * as SplashScreen from 'expo-splash-screen';
 import { StatusBar } from 'expo-status-bar';
 import { useEffect } from 'react';
@@ -55,12 +56,24 @@ export default function RootLayout() {
   return (
     <ThemeProvider value={navigationTheme}>
       <StatusBar style="light" />
-      <Stack
-        screenOptions={{
-          headerShown: false,
-          contentStyle: { backgroundColor: colors.background },
-        }}
-      />
+      {/* Barre d'onglets native. Pas de lime ici : l'accent est réservé à l'action principale de chaque écran. */}
+      <NativeTabs
+        backgroundColor={colors.background}
+        tintColor={colors.text}
+        iconColor={{ default: colors.textSecondary, selected: colors.text }}
+        labelStyle={{
+          default: { color: colors.textSecondary },
+          selected: { color: colors.text },
+        }}>
+        <NativeTabs.Trigger name="(discover)">
+          <NativeTabs.Trigger.Icon sf="sparkles" md="explore" />
+          <NativeTabs.Trigger.Label>Découvrir</NativeTabs.Trigger.Label>
+        </NativeTabs.Trigger>
+        <NativeTabs.Trigger name="(search)">
+          <NativeTabs.Trigger.Icon sf="magnifyingglass" md="search" />
+          <NativeTabs.Trigger.Label>Recherche</NativeTabs.Trigger.Label>
+        </NativeTabs.Trigger>
+      </NativeTabs>
     </ThemeProvider>
   );
 }

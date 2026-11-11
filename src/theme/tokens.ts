@@ -35,7 +35,9 @@ export const fontSizes = {
 } as const;
 
 export const lineHeights = {
-  tight: 1.1, // titres Anton
+  // Titres Anton : hauteur naturelle de la police (≈ 1,5). En dessous, iOS coupe
+  // le haut des majuscules accentuées (ex. le É de « DÉCOUVRIR »).
+  display: 1.5,
   normal: 1.4, // texte courant Inter
 } as const;
 
@@ -58,6 +60,16 @@ export const radius = {
 
 export const touch = {
   minSize: 44, // taille tactile minimale (points)
+} as const;
+
+export const iconSizes = {
+  md: 24,
+  lg: 40,
+} as const;
+
+export const opacity = {
+  pressed: 0.6, // retour visuel quand on appuie sur un bouton
+  disabled: 0.5, // élément annulé ou désactivé
 } as const;
 
 export type EventStatus =
@@ -85,5 +97,16 @@ export const statusBadges: Record<EventStatus, BadgeStyle> = {
   past: { label: 'Passé', background: colors.surface, text: colors.textSecondary, border: colors.border },
 };
 
-export const theme = { colors, fonts, fontSizes, lineHeights, spacing, radius, touch, statusBadges } as const;
+export const theme = {
+  colors,
+  fonts,
+  fontSizes,
+  lineHeights,
+  spacing,
+  radius,
+  touch,
+  iconSizes,
+  opacity,
+  statusBadges,
+} as const;
 export type Theme = typeof theme;

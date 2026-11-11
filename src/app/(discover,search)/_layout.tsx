@@ -1,0 +1,38 @@
+import { Stack } from 'expo-router';
+
+import { colors, fonts, fontSizes } from '@/theme/tokens';
+
+// Écran d'accueil de chaque onglet. Sans ce réglage, l'onglet Recherche ouvrait
+// l'écran « index » (Découvrir) au lieu de « search ».
+// La clé `search` est le nom du groupe « (search) », sans parenthèses.
+export const unstable_settings = {
+  anchor: 'index',
+  search: { anchor: 'search' },
+};
+
+type SharedStackLayoutProps = {
+  // Groupe courant fourni par Expo Router : « (discover) » ou « (search) ».
+  segment: string;
+};
+
+// Pile de navigation partagée par les onglets Découvrir et Recherche :
+// les écrans poussés (Infos, puis fiches concert et artiste) s'ouvrent dans l'onglet en cours.
+export default function SharedStackLayout({ segment }: SharedStackLayoutProps) {
+  // Le premier écran déclaré est l'écran d'accueil de l'onglet.
+  const rootScreen = segment === '(search)' ? 'search' : 'index';
+
+  return (
+    <Stack
+      screenOptions={{
+        contentStyle: { backgroundColor: colors.background },
+        headerStyle: { backgroundColor: colors.background },
+        headerTintColor: colors.text,
+        headerTitleStyle: { fontFamily: fonts.semibold, fontSize: fontSizes.md },
+        headerShadowVisible: false,
+        headerBackButtonDisplayMode: 'minimal',
+      }}>
+      <Stack.Screen name={rootScreen} options={{ headerShown: false }} />
+      <Stack.Screen name="infos" options={{ title: 'Infos' }} />
+    </Stack>
+  );
+}
