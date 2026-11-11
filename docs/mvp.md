@@ -22,8 +22,8 @@ Deux onglets : **Découvrir** et **Recherche**. La page **Infos** est accessible
 
 ## Données et technique
 
-- Données factices écrites dans Supabase par `supabase/seed.sql` : au moins 15 artistes (majorité rap, quelques autres genres), 10 salles dans au moins 5 villes, 40 concerts répartis sur les 3 prochains mois, avec quelques premières parties et tous les statuts représentés.
-- Noms d’artistes et de salles inventés (pas d’artistes réels).
+- Données factices écrites dans Supabase par `supabase/seed.sql` : au moins 15 artistes (majorité rap, quelques autres genres), 10 salles dans au moins 5 villes (dont Nantes), 40 concerts répartis sur les 3 prochains mois, avec quelques premières parties et tous les statuts représentés.
+- Artistes et salles réels, avec de vraies descriptions courtes, pour juger du rendu avant Ticketmaster. Les concerts, dates, prix et statuts sont inventés et marqués « Données de démonstration ». Les photos d’artistes sont des images génériques, jamais de vraies photos (droits à l’image).
 - Champs calqués sur la Discovery API de Ticketmaster pour faciliter la V1.1.
 - L’application lit uniquement Supabase ; aucun appel à une API externe.
 - Schéma pensé pour les versions suivantes (voir `CLAUDE.md`, section Base de données).

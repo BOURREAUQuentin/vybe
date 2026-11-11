@@ -91,7 +91,10 @@ Respecter `docs/design.md`. En résumé : thème sombre, accent lime **utilisé 
 - `npx expo start` : lance le serveur de développement (scanner le QR code avec l’appareil photo de l’iPhone).
 - `npx tsc --noEmit` : vérifie les types.
 - `npx expo lint` : vérifie le style du code.
-- `npx supabase db push` : applique les migrations sur le projet Supabase.
+- `npx supabase migration new <nom>` : crée un fichier de migration vide dans `supabase/migrations/`.
+- `npx supabase db push --remote` : applique les migrations sur le projet Supabase hébergé (CLI v3 : sans `--remote`, elle vise une base locale Docker). Ajouter `--dry-run` pour simuler, `--include-seed` pour réappliquer `supabase/seed.sql` (rafraîchit les dates des données de démo, sans rien supprimer).
+- `npx supabase gen types --lang typescript --remote --schema public > src/types/database.ts` : régénère les types après chaque migration.
+- `supabase login` et `supabase link` demandent un vrai terminal : les lancer dans l’app Terminal de macOS, pas avec `!` dans Claude Code.
 
 ## Définition de « terminé »
 
