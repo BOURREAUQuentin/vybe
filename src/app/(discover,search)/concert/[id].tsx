@@ -6,7 +6,7 @@ import { DetailSection } from '@/components/DetailSection';
 import { DetailSkeleton } from '@/components/DetailSkeleton';
 import { EmptyState } from '@/components/EmptyState';
 import { ErrorState } from '@/components/ErrorState';
-import { LineupRow } from '@/components/LineupRow';
+import { ArtistRow } from '@/components/ArtistRow';
 import { PrimaryButton } from '@/components/PrimaryButton';
 import { SourceNote } from '@/components/SourceNote';
 import { StatusBadge } from '@/components/StatusBadge';
@@ -14,7 +14,7 @@ import type { EventDetail } from '@/features/events/api';
 import { getLineupLabels, sortLineup } from '@/features/events/lineup';
 import { useEvent } from '@/features/events/useEvent';
 import { formatDayAndTime, formatEventDateLong } from '@/lib/dates';
-import { formatPriceRange } from '@/lib/format';
+import { formatPriceRange, roleLabels } from '@/lib/format';
 import { colors, fonts, fontSizes, lineHeights, spacing } from '@/theme/tokens';
 
 // Fiche concert.
@@ -130,11 +130,11 @@ function ConcertDetail({ event }: { event: EventDetail }) {
         <DetailSection title="Programmation">
           {lineup.map((entry) =>
             entry.artist ? (
-              <LineupRow
+              <ArtistRow
                 key={entry.artist.id}
                 name={entry.artist.name}
                 imageUrl={entry.artist.image_url}
-                role={entry.role}
+                subtitle={roleLabels[entry.role]}
                 onPress={() =>
                   router.push({
                     pathname: '/artist/[id]',

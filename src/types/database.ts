@@ -305,7 +305,80 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      normalize_search: { Args: { value: string }; Returns: string }
+      search_artists: {
+        Args: { search_query: string }
+        Returns: {
+          created_at: string
+          description: string | null
+          external_id: string | null
+          genre_id: string | null
+          id: string
+          image_url: string | null
+          name: string
+          source: Database["public"]["Enums"]["data_source"]
+          updated_at: string
+          url: string | null
+        }[]
+        SetofOptions: {
+          from: "*"
+          to: "artists"
+          isOneToOne: false
+          isSetofReturn: true
+        }
+      }
+      search_cities: {
+        Args: { search_query: string }
+        Returns: {
+          country_code: string
+          created_at: string
+          id: string
+          latitude: number | null
+          longitude: number | null
+          name: string
+          updated_at: string
+        }[]
+        SetofOptions: {
+          from: "*"
+          to: "cities"
+          isOneToOne: false
+          isSetofReturn: true
+        }
+      }
+      search_events: {
+        Args: { search_query: string }
+        Returns: {
+          created_at: string
+          created_by: string | null
+          currency: string
+          description: string | null
+          external_id: string | null
+          genre_id: string | null
+          id: string
+          image_url: string | null
+          is_hidden: boolean
+          name: string
+          on_sale_at: string | null
+          price_max: number | null
+          price_min: number | null
+          source: Database["public"]["Enums"]["data_source"]
+          starts_at: string
+          status: Database["public"]["Enums"]["event_status"]
+          ticket_url: string | null
+          time_tba: boolean
+          timezone: string
+          type: Database["public"]["Enums"]["event_type"]
+          updated_at: string
+          venue_id: string | null
+        }[]
+        SetofOptions: {
+          from: "*"
+          to: "events"
+          isOneToOne: false
+          isSetofReturn: true
+        }
+      }
+      search_pattern: { Args: { search_query: string }; Returns: string }
     }
     Enums: {
       artist_role: "headliner" | "support" | "guest" | "co_headliner"

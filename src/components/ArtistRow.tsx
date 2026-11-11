@@ -2,7 +2,6 @@ import { SymbolView } from 'expo-symbols';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 
 import { ArtistAvatar } from '@/components/ArtistAvatar';
-import { roleLabels, type ArtistRole } from '@/lib/format';
 import {
   colors,
   fonts,
@@ -13,20 +12,21 @@ import {
   touch,
 } from '@/theme/tokens';
 
-type LineupRowProps = {
+type ArtistRowProps = {
   name: string;
   imageUrl: string | null;
-  role: ArtistRole;
+  /** Ligne secondaire : rôle dans une programmation, ou genre dans la recherche. */
+  subtitle?: string | null;
   onPress: () => void;
 };
 
-// Ligne de programmation : vignette, nom, rôle. Ouvre la fiche artiste.
-export function LineupRow({ name, imageUrl, role, onPress }: LineupRowProps) {
+// Ligne d'artiste cliquable : vignette, nom, ligne secondaire. Ouvre la fiche artiste.
+export function ArtistRow({ name, imageUrl, subtitle, onPress }: ArtistRowProps) {
   return (
     <Pressable
       onPress={onPress}
       accessibilityRole="button"
-      accessibilityLabel={`${name}, ${roleLabels[role]}`}
+      accessibilityLabel={[name, subtitle].filter(Boolean).join(', ')}
       accessibilityHint="Ouvre la fiche de l’artiste"
       style={({ pressed }) => [styles.row, pressed && styles.pressed]}>
       <ArtistAvatar name={name} imageUrl={imageUrl} />
@@ -34,7 +34,7 @@ export function LineupRow({ name, imageUrl, role, onPress }: LineupRowProps) {
         <Text style={styles.name} numberOfLines={1}>
           {name}
         </Text>
-        <Text style={styles.role}>{roleLabels[role]}</Text>
+        {subtitle ? <Text style={styles.subtitle}>{subtitle}</Text> : null}
       </View>
       <SymbolView
         name={{ ios: 'chevron.right', android: 'chevron_right' }}
@@ -64,7 +64,7 @@ const styles = StyleSheet.create({
     fontSize: fontSizes.md,
     color: colors.text,
   },
-  role: {
+  subtitle: {
     fontFamily: fonts.regular,
     fontSize: fontSizes.sm,
     color: colors.textSecondary,
