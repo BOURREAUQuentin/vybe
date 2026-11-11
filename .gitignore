@@ -37,6 +37,9 @@ yarn-error.*
 # réglages personnels de Claude Code
 .claude/settings.local.json
 
+# réglages des éditeurs (Android Studio / IntelliJ)
+.idea/
+
 # typescript
 *.tsbuildinfo
 
