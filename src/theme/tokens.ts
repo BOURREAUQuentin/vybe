@@ -1,0 +1,89 @@
+// Design tokens de Vybe — Direction A « Urbain & énergique ».
+// Source unique des couleurs, polices, tailles et espacements : ne jamais coder ces valeurs en dur ailleurs.
+// Règles d'usage : voir docs/design.md.
+
+export const colors = {
+  background: '#0A0A0A',
+  surface: '#1A1A1A',
+  surfaceRaised: '#242424',
+  border: '#2E2E2E',
+  accent: '#C6FF3D',
+  onAccent: '#0A0A0A', // texte posé sur l'accent lime
+  text: '#F5F5F0',
+  textSecondary: '#A8A8A0',
+  alert: '#FF6B5E',
+  overlay: 'rgba(10, 10, 10, 0.85)', // dégradé sombre sur les photos d'artistes
+} as const;
+
+// Noms à faire correspondre avec le chargement des polices (@expo-google-fonts).
+export const fonts = {
+  display: 'Anton_400Regular', // grands titres uniquement, jamais sous 22 pt
+  regular: 'Inter_400Regular',
+  medium: 'Inter_500Medium',
+  semibold: 'Inter_600SemiBold',
+  bold: 'Inter_700Bold',
+} as const;
+
+export const fontSizes = {
+  xs: 12,
+  sm: 14,
+  md: 16,
+  lg: 18,
+  xl: 22,
+  display: 32,
+  hero: 48,
+} as const;
+
+export const lineHeights = {
+  tight: 1.1, // titres Anton
+  normal: 1.4, // texte courant Inter
+} as const;
+
+export const spacing = {
+  xxs: 4,
+  xs: 8,
+  sm: 12,
+  md: 16,
+  lg: 24,
+  xl: 32,
+  xxl: 48,
+} as const;
+
+export const radius = {
+  sm: 8,
+  md: 14,
+  lg: 24,
+  pill: 999,
+} as const;
+
+export const touch = {
+  minSize: 44, // taille tactile minimale (points)
+} as const;
+
+export type EventStatus =
+  | 'announced'
+  | 'on_sale'
+  | 'sold_out'
+  | 'postponed'
+  | 'cancelled'
+  | 'past';
+
+type BadgeStyle = {
+  label: string;
+  background: string;
+  text: string;
+  border: string;
+};
+
+// Styles des badges de statut. Seul « Billetterie ouverte » utilise le lime.
+export const statusBadges: Record<EventStatus, BadgeStyle> = {
+  announced: { label: 'Annoncé', background: colors.surface, text: colors.text, border: colors.border },
+  on_sale: { label: 'Billetterie ouverte', background: colors.accent, text: colors.onAccent, border: colors.accent },
+  sold_out: { label: 'Complet', background: colors.surface, text: colors.text, border: colors.border },
+  postponed: { label: 'Reporté', background: 'transparent', text: colors.textSecondary, border: colors.textSecondary },
+  cancelled: { label: 'Annulé', background: 'transparent', text: colors.alert, border: colors.alert },
+  past: { label: 'Passé', background: colors.surface, text: colors.textSecondary, border: colors.border },
+};
+
+export const theme = { colors, fonts, fontSizes, lineHeights, spacing, radius, touch, statusBadges } as const;
+export type Theme = typeof theme;
