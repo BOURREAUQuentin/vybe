@@ -35,11 +35,19 @@ Comptes et connexion, suivi d’artistes, liste d’envies, notifications, filtr
 
 ## Terminé quand
 
-- L’application affiche les données factices sur iPhone et sur Android.
-- La navigation entre Découvrir, Recherche, fiche artiste, fiche concert et page Infos est complète.
-- Les états chargement, vide et erreur sont visibles et soignés sur chaque écran.
-- Le schéma de base de données couvre les besoins listés dans `CLAUDE.md`.
-- Le code est sur GitHub avec le tag `v1.0`.
+- [x] L’application affiche les données factices sur iPhone.
+- [ ] L’application affiche les données factices sur Android (vérifications Android en cours).
+- [x] La navigation entre Découvrir, Recherche, fiche artiste, fiche concert et page Infos est complète.
+- [x] Les états chargement, vide et erreur sont visibles et soignés sur chaque écran.
+- [x] Le schéma de base de données couvre les besoins listés dans `CLAUDE.md`.
+- [ ] Le code est sur GitHub avec le tag `v1.0`.
+
+### Écarts et points reportés
+
+- Données de démonstration : artistes et salles réels, concerts fictifs (décision du porteur, voir « Données et technique »).
+- Page « introuvable » (`+not-found`) non créée : aucun lien externe ne pointe vers l’app au MVP. À traiter quand l’app partagera des liens.
+- Les textes légaux de la page Infos sont minimaux et à faire relire avant toute diffusion publique (cahier des charges, 10.8).
+- Logo et icône de l’app à créer avant toute diffusion (`docs/design.md`, « Identité »).
 
 ## Ordre de développement suggéré
 

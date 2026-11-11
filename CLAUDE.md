@@ -50,6 +50,8 @@ supabase/seed.sql     Données factices du MVP
 docs/                 Cahier des charges, périmètre MVP, design
 ```
 
+Navigation : les onglets Découvrir et Recherche partagent la pile `src/app/(discover,search)/` (fiches concert, artiste, ville, genre, Infos). Le layout racine fixe `unstable_settings.anchor = '(discover)'` et la pile partagée fixe l’écran d’accueil de chaque groupe : sans ces réglages, Expo Router ouvre le mauvais onglet ou le mauvais écran.
+
 Le gabarit Expo (SDK 58) place les routes dans `src/app/`. Imports via l’alias `@/` (= `src/`), ex. `import { colors } from '@/theme/tokens'`. Fichiers de configuration (`app.json`, `package.json`, `tsconfig.json`) et `assets/` à la racine.
 
 ## Base de données
@@ -64,6 +66,8 @@ Conçue dès le MVP pour les versions suivantes. Elle doit prévoir :
 - la possibilité d’événements créés par un utilisateur, non reliés à une source (V1.5) ;
 - un champ de lien billetterie et des champs de prix facultatifs ;
 - une future table unique `user_events` (statut `wishlist`, `going`, `attended`) prévue pour la V1.3, à ne pas créer au MVP.
+
+Recherche (migration `search`) : fonctions `search_artists`, `search_cities`, `search_events`, insensibles à la casse et aux accents (`unaccent`), en `security invoker` (la RLS s’applique). L’app les appelle avec `supabase.rpc(...)`.
 
 Conventions : noms en anglais et en `snake_case`, clés primaires `uuid`, colonnes `created_at` et `updated_at`, dates en `timestamptz`. Les données factices du MVP sont fictives mais réalistes et calquées sur les champs documentés de la Discovery API de Ticketmaster.
 
