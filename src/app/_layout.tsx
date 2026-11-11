@@ -8,10 +8,12 @@ import {
 import { useFonts } from 'expo-font';
 import { DarkTheme, ThemeProvider } from 'expo-router';
 import { NativeTabs } from 'expo-router/native-tabs';
+import { QueryClientProvider } from '@tanstack/react-query';
 import * as SplashScreen from 'expo-splash-screen';
 import { StatusBar } from 'expo-status-bar';
 import { useEffect } from 'react';
 
+import { queryClient } from '@/lib/queryClient';
 import { colors } from '@/theme/tokens';
 
 // Garde l'écran de démarrage affiché tant que les polices ne sont pas chargées.
@@ -54,6 +56,7 @@ export default function RootLayout() {
   }
 
   return (
+    <QueryClientProvider client={queryClient}>
     <ThemeProvider value={navigationTheme}>
       <StatusBar style="light" />
       {/* Barre d'onglets native. Pas de lime ici : l'accent est réservé à l'action principale de chaque écran. */}
@@ -75,5 +78,6 @@ export default function RootLayout() {
         </NativeTabs.Trigger>
       </NativeTabs>
     </ThemeProvider>
+    </QueryClientProvider>
   );
 }
