@@ -36,11 +36,11 @@ Comptes et connexion, suivi d’artistes, liste d’envies, notifications, filtr
 ## Terminé quand
 
 - [x] L’application affiche les données factices sur iPhone.
-- [ ] L’application affiche les données factices sur Android (vérifications Android en cours).
+- [x] L’application affiche les données factices sur Android.
 - [x] La navigation entre Découvrir, Recherche, fiche artiste, fiche concert et page Infos est complète.
 - [x] Les états chargement, vide et erreur sont visibles et soignés sur chaque écran.
 - [x] Le schéma de base de données couvre les besoins listés dans `CLAUDE.md`.
-- [ ] Le code est sur GitHub avec le tag `v1.0`.
+- [x] Le code est sur GitHub avec le tag `v1.0`.
 
 ### Écarts et points reportés
 
