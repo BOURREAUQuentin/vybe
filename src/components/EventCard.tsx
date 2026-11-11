@@ -1,4 +1,4 @@
-import { StyleSheet, Text, View } from 'react-native';
+import { Pressable, StyleSheet, Text, View } from 'react-native';
 
 import { StatusBadge } from '@/components/StatusBadge';
 import type { EventListItem } from '@/features/events/api';
@@ -17,10 +17,12 @@ import {
 
 type EventCardProps = {
   event: EventListItem;
+  /** Ouvre la fiche concert. */
+  onPress: () => void;
 };
 
 // Carte de concert (liste) : bloc date, affiche, salle et ville, badge de statut.
-export function EventCard({ event }: EventCardProps) {
+export function EventCard({ event, onPress }: EventCardProps) {
   const { day, month } = getDateBlock(event.starts_at);
   const { title, others } = getLineupLabels(event.name, event.lineup);
   const place = [event.venue?.name, event.venue?.city?.name].filter(Boolean).join(' · ');
@@ -37,10 +39,16 @@ export function EventCard({ event }: EventCardProps) {
     .join(', ');
 
   return (
-    <View
-      style={[styles.card, isCancelled && styles.cancelled]}
-      accessible
-      accessibilityLabel={accessibilityLabel}>
+    <Pressable
+      onPress={onPress}
+      accessibilityRole="button"
+      accessibilityLabel={accessibilityLabel}
+      accessibilityHint="Ouvre la fiche du concert"
+      style={({ pressed }) => [
+        styles.card,
+        isCancelled && styles.cancelled,
+        pressed && styles.pressed,
+      ]}>
       <View style={styles.dateBlock}>
         <Text style={styles.day}>{day}</Text>
         <Text style={styles.month}>{month}</Text>
@@ -66,7 +74,7 @@ export function EventCard({ event }: EventCardProps) {
       </View>
 
       <StatusBadge status={event.status} />
-    </View>
+    </Pressable>
   );
 }
 
@@ -81,6 +89,9 @@ const styles = StyleSheet.create({
   },
   cancelled: {
     opacity: opacity.disabled,
+  },
+  pressed: {
+    backgroundColor: colors.surfaceRaised,
   },
   dateBlock: {
     minWidth: spacing.xxl,

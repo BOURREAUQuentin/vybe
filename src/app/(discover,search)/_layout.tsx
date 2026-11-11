@@ -33,6 +33,9 @@ export default function SharedStackLayout({ segment }: SharedStackLayoutProps) {
       }}>
       <Stack.Screen name={rootScreen} options={{ headerShown: false }} />
       <Stack.Screen name="infos" options={{ title: 'Infos' }} />
+      {/* Fiches : pas de titre dans la barre, le titre est affiché dans la page. */}
+      <Stack.Screen name="concert/[id]" options={{ title: '' }} />
+      <Stack.Screen name="artist/[id]" options={{ title: '' }} />
     </Stack>
   );
 }

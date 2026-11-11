@@ -56,7 +56,12 @@ export default function DiscoverScreen() {
       <FlatList
         data={data}
         keyExtractor={(event) => event.id}
-        renderItem={({ item }) => <EventCard event={item} />}
+        renderItem={({ item }) => (
+          <EventCard
+            event={item}
+            onPress={() => router.push({ pathname: '/concert/[id]', params: { id: item.id } })}
+          />
+        )}
         contentContainerStyle={[styles.list, data.length === 0 && styles.emptyList]}
         ItemSeparatorComponent={Separator}
         ListHeaderComponent={

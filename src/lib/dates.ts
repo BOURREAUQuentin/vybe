@@ -41,6 +41,42 @@ export function formatEventDate(isoDate: string, timeTba = false): string {
   return `${weekday} ${day} ${month} · ${time}`;
 }
 
+const longFormatter = new Intl.DateTimeFormat('fr-FR', {
+  timeZone: TIME_ZONE,
+  weekday: 'long',
+  day: 'numeric',
+  month: 'long',
+  year: 'numeric',
+  hour: '2-digit',
+  minute: '2-digit',
+  hourCycle: 'h23',
+});
+
+function getLongParts(isoDate: string) {
+  const parts = longFormatter.formatToParts(new Date(isoDate));
+  const get = (type: Intl.DateTimeFormatPartTypes) =>
+    parts.find((part) => part.type === type)?.value ?? '';
+  const currentYear = new Intl.DateTimeFormat('fr-FR', { timeZone: TIME_ZONE, year: 'numeric' }).format(
+    new Date(),
+  );
+  const year = get('year');
+  // L'année n'est affichée que si elle diffère de l'année en cours.
+  const date = `${get('weekday')} ${get('day')} ${get('month')}${year !== currentYear ? ` ${year}` : ''}`;
+  return { date, time: `${get('hour')}h${get('minute')}` };
+}
+
+/** « samedi 14 novembre · 20h00 » (année ajoutée si différente de l'année en cours). */
+export function formatEventDateLong(isoDate: string, timeTba = false): string {
+  const { date, time } = getLongParts(isoDate);
+  return `${date} · ${timeTba ? 'horaire à confirmer' : time}`;
+}
+
+/** « jeudi 3 décembre à 10h00 ». */
+export function formatDayAndTime(isoDate: string): string {
+  const { date, time } = getLongParts(isoDate);
+  return `${date} à ${time}`;
+}
+
 /** Jour et mois pour le bloc date des cartes : { day: '21', month: 'MARS' }. */
 export function getDateBlock(isoDate: string): { day: string; month: string } {
   const { day, month } = getParisParts(isoDate);

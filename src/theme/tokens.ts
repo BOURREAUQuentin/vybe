@@ -41,6 +41,10 @@ export const lineHeights = {
   normal: 1.4, // texte courant Inter
 } as const;
 
+export const letterSpacing = {
+  wide: 1, // petits titres de section en majuscules
+} as const;
+
 export const spacing = {
   xxs: 4,
   xs: 8,
@@ -65,6 +69,11 @@ export const touch = {
 export const iconSizes = {
   md: 24,
   lg: 40,
+} as const;
+
+export const sizes = {
+  heroHeight: 280, // en-tête photo de la fiche artiste
+  avatar: 40, // vignette d'artiste dans une programmation
 } as const;
 
 export const opacity = {
@@ -102,10 +111,12 @@ export const theme = {
   fonts,
   fontSizes,
   lineHeights,
+  letterSpacing,
   spacing,
   radius,
   touch,
   iconSizes,
+  sizes,
   opacity,
   statusBadges,
 } as const;
