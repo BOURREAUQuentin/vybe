@@ -1,15 +1,7 @@
-import { Pressable, StyleSheet, Text, View } from 'react-native';
+import { StyleSheet, Text, View } from 'react-native';
 
-import {
-  colors,
-  fonts,
-  fontSizes,
-  lineHeights,
-  opacity,
-  radius,
-  spacing,
-  touch,
-} from '@/theme/tokens';
+import { SecondaryButton } from '@/components/SecondaryButton';
+import { colors, fonts, fontSizes, lineHeights, spacing } from '@/theme/tokens';
 
 type ErrorStateProps = {
   title?: string;
@@ -27,12 +19,9 @@ export function ErrorState({
     <View style={styles.container}>
       <Text style={styles.title}>{title}</Text>
       <Text style={styles.message}>{message}</Text>
-      <Pressable
-        onPress={onRetry}
-        accessibilityRole="button"
-        style={({ pressed }) => [styles.button, pressed && styles.pressed]}>
-        <Text style={styles.buttonLabel}>Réessayer</Text>
-      </Pressable>
+      <View style={styles.action}>
+        <SecondaryButton label="Réessayer" onPress={onRetry} />
+      </View>
     </View>
   );
 }
@@ -59,21 +48,7 @@ const styles = StyleSheet.create({
     color: colors.textSecondary,
     textAlign: 'center',
   },
-  button: {
+  action: {
     marginTop: spacing.sm,
-    minHeight: touch.minSize,
-    justifyContent: 'center',
-    paddingHorizontal: spacing.lg,
-    borderWidth: 1,
-    borderColor: colors.text,
-    borderRadius: radius.pill,
-  },
-  pressed: {
-    opacity: opacity.pressed,
-  },
-  buttonLabel: {
-    fontFamily: fonts.semibold,
-    fontSize: fontSizes.md,
-    color: colors.text,
   },
 });

@@ -15,11 +15,12 @@ import { getLineupLabels, sortLineup } from '@/features/events/lineup';
 import { useEvent } from '@/features/events/useEvent';
 import { formatDayAndTime, formatEventDateLong } from '@/lib/dates';
 import { formatPriceRange, roleLabels } from '@/lib/format';
-import { colors, fonts, fontSizes, lineHeights, spacing } from '@/theme/tokens';
+import { colors, fonts, fontSizes, lineHeights, maxFontScale, spacing } from '@/theme/tokens';
 
 // Fiche concert.
 export default function ConcertScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
+  const router = useRouter();
   const { data, error, refetch } = useEvent(id);
 
   if (data === undefined) {
@@ -40,6 +41,10 @@ export default function ConcertScreen() {
         <EmptyState
           title="Concert introuvable"
           message="Ce concert a peut-être été retiré ou le lien n’est plus valide."
+          action={{
+            label: 'Retour',
+            onPress: () => (router.canGoBack() ? router.back() : router.replace('/')),
+          }}
         />
       </View>
     );
@@ -75,7 +80,10 @@ function ConcertDetail({ event }: { event: EventDetail }) {
     <ScrollView style={styles.container} contentContainerStyle={styles.content}>
       {/* En-tête : affiche, statut, date, lieu */}
       <View style={styles.header}>
-        <Text style={styles.title} accessibilityRole="header">
+        <Text
+          style={styles.title}
+          accessibilityRole="header"
+          maxFontSizeMultiplier={maxFontScale.display}>
           {title}
         </Text>
         <View style={styles.badgeRow}>

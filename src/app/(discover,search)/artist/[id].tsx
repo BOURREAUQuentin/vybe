@@ -14,6 +14,7 @@ import { colors, fonts, fontSizes, lineHeights, spacing } from '@/theme/tokens';
 // Fiche artiste.
 export default function ArtistScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
+  const router = useRouter();
   const { data, error, refetch } = useArtist(id);
 
   if (data === undefined) {
@@ -34,6 +35,10 @@ export default function ArtistScreen() {
         <EmptyState
           title="Artiste introuvable"
           message="Cette fiche n’existe plus ou le lien n’est plus valide."
+          action={{
+            label: 'Retour',
+            onPress: () => (router.canGoBack() ? router.back() : router.replace('/')),
+          }}
         />
       </View>
     );

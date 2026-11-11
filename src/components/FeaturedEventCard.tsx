@@ -11,6 +11,7 @@ import {
   fonts,
   fontSizes,
   lineHeights,
+  maxFontScale,
   opacity,
   radius,
   sizes,
@@ -48,12 +49,14 @@ export function FeaturedEventCard({ event, onPress }: FeaturedEventCardProps) {
         </>
       ) : (
         <View style={styles.initialsContainer}>
-          <Text style={styles.initials}>{getInitials(title)}</Text>
+          <Text style={styles.initials} maxFontSizeMultiplier={maxFontScale.display}>
+            {getInitials(title)}
+          </Text>
         </View>
       )}
 
       <View style={styles.text}>
-        <Text style={styles.title} numberOfLines={2}>
+        <Text style={styles.title} numberOfLines={2} maxFontSizeMultiplier={maxFontScale.display}>
           {title}
         </Text>
         <Text style={styles.meta} numberOfLines={1}>

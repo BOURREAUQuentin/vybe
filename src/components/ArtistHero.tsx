@@ -2,7 +2,15 @@ import { Image } from 'expo-image';
 import { StyleSheet, Text, View } from 'react-native';
 
 import { getInitials } from '@/lib/format';
-import { colors, fonts, fontSizes, lineHeights, sizes, spacing } from '@/theme/tokens';
+import {
+  colors,
+  fonts,
+  fontSizes,
+  lineHeights,
+  maxFontScale,
+  sizes,
+  spacing,
+} from '@/theme/tokens';
 
 type ArtistHeroProps = {
   name: string;
@@ -30,12 +38,19 @@ export function ArtistHero({ name, imageUrl }: ArtistHeroProps) {
         </>
       ) : (
         <View style={styles.initialsContainer}>
-          <Text style={styles.initials} accessible={false}>
+          <Text
+            style={styles.initials}
+            accessible={false}
+            maxFontSizeMultiplier={maxFontScale.display}>
             {getInitials(name)}
           </Text>
         </View>
       )}
-      <Text style={styles.name} accessibilityRole="header" numberOfLines={2}>
+      <Text
+        style={styles.name}
+        accessibilityRole="header"
+        numberOfLines={2}
+        maxFontSizeMultiplier={maxFontScale.display}>
         {name}
       </Text>
     </View>

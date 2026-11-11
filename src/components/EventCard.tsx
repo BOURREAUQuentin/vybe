@@ -9,6 +9,7 @@ import {
   fonts,
   fontSizes,
   lineHeights,
+  maxFontScale,
   opacity,
   radius,
   spacing,
@@ -50,7 +51,9 @@ export function EventCard({ event, onPress }: EventCardProps) {
         pressed && styles.pressed,
       ]}>
       <View style={styles.dateBlock}>
-        <Text style={styles.day}>{day}</Text>
+        <Text style={styles.day} maxFontSizeMultiplier={maxFontScale.display}>
+          {day}
+        </Text>
         <Text style={styles.month}>{month}</Text>
       </View>
 

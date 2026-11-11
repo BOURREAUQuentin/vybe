@@ -1,7 +1,7 @@
 import type { ReactNode } from 'react';
 import { StyleSheet, Text, View } from 'react-native';
 
-import { colors, fonts, fontSizes, lineHeights, spacing } from '@/theme/tokens';
+import { colors, fonts, fontSizes, lineHeights, maxFontScale, spacing } from '@/theme/tokens';
 
 type ScreenHeaderProps = {
   title: string;
@@ -13,7 +13,11 @@ type ScreenHeaderProps = {
 export function ScreenHeader({ title, action }: ScreenHeaderProps) {
   return (
     <View style={styles.container}>
-      <Text style={styles.title} accessibilityRole="header" numberOfLines={1}>
+      <Text
+        style={styles.title}
+        accessibilityRole="header"
+        numberOfLines={1}
+        maxFontSizeMultiplier={maxFontScale.display}>
         {title}
       </Text>
       {action}

@@ -43,6 +43,12 @@ export const lineHeights = {
   normal: 1.4, // texte courant Inter
 } as const;
 
+// Agrandissement maximal du texte (réglage « Taille du texte » du téléphone) :
+// les grands titres Anton sont plafonnés pour ne pas déborder ; le texte courant reste libre.
+export const maxFontScale = {
+  display: 1.3,
+} as const;
+
 export const letterSpacing = {
   wide: 1, // petits titres de section en majuscules
 } as const;
@@ -115,6 +121,7 @@ export const theme = {
   fonts,
   fontSizes,
   lineHeights,
+  maxFontScale,
   letterSpacing,
   spacing,
   radius,

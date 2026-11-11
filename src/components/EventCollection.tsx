@@ -7,7 +7,7 @@ import { EventCard } from '@/components/EventCard';
 import { EventCardSkeleton } from '@/components/EventCardSkeleton';
 import type { EventListItem } from '@/features/events/api';
 import { useUpcomingEvents } from '@/features/events/useUpcomingEvents';
-import { colors, fonts, fontSizes, lineHeights, spacing } from '@/theme/tokens';
+import { colors, fonts, fontSizes, lineHeights, maxFontScale, spacing } from '@/theme/tokens';
 
 const SKELETON_COUNT = 5;
 
@@ -26,7 +26,11 @@ export function EventCollection({ title, filter, emptyTitle }: EventCollectionPr
   const { data, error, isRefetching, refetch } = useUpcomingEvents();
 
   const header = (
-    <Text style={styles.title} accessibilityRole="header" numberOfLines={2}>
+    <Text
+      style={styles.title}
+      accessibilityRole="header"
+      numberOfLines={2}
+      maxFontSizeMultiplier={maxFontScale.display}>
       {title}
     </Text>
   );

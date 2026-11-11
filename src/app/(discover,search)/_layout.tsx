@@ -1,6 +1,12 @@
-import { Stack } from 'expo-router';
+import { Stack, type ErrorBoundaryProps } from 'expo-router';
 
+import { CrashScreen } from '@/components/CrashScreen';
 import { colors, fonts, fontSizes } from '@/theme/tokens';
+
+// Si un écran de Découvrir ou Recherche plante : écran de secours, la barre d'onglets reste utilisable.
+export function ErrorBoundary({ retry }: ErrorBoundaryProps) {
+  return <CrashScreen onRetry={() => void retry()} />;
+}
 
 // Écran d'accueil de chaque onglet. Sans ce réglage, l'onglet Recherche ouvrait
 // l'écran « index » (Découvrir) au lieu de « search ».
