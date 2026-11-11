@@ -60,8 +60,8 @@ const styles = StyleSheet.create({
   },
   initials: {
     fontFamily: fonts.display,
-    fontSize: fontSizes.hero * 2,
-    lineHeight: fontSizes.hero * 2 * lineHeights.display,
+    fontSize: fontSizes.initialsHero,
+    lineHeight: fontSizes.initialsHero * lineHeights.display,
     color: colors.accent,
   },
   name: {

@@ -9,8 +9,9 @@ export const EVENT_LIST_SELECT = `
   status,
   starts_at,
   time_tba,
+  genre:genres ( id, slug, name ),
   venue:venues ( id, name, city:cities ( id, name ) ),
-  lineup:event_artists ( role, position, artist:artists ( id, name ) )
+  lineup:event_artists ( role, position, artist:artists ( id, name, image_url ) )
 `;
 
 // Colonnes de la fiche concert.
@@ -33,7 +34,11 @@ const EVENT_DETAIL_SELECT = `
 
 const UPCOMING_LIMIT = 100;
 
-/** Concerts à venir, du plus proche au plus lointain. */
+/**
+ * Concerts à venir, du plus proche au plus lointain.
+ * MVP : une seule requête alimente toute la page Découvrir et les listes par ville / genre.
+ * À revoir en V1.1 (catalogue Ticketmaster complet) : une requête filtrée côté serveur par section.
+ */
 export async function fetchUpcomingEvents() {
   const { data, error } = await supabase
     .from('events')

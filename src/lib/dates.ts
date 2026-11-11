@@ -86,6 +86,25 @@ export function formatDayAndTime(isoDate: string): string {
   return `${formatLongDate(paris)} à ${formatTime(paris)}`;
 }
 
+/** Clé de regroupement par mois : « 2026-12 ». */
+export function getMonthKey(isoDate: string): string {
+  const { year, month } = getParisDate(new Date(isoDate));
+  return `${year}-${pad(month)}`;
+}
+
+/** Intertitre de mois : « décembre », ou « janvier 2027 » si l'année diffère de l'année en cours. */
+export function formatMonthTitle(isoDate: string, now: Date = new Date()): string {
+  const { year, month } = getParisDate(new Date(isoDate));
+  const currentYear = getParisDate(now).year;
+  return `${MONTHS_LONG[month - 1]}${year !== currentYear ? ` ${year}` : ''}`;
+}
+
+/** Vrai si la date tombe dans les `days` prochains jours à partir de `now`. */
+export function isWithinNextDays(isoDate: string, days: number, now: Date = new Date()): boolean {
+  const time = new Date(isoDate).getTime();
+  return time >= now.getTime() && time < now.getTime() + days * 24 * 60 * 60 * 1000;
+}
+
 /** Jour et mois pour le bloc date des cartes : { day: '21', month: 'MARS' }. */
 export function getDateBlock(isoDate: string): { day: string; month: string } {
   const paris = getParisDate(new Date(isoDate));

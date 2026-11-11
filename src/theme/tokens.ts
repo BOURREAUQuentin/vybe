@@ -32,6 +32,8 @@ export const fontSizes = {
   xl: 22,
   display: 32,
   hero: 48,
+  initials: 72, // initiales d'une carte vedette sans photo
+  initialsHero: 96, // initiales de l'en-tête de fiche artiste sans photo
 } as const;
 
 export const lineHeights = {
@@ -74,6 +76,8 @@ export const iconSizes = {
 export const sizes = {
   heroHeight: 280, // en-tête photo de la fiche artiste
   avatar: 40, // vignette d'artiste dans une programmation
+  featuredWidth: 220, // carte vedette (format affiche)
+  featuredHeight: 300,
 } as const;
 
 export const opacity = {
