@@ -7,7 +7,8 @@ Ce fichier est lu au début de chaque session. Il décrit le projet, la stack et
 Vybe est une application mobile iOS et Android pour découvrir, suivre et garder en mémoire des concerts en France, avec le rap mis en avant.
 
 - Cahier des charges complet : `docs/cahier-des-charges.md` (le périmètre de chaque version est en section 12).
-- Version en cours : **V1.0 (MVP)**. Son périmètre exact est dans `docs/mvp.md`.
+- Version en cours : **V1.2 (meilleure consultation)**. Son périmètre exact est dans `docs/v1.2.md`. Versions livrées : V1.0 (MVP, `docs/mvp.md`), V1.0.1 (logo).
+- **Ordre modifié** : la V1.2 passe avant la V1.1 (données Ticketmaster), mise de côté ; l’app fonctionne toujours sur les données de démonstration.
 - Direction artistique : `docs/design.md`. Valeurs de design : `src/theme/tokens.ts`.
 
 ## Le porteur du projet
@@ -18,13 +19,13 @@ Vybe est une application mobile iOS et Android pour découvrir, suivre et garder
 
 ## Règles absolues
 
-1. **Ne développe que le périmètre de la version en cours** (`docs/mvp.md`). Si une demande en sort, signale-le avant d’agir.
+1. **Ne développe que le périmètre de la version en cours** (`docs/v1.2.md`). Si une demande en sort, signale-le avant d’agir.
 2. **L’application lit uniquement la base Supabase.** Elle n’appelle jamais d’API externe (Ticketmaster ou autre). Seul le backend (fonctions Supabase, tâches planifiées) appelle les sources externes, à partir de la V1.1.
 3. **Aucun secret dans le code ni dans Git.** Les variables d’environnement vont dans `.env` (ignoré par Git), avec un `.env.example` à jour. L’application ne contient que l’URL Supabase et la clé publique (anon / publishable), jamais la clé `service_role`.
 4. **Row Level Security activée sur toutes les tables.** Au MVP, lecture publique seule sur le catalogue ; aucune écriture depuis l’application.
 5. **TypeScript strict partout.** Pas de `any`, pas de `@ts-ignore` sans commentaire qui explique pourquoi.
 6. **Aucune couleur, taille de police ou espacement codé en dur** : tout passe par `src/theme/tokens.ts`.
-7. **Aucune donnée personnelle collectée au MVP** : pas d’outil d’analyse, de suivi des plantages ni de géolocalisation sans validation préalable.
+7. **Aucune donnée personnelle collectée** : pas d’outil d’analyse ni de suivi des plantages sans validation préalable. **Géolocalisation (V1.2, validée)** : uniquement à la demande de l’utilisateur (« Me localiser »), jamais au démarrage ni en arrière-plan, position arrondie à ~1 km, jamais enregistrée (ni sur le téléphone, ni en base) ; seule la ville choisie peut être mémorisée sur le téléphone. Choix manuel d’une ville toujours possible.
 8. Ne jamais supprimer de données, de migrations ou de fichiers du projet sans confirmation.
 
 ## Stack
@@ -103,4 +104,4 @@ Respecter `docs/design.md`. En résumé : thème sombre, accent lime **utilisé 
 
 ## Définition de « terminé »
 
-Une version est terminée quand : toutes ses fonctionnalités sont testées sur iPhone et sur Android ; les états vides, chargements et erreurs sont gérés ; aucun plantage n’est constaté ; le code est sur GitHub avec un tag de version ; ce fichier et la documentation sont à jour ; le critère « Terminé quand » de la version (voir `docs/mvp.md`) est atteint.
+Une version est terminée quand : toutes ses fonctionnalités sont testées sur iPhone et sur Android ; les états vides, chargements et erreurs sont gérés ; aucun plantage n’est constaté ; le code est sur GitHub avec un tag de version ; ce fichier et la documentation sont à jour ; le critère « Terminé quand » de la version (voir `docs/v1.2.md` pour la version en cours) est atteint.
