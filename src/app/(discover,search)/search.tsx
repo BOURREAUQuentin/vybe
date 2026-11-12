@@ -12,6 +12,7 @@ import { EventCardSkeleton } from '@/components/EventCardSkeleton';
 import { ScreenHeader } from '@/components/ScreenHeader';
 import { SearchField } from '@/components/SearchField';
 import { SectionTitle } from '@/components/SectionTitle';
+import { VenueRow } from '@/components/VenueRow';
 import { filterByCity } from '@/features/discover/sections';
 import { useUpcomingEvents } from '@/features/events/useUpcomingEvents';
 import { MIN_QUERY_LENGTH, type SearchResults } from '@/features/search/api';
@@ -81,9 +82,9 @@ function SearchResultsList({ results, query, stale, refreshFailed }: SearchResul
   const router = useRouter();
   // Nombre de concerts par ville, si la liste de Découvrir est déjà en cache.
   const { data: upcoming } = useUpcomingEvents();
-  const { artists, cities, events } = results;
+  const { artists, cities, venues, events } = results;
 
-  if (!stale && artists.length + cities.length + events.length === 0) {
+  if (!stale && artists.length + cities.length + venues.length + events.length === 0) {
     return (
       <EmptyState
         title={`Aucun résultat pour « ${query} »`}
@@ -135,6 +136,24 @@ function SearchResultsList({ results, query, stale, refreshFailed }: SearchResul
                     pathname: '/city/[id]',
                     params: { id: city.id, name: city.name },
                   })
+                }
+              />
+            ))}
+          </View>
+        </View>
+      ) : null}
+
+      {venues.length > 0 ? (
+        <View style={styles.section}>
+          <SectionTitle title="Salles" />
+          <View style={styles.padded}>
+            {venues.map((venue) => (
+              <VenueRow
+                key={venue.id}
+                name={venue.name}
+                subtitle={venue.city.name}
+                onPress={() =>
+                  router.push({ pathname: '/venue/[id]', params: { id: venue.id } })
                 }
               />
             ))}

@@ -10,6 +10,7 @@ import { ArtistRow } from '@/components/ArtistRow';
 import { PrimaryButton } from '@/components/PrimaryButton';
 import { SourceNote } from '@/components/SourceNote';
 import { StatusBadge } from '@/components/StatusBadge';
+import { VenueRow } from '@/components/VenueRow';
 import type { EventDetail } from '@/features/events/api';
 import { getLineupLabels, sortLineup } from '@/features/events/lineup';
 import { useEvent } from '@/features/events/useEvent';
@@ -128,9 +129,12 @@ function ConcertDetail({ event }: { event: EventDetail }) {
 
       {venue ? (
         <DetailSection title="Lieu">
-          <Text style={styles.bodyStrong}>{venue.name}</Text>
-          {venue.address ? <Text style={styles.body}>{venue.address}</Text> : null}
-          {cityLine ? <Text style={styles.body}>{cityLine}</Text> : null}
+          {/* Ouvre la fiche salle (V1.2). */}
+          <VenueRow
+            name={venue.name}
+            subtitle={[venue.address, cityLine].filter(Boolean).join(', ')}
+            onPress={() => router.push({ pathname: '/venue/[id]', params: { id: venue.id } })}
+          />
         </DetailSection>
       ) : null}
 
@@ -216,11 +220,6 @@ const styles = StyleSheet.create({
     fontFamily: fonts.regular,
     fontSize: fontSizes.md,
     lineHeight: fontSizes.md * lineHeights.normal,
-    color: colors.text,
-  },
-  bodyStrong: {
-    fontFamily: fonts.semibold,
-    fontSize: fontSizes.md,
     color: colors.text,
   },
 });

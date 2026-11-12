@@ -379,6 +379,29 @@ export type Database = {
         }
       }
       search_pattern: { Args: { search_query: string }; Returns: string }
+      search_venues: {
+        Args: { search_query: string }
+        Returns: {
+          address: string | null
+          city_id: string
+          created_at: string
+          external_id: string | null
+          id: string
+          latitude: number | null
+          longitude: number | null
+          name: string
+          postal_code: string | null
+          source: Database["public"]["Enums"]["data_source"]
+          updated_at: string
+          url: string | null
+        }[]
+        SetofOptions: {
+          from: "*"
+          to: "venues"
+          isOneToOne: false
+          isSetofReturn: true
+        }
+      }
     }
     Enums: {
       artist_role: "headliner" | "support" | "guest" | "co_headliner"
