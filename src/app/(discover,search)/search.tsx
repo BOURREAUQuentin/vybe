@@ -132,10 +132,7 @@ function SearchResultsList({ results, query, stale, refreshFailed }: SearchResul
                 label={city.name}
                 count={upcoming ? filterByCity(upcoming, city.id).length : undefined}
                 onPress={() =>
-                  router.push({
-                    pathname: '/city/[id]',
-                    params: { id: city.id, name: city.name },
-                  })
+                  router.push({ pathname: '/concerts', params: { city: city.id } })
                 }
               />
             ))}

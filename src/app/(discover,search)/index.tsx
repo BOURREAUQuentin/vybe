@@ -94,12 +94,9 @@ export default function DiscoverScreen() {
             sections={sections}
             refreshFailed={Boolean(error)}
             onOpenConcert={openConcert}
-            onOpenCity={(id, name) =>
-              router.push({ pathname: '/city/[id]', params: { id, name } })
-            }
-            onOpenGenre={(id, name) =>
-              router.push({ pathname: '/genre/[id]', params: { id, name } })
-            }
+            onOpenCity={(id) => router.push({ pathname: '/concerts', params: { city: id } })}
+            onOpenGenre={(id) => router.push({ pathname: '/concerts', params: { genres: id } })}
+            onOpenAll={() => router.push('/concerts')}
           />
         }
       />
@@ -111,8 +108,10 @@ type TopSectionsProps = {
   sections: DiscoverSections;
   refreshFailed: boolean;
   onOpenConcert: (id: string) => void;
-  onOpenCity: (id: string, name: string) => void;
-  onOpenGenre: (id: string, name: string) => void;
+  onOpenCity: (id: string) => void;
+  onOpenGenre: (id: string) => void;
+  /** Ouvre « Tous les concerts » (filtres). */
+  onOpenAll: () => void;
 };
 
 // Haut de la page, au-dessus de la liste par mois. Une section vide n'est pas affichée.
@@ -122,6 +121,7 @@ function DiscoverTopSections({
   onOpenConcert,
   onOpenCity,
   onOpenGenre,
+  onOpenAll,
 }: TopSectionsProps) {
   const { featured, thisWeek, cities, genres, months } = sections;
 
@@ -172,7 +172,7 @@ function DiscoverTopSections({
                 key={city.id}
                 label={city.name}
                 count={city.count}
-                onPress={() => onOpenCity(city.id, city.name)}
+                onPress={() => onOpenCity(city.id)}
               />
             ))}
           </ScrollView>
@@ -191,14 +191,23 @@ function DiscoverTopSections({
                 key={genre.id}
                 label={genre.name}
                 count={genre.count}
-                onPress={() => onOpenGenre(genre.id, genre.name)}
+                onPress={() => onOpenGenre(genre.id)}
               />
             ))}
           </ScrollView>
         </View>
       ) : null}
 
-      {months.length > 0 ? <SectionTitle title="À venir" /> : null}
+      {months.length > 0 ? (
+        <SectionTitle
+          title="À venir"
+          action={{
+            label: 'Tout voir',
+            accessibilityLabel: 'Voir tous les concerts et les filtrer',
+            onPress: onOpenAll,
+          }}
+        />
+      ) : null}
     </View>
   );
 }

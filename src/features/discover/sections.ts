@@ -66,7 +66,10 @@ function countBy<T extends { id: string; name: string }>(items: (T | null | unde
 }
 
 /** Regroupe par mois, dans l'ordre chronologique (la liste d'entrée est déjà triée). */
-function groupByMonth(events: EventListItem[], now: Date): MonthSection[] {
+export function groupEventsByMonth(
+  events: EventListItem[],
+  now: Date = new Date(),
+): MonthSection[] {
   const sections: MonthSection[] = [];
   for (const event of events) {
     const key = getMonthKey(event.starts_at);
@@ -95,14 +98,11 @@ export function buildDiscoverSections(
         event.genre ? { id: event.genre.id, slug: event.genre.slug, name: event.genre.name } : null,
       ),
     ),
-    months: groupByMonth(later, now),
+    months: groupEventsByMonth(later, now),
   };
 }
 
+/** Concerts d'une ville (utilisé pour le compteur des pastilles de ville). */
 export function filterByCity(events: EventListItem[], cityId: string) {
   return events.filter((event) => event.venue?.city.id === cityId);
-}
-
-export function filterByGenre(events: EventListItem[], genreId: string) {
-  return events.filter((event) => event.genre?.id === genreId);
 }

@@ -305,6 +305,51 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      distance_km: {
+        Args: { lat1: number; lat2: number; lon1: number; lon2: number }
+        Returns: number
+      }
+      filter_events: {
+        Args: {
+          p_city_id?: string
+          p_from?: string
+          p_genre_ids?: string[]
+          p_latitude?: number
+          p_longitude?: number
+          p_radius_km?: number
+          p_to?: string
+        }
+        Returns: {
+          created_at: string
+          created_by: string | null
+          currency: string
+          description: string | null
+          external_id: string | null
+          genre_id: string | null
+          id: string
+          image_url: string | null
+          is_hidden: boolean
+          name: string
+          on_sale_at: string | null
+          price_max: number | null
+          price_min: number | null
+          source: Database["public"]["Enums"]["data_source"]
+          starts_at: string
+          status: Database["public"]["Enums"]["event_status"]
+          ticket_url: string | null
+          time_tba: boolean
+          timezone: string
+          type: Database["public"]["Enums"]["event_type"]
+          updated_at: string
+          venue_id: string | null
+        }[]
+        SetofOptions: {
+          from: "*"
+          to: "events"
+          isOneToOne: false
+          isSetofReturn: true
+        }
+      }
       normalize_search: { Args: { value: string }; Returns: string }
       search_artists: {
         Args: { search_query: string }

@@ -113,3 +113,73 @@ export function getDateBlock(isoDate: string): { day: string; month: string } {
     month: MONTHS_SHORT[paris.month - 1].replace('.', '').toUpperCase(),
   };
 }
+
+// ---------------------------------------------------------------------------
+// Périodes des filtres (V1.2), calculées à l'heure de Paris.
+// ---------------------------------------------------------------------------
+
+const DAY_MS = 24 * 60 * 60 * 1000;
+
+/**
+ * Instant correspondant à une heure « murale » de Paris (ex. vendredi 18h00).
+ * Le jour peut déborder (32 → 1er du mois suivant) : Date.UTC normalise.
+ */
+export function fromParisWallClock(
+  year: number,
+  month: number,
+  day: number,
+  hour = 0,
+  minute = 0,
+): Date {
+  const asIfUtc = Date.UTC(year, month - 1, day, hour, minute);
+  // Décalage de Paris à cet instant (+1 h en hiver, +2 h en été).
+  const paris = getParisDate(new Date(asIfUtc));
+  const offset =
+    Date.UTC(paris.year, paris.month - 1, paris.day, paris.hour, paris.minute) - asIfUtc;
+  return new Date(asIfUtc - offset);
+}
+
+export type DatePreset = 'all' | 'today' | 'weekend' | 'week' | 'month';
+
+export const datePresetLabels: Record<DatePreset, string> = {
+  all: 'Toutes les dates',
+  today: 'Aujourd’hui',
+  weekend: 'Ce week-end',
+  week: 'Cette semaine',
+  month: 'Ce mois-ci',
+};
+
+/**
+ * Bornes d'une période : de `from` (inclus) à `to` (exclu, ou null = sans fin).
+ * - Aujourd'hui : jusqu'à minuit (Paris).
+ * - Ce week-end : du vendredi 18h00 au lundi 00h00 (ou à partir de maintenant si le week-end a commencé).
+ * - Cette semaine : les 7 prochains jours (comme la section de Découvrir).
+ * - Ce mois-ci : jusqu'au 1er du mois suivant.
+ */
+export function getDateRange(preset: DatePreset, now: Date = new Date()): { from: Date; to: Date | null } {
+  const today = getParisDate(now);
+  const at = (dayOffset: number, hour = 0) =>
+    fromParisWallClock(today.year, today.month, today.day + dayOffset, hour);
+  const fromNowOr = (start: Date) => (start.getTime() > now.getTime() ? start : now);
+
+  switch (preset) {
+    case 'today':
+      return { from: now, to: at(1) };
+    case 'weekend': {
+      // weekday : 0 = dimanche … 5 = vendredi, 6 = samedi.
+      const daysToFriday = today.weekday === 0 ? -2 : 5 - today.weekday;
+      const daysToMonday = today.weekday === 0 ? 1 : 8 - today.weekday;
+      return { from: fromNowOr(at(daysToFriday, 18)), to: at(daysToMonday) };
+    }
+    case 'week':
+      return { from: now, to: new Date(now.getTime() + 7 * DAY_MS) };
+    case 'month':
+      return {
+        from: now,
+        to: fromParisWallClock(today.year, today.month + 1, 1),
+      };
+    case 'all':
+    default:
+      return { from: now, to: null };
+  }
+}

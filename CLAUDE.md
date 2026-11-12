@@ -77,6 +77,7 @@ Conventions : noms en anglais et en `snake_case`, clés primaires `uuid`, colonn
 - Code, noms de variables et de fichiers en anglais. Commentaires et textes de l’interface en français.
 - Composants fonctionnels, exports nommés, un composant par fichier. Composants en `PascalCase.tsx`, autres fichiers en `camelCase.ts`.
 - Dates affichées au format français, fuseau `Europe/Paris` (ex. « sam. 21 mars · 20h00 »). Toujours passer par `src/lib/dates.ts` ; ne pas utiliser `Intl.DateTimeFormat#formatToParts` ni `toLocaleString` dans l’app : sur iPhone (Hermes), le rendu est incorrect (morceaux manquants, « 30h » au lieu de « 20h30 »).
+- Panneaux qui montent du bas : utiliser `src/components/FilterSheet.tsx` (basé sur le `Modal` de React Native). Ne pas utiliser le `BottomSheet` de `@expo/ui` : dans Expo Go, son contenu React Native s’affichait mal et ne réagissait pas au toucher.
 - Chaque écran gère ses états : chargement, vide, erreur, et données manquantes (photo, prix, description absents).
 - Accessibilité : libellés sur les boutons-icônes, zones tactiles d’au moins 44 × 44 points.
 

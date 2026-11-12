@@ -75,6 +75,7 @@ export const touch = {
 } as const;
 
 export const iconSizes = {
+  sm: 14, // flèche des pastilles de filtre
   md: 24,
   lg: 40,
 } as const;
@@ -84,6 +85,9 @@ export const sizes = {
   avatar: 40, // vignette d'artiste dans une programmation
   featuredWidth: 220, // carte vedette (format affiche)
   featuredHeight: 300,
+  sheetHandleWidth: 36, // petite barre de prise en haut des panneaux de filtre
+  sheetHandleHeight: 4,
+  sheetMaxHeight: '75%', // hauteur maximale d'un panneau de filtre
 } as const;
 
 export const opacity = {

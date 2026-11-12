@@ -43,8 +43,7 @@ export default function SharedStackLayout({ segment }: SharedStackLayoutProps) {
       <Stack.Screen name="concert/[id]" options={{ title: '' }} />
       <Stack.Screen name="artist/[id]" options={{ title: '' }} />
       <Stack.Screen name="venue/[id]" options={{ title: '' }} />
-      <Stack.Screen name="city/[id]" options={{ title: '' }} />
-      <Stack.Screen name="genre/[id]" options={{ title: '' }} />
+      <Stack.Screen name="concerts" options={{ title: '' }} />
     </Stack>
   );
 }
