@@ -18,6 +18,9 @@ export async function fetchFilteredEvents(filters: EventFilters) {
       p_city_id: filters.cityId ?? undefined,
       p_genre_ids: filters.genreIds.length > 0 ? filters.genreIds : undefined,
       p_radius_km: filters.radiusKm ?? undefined,
+      // Position arrondie (~1 km), envoyée seulement dans le corps de la requête, jamais enregistrée.
+      p_latitude: filters.position?.latitude,
+      p_longitude: filters.position?.longitude,
     })
     .select(EVENT_LIST_SELECT)
     .order('starts_at', { ascending: true });

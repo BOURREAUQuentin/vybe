@@ -96,6 +96,8 @@ const styles = StyleSheet.create({
   },
   scroll: {
     flexGrow: 0,
+    // La liste rétrécit (et défile) pour laisser le titre et le bas du panneau toujours visibles.
+    flexShrink: 1,
   },
   options: {
     gap: spacing.xxs,

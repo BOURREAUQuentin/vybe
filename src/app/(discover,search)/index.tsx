@@ -11,6 +11,7 @@ import { EventCard } from '@/components/EventCard';
 import { FeaturedEventCard } from '@/components/FeaturedEventCard';
 import { IconButton } from '@/components/IconButton';
 import { MonthHeader } from '@/components/MonthHeader';
+import { NearbySection } from '@/components/NearbySection';
 import { ScreenHeader } from '@/components/ScreenHeader';
 import { SectionTitle } from '@/components/SectionTitle';
 import { buildDiscoverSections, type DiscoverSections } from '@/features/discover/sections';
@@ -148,6 +149,8 @@ function DiscoverTopSections({
           />
         </View>
       ) : null}
+
+      <NearbySection />
 
       {thisWeek.length > 0 ? (
         <View style={styles.section}>

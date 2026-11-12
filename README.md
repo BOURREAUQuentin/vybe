@@ -58,7 +58,7 @@ Commandes courantes :
 | `npx supabase migration new <nom>` | Crée une migration vide |
 | `npx supabase db push --remote --dry-run` | Simule l’envoi des migrations |
 | `npx supabase db push --remote` | Applique les migrations sur le projet hébergé |
-| `npx supabase db push --remote --include-seed` | Réapplique aussi les données de démo (rafraîchit leurs dates, ne supprime rien) |
+| `npx supabase db query --remote --file supabase/seed.sql --yes` | (Ré)applique les données de démo : insère ou met à jour, rafraîchit leurs dates, ne supprime rien (`db push --include-seed` ne l’exécute qu’une fois) |
 | `npx supabase gen types --lang typescript --remote --schema public > src/types/database.ts` | Régénère les types après une migration |
 
 ## Logo et icônes

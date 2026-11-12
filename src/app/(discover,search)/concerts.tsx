@@ -92,8 +92,8 @@ export default function ConcertsScreen() {
         />
         <FilterChip
           filterName="ville"
-          label={cityName ?? 'Ville'}
-          active={filters.cityId !== null}
+          label={filters.position ? 'Autour de moi' : (cityName ?? 'Ville')}
+          active={filters.cityId !== null || filters.position !== null}
           onPress={() => setOpenSheet('city')}
         />
         <FilterChip
@@ -216,19 +216,23 @@ export default function ConcertsScreen() {
       <FilterSheet title="Ville" isPresented={openSheet === 'city'} onDismiss={close} scrollable>
         <OptionRow
           label="Toutes les villes"
-          selected={filters.cityId === null}
+          selected={filters.cityId === null && filters.position === null}
           onPress={() => {
-            update({ cityId: null, radiusKm: null });
+            update({ cityId: null, position: null, radiusKm: null });
             close();
           }}
         />
+        {/* Position venue de « Près de chez toi » : affichée tant qu'aucune ville ne la remplace. */}
+        {filters.position ? (
+          <OptionRow label="Autour de moi" selected onPress={close} />
+        ) : null}
         {(options?.cities ?? []).map((city) => (
           <OptionRow
             key={city.id}
             label={city.name}
             selected={filters.cityId === city.id}
             onPress={() => {
-              update({ cityId: city.id });
+              update({ cityId: city.id, position: null });
               close();
             }}
           />
@@ -236,20 +240,23 @@ export default function ConcertsScreen() {
       </FilterSheet>
 
       <FilterSheet title="Rayon" isPresented={openSheet === 'radius'} onDismiss={close}>
-        {filters.cityId === null ? (
+        {filters.cityId === null && filters.position === null ? (
           <Text style={styles.hint}>
             Choisis d’abord une ville : le rayon se calcule autour de son centre.
           </Text>
         ) : (
           <>
-            <OptionRow
-              label={`${cityName ?? 'Ville'} uniquement`}
-              selected={filters.radiusKm === null}
-              onPress={() => {
-                update({ radiusKm: null });
-                close();
-              }}
-            />
+            {/* Autour d'une position, « uniquement » n'a pas de sens : seuls les rayons sont proposés. */}
+            {filters.position === null ? (
+              <OptionRow
+                label={`${cityName ?? 'Ville'} uniquement`}
+                selected={filters.radiusKm === null}
+                onPress={() => {
+                  update({ radiusKm: null });
+                  close();
+                }}
+              />
+            ) : null}
             {RADIUS_OPTIONS.map((radius) => (
               <OptionRow
                 key={radius}

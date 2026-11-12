@@ -39,7 +39,12 @@ insert into public.cities (name, latitude, longitude) values
   ('Marseille', 43.2965, 5.3698),
   ('Bordeaux', 44.8378, -0.5792),
   ('Lille', 50.6292, 3.0573),
-  ('Toulouse', 43.6047, 1.4442)
+  ('Toulouse', 43.6047, 1.4442),
+  -- V1.2 : villes proches des grandes villes, pour le filtre par rayon.
+  ('Saint-Nazaire', 47.2735, -2.2138),
+  ('Angers', 47.4784, -0.5632),
+  ('Rennes', 48.1173, -1.6778),
+  ('Nanterre', 48.8924, 2.2071)
 on conflict (name, country_code) do update
   set latitude = excluded.latitude, longitude = excluded.longitude;
 
@@ -64,7 +69,12 @@ from (values
   ('KovZpZAdemoARK', 'Arkéa Arena', 'Bordeaux', '48-50 avenue Jean Alfonséa, Floirac', '33270', 44.8303, -0.5242),
   ('KovZpZAdemoZLI', 'Zénith de Lille', 'Lille', '1 boulevard des Cités Unies', '59777', 50.6330, 3.0765),
   ('KovZpZAdemoAER', 'L''Aéronef', 'Lille', '168 avenue Willy Brandt', '59777', 50.6375, 3.0760),
-  ('KovZpZAdemoZTO', 'Zénith Toulouse Métropole', 'Toulouse', '11 avenue Raymond Badiou', '31300', 43.5966, 1.4143)
+  ('KovZpZAdemoZTO', 'Zénith Toulouse Métropole', 'Toulouse', '11 avenue Raymond Badiou', '31300', 43.5966, 1.4143),
+  -- V1.2 : salles réelles dans les villes proches (coordonnées approximatives).
+  ('KovZpZAdemoVIP', 'Le VIP', 'Saint-Nazaire', 'Base sous-marine, boulevard de la Légion d''Honneur', '44600', 47.2737, -2.2016),
+  ('KovZpZAdemoCHA', 'Le Chabada', 'Angers', '56 boulevard du Doyenné', '49100', 47.4870, -0.5450),
+  ('KovZpZAdemoLIB', 'Le Liberté', 'Rennes', '1 esplanade Charles de Gaulle', '35000', 48.1050, -1.6780),
+  ('KovZpZAdemoLDA', 'Paris La Défense Arena', 'Nanterre', '99 jardins de l''Arche', '92000', 48.8957, 2.2290)
 ) as v(external_id, name, city, address, postal_code, latitude, longitude)
 join public.cities c on c.name = v.city and c.country_code = 'FR'
 on conflict (source, external_id) do update set
@@ -146,7 +156,7 @@ on conflict (source, external_id) do update set
   genre_id = excluded.genre_id;
 
 -- ---------------------------------------------------------------------------
--- Concerts (inventés) : 2 passés + 40 sur les 3 prochains mois, tous les statuts.
+-- Concerts (inventés) : 2 passés + 55 sur les 3 prochains mois, tous les statuts.
 -- Colonnes : identifiant, nom, salle, genre, statut, jour (relatif), heure,
 --            heure à confirmer, prix min, prix max, description.
 -- ---------------------------------------------------------------------------
@@ -218,7 +228,23 @@ from (values
   ('vvG1demo0039', 'Zola', 'TRA', 'rap', 'postponed', 75, '20:00', false, 32.00, 32.00, 'Date reportée : les billets restent valables pour la nouvelle date.'),
   ('vvG1demo0040', 'Werenoi', 'ZNA', 'rap', 'announced', 79, '20:00', false, null, null, null),
   ('vvG1demo0041', 'Ninho', 'ZLI', 'rap', 'announced', 83, '20:00', false, null, null, null),
-  ('vvG1demo0042', 'So La Lune', 'OLY', 'rap', 'announced', 87, '20:30', false, null, null, null)
+  ('vvG1demo0042', 'So La Lune', 'OLY', 'rap', 'announced', 87, '20:30', false, null, null, null),
+  -- V1.2 : concerts dans les villes proches (filtre par rayon, « près de moi »).
+  ('vvG1demo0043', 'Bekar', 'VIP', 'rap', 'on_sale', 4, '20:30', false, 25.00, 25.00, 'Ouverture des portes à 19h30. Concert debout.'),
+  ('vvG1demo0044', 'Theodora', 'CHA', 'rap', 'on_sale', 9, '20:30', false, 27.00, 27.00, null),
+  ('vvG1demo0045', 'Zola', 'LIB', 'rap', 'sold_out', 11, '20:00', false, 35.00, 35.00, null),
+  ('vvG1demo0046', 'Ninho', 'LDA', 'rap', 'on_sale', 16, '20:00', false, 49.00, 119.00, 'Fosse debout, places assises numérotées en gradins.'),
+  ('vvG1demo0047', 'Josman', 'CHA', 'rap', 'on_sale', 21, '20:30', false, 29.00, 29.00, null),
+  ('vvG1demo0048', 'Laylow', 'LIB', 'rap', 'on_sale', 25, '20:00', false, 38.00, 38.00, null),
+  ('vvG1demo0049', 'So La Lune', 'VIP', 'rap', 'on_sale', 30, '20:30', false, 26.00, 26.00, null),
+  ('vvG1demo0050', 'Aya Nakamura', 'LDA', 'pop', 'sold_out', 34, '20:00', false, 55.00, 129.00, null),
+  ('vvG1demo0051', 'Justice', 'LIB', 'electro', 'on_sale', 39, '20:00', false, 42.00, 42.00, 'Ouverture des portes à 19h. Concert debout.'),
+  ('vvG1demo0052', 'Tiakola', 'VIP', 'rap', 'postponed', 43, '20:30', false, 28.00, 28.00, 'Date reportée : les billets restent valables pour la nouvelle date.'),
+  ('vvG1demo0053', 'Zaho de Sagazan', 'VIP', 'chanson', 'on_sale', 47, '20:00', false, 30.00, 30.00, null),
+  ('vvG1demo0054', 'Gazo', 'LDA', 'rap', 'announced', 53, '20:00', false, null, null, null),
+  ('vvG1demo0055', 'SDM', 'CHA', 'rap', 'cancelled', 58, '20:30', false, 30.00, 30.00, 'Concert annulé. Remboursement auprès du point de vente.'),
+  ('vvG1demo0056', 'Tayc', 'LIB', 'rnb', 'on_sale', 63, '20:00', false, null, null, null),
+  ('vvG1demo0057', 'Hamza', 'CHA', 'rap', 'announced', 76, '20:30', true, null, null, null)
 ) as e(external_id, name, venue, genre, status, day, local_time, time_tba, price_min, price_max, description)
 join public.venues v on v.source = 'demo' and v.external_id = 'KovZpZAdemo' || e.venue
 join public.genres g on g.slug = e.genre
@@ -283,7 +309,22 @@ from (values
   ('0039', 'ZOL', 'headliner', 0),
   ('0040', 'WER', 'headliner', 0), ('0040', 'BEK', 'support', 1),
   ('0041', 'NIN', 'headliner', 0),
-  ('0042', 'SLL', 'headliner', 0)
+  ('0042', 'SLL', 'headliner', 0),
+  ('0043', 'BEK', 'headliner', 0),
+  ('0044', 'THE', 'headliner', 0),
+  ('0045', 'ZOL', 'headliner', 0),
+  ('0046', 'NIN', 'headliner', 0), ('0046', 'TIA', 'guest', 1),
+  ('0047', 'JOS', 'headliner', 0),
+  ('0048', 'LAY', 'headliner', 0),
+  ('0049', 'SLL', 'headliner', 0),
+  ('0050', 'AYA', 'headliner', 0),
+  ('0051', 'JUS', 'headliner', 0),
+  ('0052', 'TIA', 'headliner', 0),
+  ('0053', 'ZAH', 'headliner', 0),
+  ('0054', 'GAZ', 'headliner', 0), ('0054', 'ZOL', 'support', 1),
+  ('0055', 'SDM', 'headliner', 0),
+  ('0056', 'TAY', 'headliner', 0),
+  ('0057', 'HAM', 'headliner', 0), ('0057', 'BEK', 'support', 1)
 ) as p(event, artist, role, position)
 join public.events ev on ev.source = 'demo' and ev.external_id = 'vvG1demo' || p.event
 join public.artists ar on ar.source = 'demo' and ar.external_id = 'K8vZ917demo' || p.artist
