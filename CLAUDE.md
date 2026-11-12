@@ -42,7 +42,7 @@ Vybe est une application mobile iOS et Android pour découvrir, suivre et garder
 ```
 src/app/              Écrans et navigation (Expo Router) — uniquement des routes
 src/components/       Composants réutilisables (cartes, badges, boutons, états vides…)
-src/features/         Logique par domaine (events, artists, search…)
+src/features/         Logique par domaine (events, artists, venues, search, discover, filters, nearby, infos)
 src/lib/              Client Supabase, utilitaires (dates, formatage)
 src/theme/            tokens.ts et helpers de style
 src/types/            Types partagés, dont les types générés depuis Supabase
@@ -51,7 +51,7 @@ supabase/seed.sql     Données factices du MVP
 docs/                 Cahier des charges, périmètre MVP, design
 ```
 
-Navigation : les onglets Découvrir et Recherche partagent la pile `src/app/(discover,search)/` (fiches concert, artiste, ville, genre, Infos). Le layout racine fixe `unstable_settings.anchor = '(discover)'` et la pile partagée fixe l’écran d’accueil de chaque groupe : sans ces réglages, Expo Router ouvre le mauvais onglet ou le mauvais écran.
+Navigation : les onglets Découvrir et Recherche partagent la pile `src/app/(discover,search)/` (fiches concert, artiste, salle, écran « Concerts » avec filtres, Infos). Les filtres de départ de « Concerts » passent par l’adresse (`/concerts?city=…&genres=…&date=…&radius=…` ou `lat`/`lng`). Le layout racine fixe `unstable_settings.anchor = '(discover)'` et la pile partagée fixe l’écran d’accueil de chaque groupe : sans ces réglages, Expo Router ouvre le mauvais onglet ou le mauvais écran.
 
 Le gabarit Expo (SDK 58) place les routes dans `src/app/`. Imports via l’alias `@/` (= `src/`), ex. `import { colors } from '@/theme/tokens'`. Fichiers de configuration (`app.json`, `package.json`, `tsconfig.json`) et `assets/` à la racine.
 
@@ -68,7 +68,10 @@ Conçue dès le MVP pour les versions suivantes. Elle doit prévoir :
 - un champ de lien billetterie et des champs de prix facultatifs ;
 - une future table unique `user_events` (statut `wishlist`, `going`, `attended`) prévue pour la V1.3, à ne pas créer au MVP.
 
-Recherche (migration `search`) : fonctions `search_artists`, `search_cities`, `search_events`, insensibles à la casse et aux accents (`unaccent`), en `security invoker` (la RLS s’applique). L’app les appelle avec `supabase.rpc(...)`.
+Fonctions SQL appelées par l’app avec `supabase.rpc(...)`, toutes en `security invoker` (la RLS s’applique) :
+
+- recherche : `search_artists`, `search_cities`, `search_venues`, `search_events`, insensibles à la casse et aux accents (`unaccent`) ;
+- filtres (V1.2) : `filter_events` (période, ville, genres, rayon autour d’une ville ou d’une position), distance calculée par `distance_km` (haversine) à partir des coordonnées des salles. Ne jamais enregistrer la position reçue.
 
 Conventions : noms en anglais et en `snake_case`, clés primaires `uuid`, colonnes `created_at` et `updated_at`, dates en `timestamptz`. Les données factices du MVP sont fictives mais réalistes et calquées sur les champs documentés de la Discovery API de Ticketmaster.
 

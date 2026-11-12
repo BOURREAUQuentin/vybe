@@ -41,6 +41,10 @@ Toutes les valeurs ci-dessous sont dans `src/theme/tokens.ts`. Ne jamais les rec
   - Annulé : contour alerte, texte alerte ; la carte entière passe à 50 % d’opacité.
 - **Carte de concert (liste)** : fond surface, bloc date à gauche (jour en Anton, mois en Inter lime), nom de l’artiste, salle et ville en secondaire, badge de statut à droite.
 - **Mention de source** : petite, en texte secondaire, sur la fiche concert (« Données de démonstration » au MVP, « Source : Ticketmaster » à partir de la V1.1).
+- **Pastilles de filtre** (V1.2) : fond surface, contour discret, texte secondaire et petite flèche ; une fois actives, fond `surfaceRaised`, contour et texte clairs, valeur choisie affichée (« Ce week-end », « Nantes »). **Jamais de lime.** Elles passent à la ligne plutôt que de défiler, pour rester toutes visibles.
+- **Ligne de résumé** (V1.2) : sous les pastilles, nombre de résultats à gauche, « Réinitialiser (n) » à droite dès qu’un filtre est actif. Une action importante n’est jamais cachée en bout de liste défilante.
+- **Panneau de choix** (V1.2) : monte du bas sur fond assombri, coins arrondis en haut, petite barre de prise, fond surface, titre en Inter gras ; 75 % de l’écran au maximum, la liste défile et les actions (« Terminé », « Effacer mon choix ») restent fixes en bas. Fermeture en touchant le fond ou avec le retour Android. Composant : `FilterSheet`.
+- **Lignes cliquables** (artiste, salle, choix) : 44 pt minimum, chevron › pour ouvrir une fiche, coche pour une option choisie.
 
 ## Principes d’expérience
 

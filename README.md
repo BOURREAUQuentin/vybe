@@ -2,17 +2,22 @@
 
 Application mobile (iOS et Android) pour découvrir, suivre et garder en mémoire des concerts en France, avec le rap mis en avant.
 
-Version : **V1.0 (MVP)** — périmètre dans `docs/mvp.md`. Les concerts affichés sont des **données de démonstration** (artistes et salles réels, concerts fictifs).
+Version : **V1.2 (meilleure consultation)** — périmètre dans `docs/v1.2.md` (V1.0 : `docs/mvp.md`). Les concerts affichés sont des **données de démonstration** (artistes et salles réels, concerts fictifs). La V1.1 (données réelles Ticketmaster) est mise de côté pour l’instant.
 
-## Fonctionnalités (V1.0)
+## Fonctionnalités
 
-- **Découvrir** : Rap à l’affiche, Cette semaine, Par ville, Par genre, À venir (par mois).
+- **Découvrir** : Rap à l’affiche, **Près de chez toi** (V1.2), Cette semaine, Par ville, Par genre, À venir (par mois).
+- **Concerts** (V1.2) : filtres combinables date, ville, rayon (10 à 100 km) et genres.
+- **Près de chez toi** (V1.2) : « Me localiser » (facultatif) ou choix d’une ville, concerts à moins de 50 km.
 - **Recherche** par artiste, concert, salle ou ville (insensible aux accents).
 - **Fiche concert** : affiche, statut, date, lieu, prix indicatif, programmation, billetterie, source.
+- **Fiche salle** (V1.2) : adresse, itinéraire (app de cartes du téléphone), concerts à venir.
 - **Fiche artiste** : photo ou initiales, description, concerts à venir.
 - **Infos** : à propos, mentions légales, confidentialité.
 
-Aucun compte, aucune donnée personnelle collectée.
+## Confidentialité
+
+Aucun compte, aucune donnée personnelle collectée. La localisation est **facultative** : demandée seulement quand on touche « Me localiser », approximative (arrondie à ~1 km), jamais enregistrée ni suivie en arrière-plan. Seule la ville choisie pour « Près de chez toi » est gardée, sur le téléphone.
 
 ## Stack
 
