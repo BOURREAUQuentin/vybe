@@ -51,7 +51,7 @@ supabase/seed.sql     Données factices du MVP
 docs/                 Cahier des charges, périmètre MVP, design
 ```
 
-Navigation : les onglets Découvrir et Recherche partagent la pile `src/app/(discover,search)/` (fiches concert, artiste, salle, écran « Concerts » avec filtres, Infos). Les filtres de départ de « Concerts » passent par l’adresse (`/concerts?city=…&genres=…&date=…&radius=…` ou `lat`/`lng`). Le layout racine fixe `unstable_settings.anchor = '(discover)'` et la pile partagée fixe l’écran d’accueil de chaque groupe : sans ces réglages, Expo Router ouvre le mauvais onglet ou le mauvais écran.
+Navigation (V1.3) : cinq onglets — Découvrir, Recherche, Artistes, Envies, Profil — qui partagent la pile `src/app/(discover,search,artists,wishlist,profile)/` (fiches concert, artiste, salle, écran « Concerts » avec filtres, Infos, connexion `sign-in` en modale). Les filtres de départ de « Concerts » passent par l’adresse (`/concerts?city=…&genres=…&date=…&radius=…` ou `lat`/`lng`). Le layout racine fixe `unstable_settings.anchor = '(discover)'` et la pile partagée fixe l’écran d’accueil de chaque groupe (`ROOT_SCREENS` : index, search, my-artists, wishlist, profile) : sans ces réglages, Expo Router ouvre le mauvais onglet ou le mauvais écran. Ajouter un onglet = ajouter le groupe au nom du dossier, à `ROOT_SCREENS` et un `NativeTabs.Trigger`.
 
 Le gabarit Expo (SDK 58) place les routes dans `src/app/`. Imports via l’alias `@/` (= `src/`), ex. `import { colors } from '@/theme/tokens'`. Fichiers de configuration (`app.json`, `package.json`, `tsconfig.json`) et `assets/` à la racine.
 

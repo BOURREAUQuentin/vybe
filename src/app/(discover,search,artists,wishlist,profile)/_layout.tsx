@@ -3,29 +3,45 @@ import { Stack, type ErrorBoundaryProps } from 'expo-router';
 import { CrashScreen } from '@/components/CrashScreen';
 import { colors, fonts, fontSizes } from '@/theme/tokens';
 
-// Si un écran de Découvrir ou Recherche plante : écran de secours, la barre d'onglets reste utilisable.
+// Si un écran d'un onglet plante : écran de secours, la barre d'onglets reste utilisable.
 export function ErrorBoundary({ retry }: ErrorBoundaryProps) {
   return <CrashScreen onRetry={() => void retry()} />;
 }
 
-// Écran d'accueil de chaque onglet. Sans ce réglage, l'onglet Recherche ouvrait
-// l'écran « index » (Découvrir) au lieu de « search ».
-// La clé `search` est le nom du groupe « (search) », sans parenthèses.
+// Écran d'accueil de chaque onglet (groupe). Sans ce réglage, Expo Router ouvrirait
+// l'écran « index » (Découvrir) dans tous les onglets. Les clés sont les noms des groupes
+// sans parenthèses : « (search) » → search, etc.
+const ROOT_SCREENS = {
+  discover: 'index',
+  search: 'search',
+  artists: 'my-artists',
+  wishlist: 'wishlist',
+  profile: 'profile',
+} as const;
+
 export const unstable_settings = {
-  anchor: 'index',
-  search: { anchor: 'search' },
+  anchor: ROOT_SCREENS.discover,
+  search: { anchor: ROOT_SCREENS.search },
+  artists: { anchor: ROOT_SCREENS.artists },
+  wishlist: { anchor: ROOT_SCREENS.wishlist },
+  profile: { anchor: ROOT_SCREENS.profile },
 };
 
 type SharedStackLayoutProps = {
-  // Groupe courant fourni par Expo Router : « (discover) » ou « (search) ».
+  // Groupe courant fourni par Expo Router : « (discover) », « (search) », « (artists) »…
   segment: string;
 };
 
-// Pile de navigation partagée par les onglets Découvrir et Recherche :
-// les écrans poussés (Infos, puis fiches concert et artiste) s'ouvrent dans l'onglet en cours.
+function rootScreenFor(segment: string): string {
+  const group = segment.replace(/[()]/g, '');
+  return group in ROOT_SCREENS ? ROOT_SCREENS[group as keyof typeof ROOT_SCREENS] : 'index';
+}
+
+// Pile de navigation partagée par les 5 onglets : les écrans poussés (fiches, « Concerts »,
+// Infos, connexion) s'ouvrent dans l'onglet en cours, avec la barre d'onglets visible.
 export default function SharedStackLayout({ segment }: SharedStackLayoutProps) {
   // Le premier écran déclaré est l'écran d'accueil de l'onglet.
-  const rootScreen = segment === '(search)' ? 'search' : 'index';
+  const rootScreen = rootScreenFor(segment);
 
   return (
     <Stack

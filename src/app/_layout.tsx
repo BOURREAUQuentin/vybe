@@ -88,6 +88,19 @@ export default function RootLayout() {
                 <NativeTabs.Trigger.Icon sf="magnifyingglass" md="search" />
                 <NativeTabs.Trigger.Label>Recherche</NativeTabs.Trigger.Label>
               </NativeTabs.Trigger>
+              {/* V1.3 : onglets du compte (consultables sans compte, avec une invitation à se connecter). */}
+              <NativeTabs.Trigger name="(artists)">
+                <NativeTabs.Trigger.Icon sf="person.2" md="group" />
+                <NativeTabs.Trigger.Label>Artistes</NativeTabs.Trigger.Label>
+              </NativeTabs.Trigger>
+              <NativeTabs.Trigger name="(wishlist)">
+                <NativeTabs.Trigger.Icon sf="heart" md="favorite" />
+                <NativeTabs.Trigger.Label>Envies</NativeTabs.Trigger.Label>
+              </NativeTabs.Trigger>
+              <NativeTabs.Trigger name="(profile)">
+                <NativeTabs.Trigger.Icon sf="person.crop.circle" md="account_circle" />
+                <NativeTabs.Trigger.Label>Profil</NativeTabs.Trigger.Label>
+              </NativeTabs.Trigger>
             </NativeTabs>
           </ThemeProvider>
         </NearbyProvider>
