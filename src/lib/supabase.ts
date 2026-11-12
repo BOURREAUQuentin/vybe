@@ -1,4 +1,6 @@
 import { createClient } from '@supabase/supabase-js';
+import Storage from 'expo-sqlite/kv-store';
+import { AppState, Platform } from 'react-native';
 
 import type { Database } from '@/types/database';
 
@@ -13,11 +15,25 @@ if (!supabaseUrl || !supabaseKey) {
   );
 }
 
-// Client en lecture seule pour le MVP : pas de compte, donc pas de session à conserver.
+// V1.3 : la session du compte est conservée dans le stockage local de l'app
+// (expo-sqlite/kv-store) pour rester connecté entre deux lancements.
 export const supabase = createClient<Database>(supabaseUrl, supabaseKey, {
   auth: {
-    persistSession: false,
-    autoRefreshToken: false,
-    detectSessionInUrl: false,
+    storage: Storage,
+    persistSession: true,
+    autoRefreshToken: true,
+    detectSessionInUrl: false, // connexion par code, pas par lien
   },
 });
+
+// Renouvelle la session seulement quand l'app est au premier plan (recommandation Supabase
+// pour React Native) : évite des requêtes inutiles en arrière-plan.
+if (Platform.OS !== 'web') {
+  AppState.addEventListener('change', (state) => {
+    if (state === 'active') {
+      void supabase.auth.startAutoRefresh();
+    } else {
+      void supabase.auth.stopAutoRefresh();
+    }
+  });
+}

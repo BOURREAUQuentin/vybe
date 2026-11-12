@@ -51,6 +51,7 @@ export const maxFontScale = {
 
 export const letterSpacing = {
   wide: 1, // petits titres de section en majuscules
+  code: 8, // chiffres d'un code de connexion
 } as const;
 
 export const spacing = {

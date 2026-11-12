@@ -1,15 +1,19 @@
 import Constants from 'expo-constants';
 import * as Linking from 'expo-linking';
+import { useRouter } from 'expo-router';
 import { ScrollView, StyleSheet, Text, View } from 'react-native';
 
 import { DetailSection } from '@/components/DetailSection';
 import { SecondaryButton } from '@/components/SecondaryButton';
+import { useAuth } from '@/features/auth/AuthContext';
 import { about, legalNotice, privacyPolicy, publisher } from '@/features/infos/content';
 import { colors, fonts, fontSizes, lineHeights, spacing } from '@/theme/tokens';
 
 // Page Infos, ouverte depuis Découvrir : à propos, mentions légales, confidentialité.
 export default function InfosScreen() {
   const version = Constants.expoConfig?.version;
+  const router = useRouter();
+  const { email, signOut } = useAuth();
 
   const writeToUs = () => {
     // Ouvre l'application de messagerie ; l'adresse reste lisible dans le texte si aucune n'est installée.
@@ -18,6 +22,22 @@ export default function InfosScreen() {
 
   return (
     <ScrollView style={styles.container} contentContainerStyle={styles.content}>
+      {/* TEMPORAIRE (V1.3, étape 3) : déplacé dans l'onglet Profil à l'étape 4. */}
+      <DetailSection title="Compte">
+        {email ? (
+          <>
+            <Text style={styles.body}>Connecté : {email}</Text>
+            <View style={styles.contact}>
+              <SecondaryButton label="Se déconnecter" onPress={() => void signOut()} />
+            </View>
+          </>
+        ) : (
+          <View style={styles.contact}>
+            <SecondaryButton label="Se connecter" onPress={() => router.push('/sign-in')} />
+          </View>
+        )}
+      </DetailSection>
+
       <DetailSection title="À propos">
         <Paragraphs items={about} />
       </DetailSection>

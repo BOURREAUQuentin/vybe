@@ -14,6 +14,7 @@ import { StatusBar } from 'expo-status-bar';
 import { useEffect } from 'react';
 
 import { CrashScreen } from '@/components/CrashScreen';
+import { AuthProvider } from '@/features/auth/AuthContext';
 import { NearbyProvider } from '@/features/nearby/NearbyContext';
 import { queryClient } from '@/lib/queryClient';
 import { colors } from '@/theme/tokens';
@@ -65,30 +66,32 @@ export default function RootLayout() {
 
   return (
     <QueryClientProvider client={queryClient}>
-      {/* Lieu de « Près de chez toi » (ville mémorisée ou position de la session). */}
-      <NearbyProvider>
-        <ThemeProvider value={navigationTheme}>
-          <StatusBar style="light" />
-          {/* Barre d'onglets native. Pas de lime ici : l'accent est réservé à l'action principale de chaque écran. */}
-          <NativeTabs
-            backgroundColor={colors.background}
-            tintColor={colors.text}
-            iconColor={{ default: colors.textSecondary, selected: colors.text }}
-            labelStyle={{
-              default: { color: colors.textSecondary },
-              selected: { color: colors.text },
-            }}>
-            <NativeTabs.Trigger name="(discover)">
-              <NativeTabs.Trigger.Icon sf="sparkles" md="explore" />
-              <NativeTabs.Trigger.Label>Découvrir</NativeTabs.Trigger.Label>
-            </NativeTabs.Trigger>
-            <NativeTabs.Trigger name="(search)">
-              <NativeTabs.Trigger.Icon sf="magnifyingglass" md="search" />
-              <NativeTabs.Trigger.Label>Recherche</NativeTabs.Trigger.Label>
-            </NativeTabs.Trigger>
-          </NativeTabs>
-        </ThemeProvider>
-      </NearbyProvider>
+      {/* Compte connecté (V1.3), puis lieu de « Près de chez toi ». */}
+      <AuthProvider>
+        <NearbyProvider>
+          <ThemeProvider value={navigationTheme}>
+            <StatusBar style="light" />
+            {/* Barre d'onglets native. Pas de lime ici : l'accent est réservé à l'action principale de chaque écran. */}
+            <NativeTabs
+              backgroundColor={colors.background}
+              tintColor={colors.text}
+              iconColor={{ default: colors.textSecondary, selected: colors.text }}
+              labelStyle={{
+                default: { color: colors.textSecondary },
+                selected: { color: colors.text },
+              }}>
+              <NativeTabs.Trigger name="(discover)">
+                <NativeTabs.Trigger.Icon sf="sparkles" md="explore" />
+                <NativeTabs.Trigger.Label>Découvrir</NativeTabs.Trigger.Label>
+              </NativeTabs.Trigger>
+              <NativeTabs.Trigger name="(search)">
+                <NativeTabs.Trigger.Icon sf="magnifyingglass" md="search" />
+                <NativeTabs.Trigger.Label>Recherche</NativeTabs.Trigger.Label>
+              </NativeTabs.Trigger>
+            </NativeTabs>
+          </ThemeProvider>
+        </NearbyProvider>
+      </AuthProvider>
     </QueryClientProvider>
   );
 }
