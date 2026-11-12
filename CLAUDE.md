@@ -104,6 +104,7 @@ Respecter `docs/design.md`. En résumé : thème sombre, accent lime **utilisé 
 - `npx supabase db push --remote` : applique les migrations sur le projet Supabase hébergé (CLI v3 : sans `--remote`, elle vise une base locale Docker). Ajouter `--dry-run` pour simuler.
 - `npx supabase db query --remote --file supabase/seed.sql --yes` : (ré)applique les données de démo (insère ou met à jour, rafraîchit les dates, ne supprime rien). Attention : `db push --include-seed` n’exécute le seed qu’une seule fois, puis ne fait que mémoriser son empreinte.
 - `npx supabase gen types --lang typescript --remote --schema public > src/types/database.ts` : régénère les types après chaque migration.
+- `npx supabase db query --remote --file supabase/tests/user-data-rls.sql --yes` : teste la sécurité des tables utilisateur (RLS, suppression du compte) avec deux utilisateurs fictifs, dans une transaction **toujours annulée** (rien n’est enregistré). Le bilan s’affiche dans le message d’erreur final (✓ / ✗). À relancer après chaque migration touchant ces tables.
 - `npm run icons` : régénère icônes et écran de démarrage depuis `assets/brand/*.svg` (ne pas retoucher les PNG à la main).
 - `supabase login` et `supabase link` demandent un vrai terminal : les lancer dans l’app Terminal de macOS, pas avec `!` dans Claude Code.
 
