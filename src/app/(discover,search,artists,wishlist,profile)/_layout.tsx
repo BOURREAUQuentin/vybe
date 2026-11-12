@@ -62,6 +62,8 @@ export default function SharedStackLayout({ segment }: SharedStackLayoutProps) {
       <Stack.Screen name="concerts" options={{ title: '' }} />
       {/* Connexion (V1.3) : fenêtre modale par-dessus l'onglet en cours. */}
       <Stack.Screen name="sign-in" options={{ title: '', presentation: 'modal' }} />
+      {/* Onboarding « Suis quelques artistes » (V1.3) : modale aussi. */}
+      <Stack.Screen name="onboarding" options={{ title: '', presentation: 'modal' }} />
     </Stack>
   );
 }

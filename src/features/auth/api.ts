@@ -58,14 +58,18 @@ export async function sendSignInCode(email: string): Promise<void> {
   if (error) throw error;
 }
 
-/** Vérifie le code ; en cas de succès, la session est enregistrée automatiquement. */
-export async function verifySignInCode(email: string, code: string): Promise<void> {
-  const { error } = await supabase.auth.verifyOtp({
+/**
+ * Vérifie le code ; en cas de succès, la session est enregistrée automatiquement.
+ * Renvoie l'identifiant du compte connecté.
+ */
+export async function verifySignInCode(email: string, code: string): Promise<string | null> {
+  const { data, error } = await supabase.auth.verifyOtp({
     email: normalizeEmail(email),
     token: code.trim(),
     type: 'email',
   });
   if (error) throw error;
+  return data.user?.id ?? null;
 }
 
 export async function signOut(): Promise<void> {

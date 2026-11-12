@@ -1,4 +1,5 @@
 import { useRouter } from 'expo-router';
+import type { ReactNode } from 'react';
 import { StyleSheet, Text, View } from 'react-native';
 
 import { PrimaryButton } from '@/components/PrimaryButton';
@@ -7,11 +8,13 @@ import { colors, fonts, fontSizes, lineHeights, spacing } from '@/theme/tokens';
 type SignInPromptProps = {
   title: string;
   message: string;
+  /** Contenu facultatif sous le bouton (ex. lien « À propos »), toujours visible au centre de l'écran. */
+  children?: ReactNode;
 };
 
 // Invitation à se connecter (sans compte) : explication + bouton principal « Se connecter ».
 // L'application reste consultable sans compte ; la connexion ne sert qu'à suivre et enregistrer.
-export function SignInPrompt({ title, message }: SignInPromptProps) {
+export function SignInPrompt({ title, message, children }: SignInPromptProps) {
   const router = useRouter();
 
   return (
@@ -25,6 +28,7 @@ export function SignInPrompt({ title, message }: SignInPromptProps) {
           onPress={() => router.push('/sign-in')}
         />
       </View>
+      {children ? <View style={styles.extra}>{children}</View> : null}
     </View>
   );
 }
@@ -53,6 +57,10 @@ const styles = StyleSheet.create({
   },
   action: {
     marginTop: spacing.sm,
+    alignSelf: 'stretch',
+  },
+  extra: {
+    marginTop: spacing.md,
     alignSelf: 'stretch',
   },
 });

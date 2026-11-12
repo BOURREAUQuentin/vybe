@@ -7,6 +7,7 @@ import { DetailSkeleton } from '@/components/DetailSkeleton';
 import { EmptyState } from '@/components/EmptyState';
 import { ErrorState } from '@/components/ErrorState';
 import { EventCard } from '@/components/EventCard';
+import { FollowButton } from '@/components/FollowButton';
 import type { ArtistWithEvents } from '@/features/artists/api';
 import { useArtist } from '@/features/artists/useArtist';
 import { colors, fonts, fontSizes, lineHeights, spacing } from '@/theme/tokens';
@@ -56,6 +57,9 @@ function ArtistDetail({ artist, events }: ArtistWithEvents) {
 
       <View style={styles.content}>
         {artist.genre ? <Text style={styles.genre}>{artist.genre.name}</Text> : null}
+
+        {/* V1.3 : seule action principale (lime) de la fiche artiste. */}
+        <FollowButton artist={artist} />
 
         {artist.description ? (
           <Text style={styles.description}>{artist.description}</Text>

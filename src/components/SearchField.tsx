@@ -6,6 +6,7 @@ import {
   fonts,
   fontSizes,
   iconSizes,
+  letterSpacing,
   opacity,
   radius,
   spacing,
@@ -78,6 +79,8 @@ const styles = StyleSheet.create({
     minHeight: touch.minSize,
     fontFamily: fonts.regular,
     fontSize: fontSizes.md,
+    // Explicite : évite qu'un champ natif recyclé garde l'espacement du champ de code (iOS).
+    letterSpacing: letterSpacing.none,
     color: colors.text,
   },
   clear: {

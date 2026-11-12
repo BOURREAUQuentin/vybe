@@ -62,6 +62,8 @@ const styles = StyleSheet.create({
     paddingVertical: spacing.xs,
     fontFamily: fonts.regular,
     fontSize: fontSizes.md,
+    // Explicite : le variant « code » change l'espacement ; un champ recyclé doit revenir à 0.
+    letterSpacing: letterSpacing.none,
     color: colors.text,
     backgroundColor: colors.surface,
     borderWidth: 1,

@@ -50,6 +50,9 @@ export const maxFontScale = {
 } as const;
 
 export const letterSpacing = {
+  // Espacement normal, à préciser explicitement sur les champs de saisie : sur iOS, un champ
+  // natif recyclé peut garder l'espacement d'un autre champ (ex. celui du code).
+  none: 0,
   wide: 1, // petits titres de section en majuscules
   code: 8, // chiffres d'un code de connexion
 } as const;
@@ -84,6 +87,7 @@ export const iconSizes = {
 export const sizes = {
   heroHeight: 280, // en-tête photo de la fiche artiste
   avatar: 40, // vignette d'artiste dans une programmation
+  avatarLarge: 64, // vignette d'artiste suivi (onglet Mes artistes)
   featuredWidth: 220, // carte vedette (format affiche)
   featuredHeight: 300,
   sheetHandleWidth: 36, // petite barre de prise en haut des panneaux de filtre

@@ -22,6 +22,8 @@ import {
   sendSignInCode,
   verifySignInCode,
 } from '@/features/auth/api';
+import { countFollowedArtists } from '@/features/follows/api';
+import { hasSeenOnboarding } from '@/features/follows/onboarding';
 import {
   colors,
   fonts,
@@ -34,6 +36,16 @@ import {
 } from '@/theme/tokens';
 
 type Step = 'email' | 'code';
+
+/** Onboarding à proposer ? (en cas de doute ou d'erreur réseau : non, on ne bloque pas la connexion) */
+async function shouldShowOnboarding(userId: string): Promise<boolean> {
+  if (hasSeenOnboarding(userId)) return false;
+  try {
+    return (await countFollowedArtists()) === 0;
+  } catch {
+    return false;
+  }
+}
 
 // Connexion sans mot de passe (V1.3), présentée en fenêtre modale :
 // 1. e-mail → envoi d'un code à 6 chiffres ; 2. saisie du code → connecté (le compte est créé si besoin).
@@ -82,8 +94,14 @@ export default function SignInScreen() {
     setError(null);
     setIsVerifying(true);
     try {
-      await verifySignInCode(email, value);
-      close(); // connecté : la session est enregistrée, l'app se met à jour toute seule
+      const userId = await verifySignInCode(email, value);
+      // Connecté : la session est enregistrée, l'app se met à jour toute seule.
+      // Première connexion (aucun artiste suivi, onboarding jamais proposé) : « Suis quelques artistes ».
+      if (userId && (await shouldShowOnboarding(userId))) {
+        router.replace('/onboarding');
+      } else {
+        close();
+      }
     } catch (caught) {
       setError(authErrorMessage(caught));
       setIsVerifying(false);

@@ -44,11 +44,12 @@ export default function ProfileScreen() {
     return (
       <SafeAreaView style={styles.container} edges={['top']}>
         <ScreenHeader title="Profil" />
+        {/* Le lien « À propos » est sous le bouton : en bas d'écran, la barre d'onglets le masquait. */}
         <SignInPrompt
           title="Ton compte Vybe"
-          message="Un compte pour suivre tes artistes, enregistrer tes envies et garder tes villes et salles favorites. Sans mot de passe."
-        />
-        <View style={styles.footer}>{aboutLink}</View>
+          message="Un compte pour suivre tes artistes, enregistrer tes envies et garder tes villes et salles favorites. Sans mot de passe.">
+          {aboutLink}
+        </SignInPrompt>
       </SafeAreaView>
     );
   }
@@ -129,9 +130,5 @@ const styles = StyleSheet.create({
   },
   signOut: {
     alignItems: 'flex-start',
-  },
-  footer: {
-    paddingHorizontal: spacing.md,
-    paddingBottom: spacing.lg,
   },
 });
