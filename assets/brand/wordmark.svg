@@ -1,0 +1,5 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="400" viewBox="0 0 1200 400">
+  <!-- Mot « VYBE » (piste C), utilisé sur l'écran de démarrage. Police Anton, lime #C6FF3D, fond transparent.
+       Le rendu PNG est fait par scripts/generate-icons.mjs, qui fournit la police Anton. -->
+  <text x="600" y="329" font-family="Anton" font-size="300" fill="#C6FF3D" text-anchor="middle">VYBE</text>
+</svg>

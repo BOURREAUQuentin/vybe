@@ -1,0 +1,17 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1024" height="1024" viewBox="0 0 1024 1024">
+  <!-- Logo Vybe : « V égaliseur » (piste B). Couleurs de la charte : lime #C6FF3D sur #0A0A0A.
+       Les bandes de la branche droite sont des découpes (masque), le fond reste donc transparent. -->
+  <defs>
+    <mask id="cuts">
+      <rect width="1024" height="1024" fill="#FFFFFF"/>
+      <rect x="600" y="150" width="16" height="720" fill="#000000"/>
+      <rect x="652" y="150" width="16" height="720" fill="#000000"/>
+      <rect x="704" y="150" width="16" height="720" fill="#000000"/>
+      <rect x="756" y="150" width="16" height="720" fill="#000000"/>
+    </mask>
+  </defs>
+  <g id="mark" fill="#C6FF3D" mask="url(#cuts)">
+    <polygon points="236,190 384,190 566,834 458,834"/>
+    <polygon points="788,190 640,190 458,834 566,834"/>
+  </g>
+</svg>

@@ -47,7 +47,7 @@ Comptes et connexion, suivi d’artistes, liste d’envies, notifications, filtr
 - Données de démonstration : artistes et salles réels, concerts fictifs (décision du porteur, voir « Données et technique »).
 - Page « introuvable » (`+not-found`) non créée : aucun lien externe ne pointe vers l’app au MVP. À traiter quand l’app partagera des liens.
 - Les textes légaux de la page Infos sont minimaux et à faire relire avant toute diffusion publique (cahier des charges, 10.8).
-- Logo et icône de l’app à créer avant toute diffusion (`docs/design.md`, « Identité »).
+- Logo et icône de l’app : faits après le tag `v1.0` (voir `docs/design.md`, « Identité »). Visibles seulement dans un build de l’app, pas dans Expo Go.
 
 ## Ordre de développement suggéré
 

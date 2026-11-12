@@ -61,6 +61,16 @@ Commandes courantes :
 | `npx supabase db push --remote --include-seed` | Réapplique aussi les données de démo (rafraîchit leurs dates, ne supprime rien) |
 | `npx supabase gen types --lang typescript --remote --schema public > src/types/database.ts` | Régénère les types après une migration |
 
+## Logo et icônes
+
+Les logos sources sont dans `assets/brand/` (SVG). Après une modification, régénérer toutes les icônes et l’écran de démarrage :
+
+```bash
+npm run icons
+```
+
+L’icône et l’écran de démarrage ne s’affichent pas dans Expo Go (qui montre les siens) : il faut un build de l’app pour les voir sur le téléphone.
+
 ## Vérifications
 
 ```bash

@@ -51,4 +51,9 @@ Toutes les valeurs ci-dessous sont dans `src/theme/tokens.ts`. Ne jamais les rec
 
 ## Identité
 
-Nom : **Vybe**. Logo et icône à créer dans cette charte (à faire avant toute diffusion).
+Nom : **Vybe**.
+
+- **Logo / icône** : « V égaliseur » — un V lime dont la branche droite est découpée en bandes verticales (évoque le son et le live), sur fond `#0A0A0A`. Source : `assets/brand/logo-mark.svg`.
+- **Mot-symbole** : « VYBE » en Anton lime, utilisé sur l’écran de démarrage. Source : `assets/brand/wordmark.svg`.
+- Les PNG (icône iOS, icône adaptative et monochrome Android, écran de démarrage, favicon) sont générés par `npm run icons` : ne pas les retoucher à la main, modifier les SVG puis relancer la commande.
+- L’icône principale n’a pas de canal de transparence (exigence de l’App Store) ; le logo Android tient dans la zone sûre (cercle central de 66/108).
