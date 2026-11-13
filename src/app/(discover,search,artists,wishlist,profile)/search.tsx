@@ -3,8 +3,6 @@ import { useState, type ReactNode } from 'react';
 import { ScrollView, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
-import { useTabBarSpace } from '@/lib/useTabBarSpace';
-
 import { ArtistRow } from '@/components/ArtistRow';
 import { Chip } from '@/components/Chip';
 import { EmptyState } from '@/components/EmptyState';
@@ -20,6 +18,7 @@ import { useUpcomingEvents } from '@/features/events/useUpcomingEvents';
 import { MIN_QUERY_LENGTH, type SearchResults } from '@/features/search/api';
 import { useSearch } from '@/features/search/useSearch';
 import { useDebouncedValue } from '@/lib/useDebouncedValue';
+import { useTabBarSpace } from '@/lib/useTabBarSpace';
 import { colors, fonts, fontSizes, opacity, spacing } from '@/theme/tokens';
 
 const DEBOUNCE_MS = 300;

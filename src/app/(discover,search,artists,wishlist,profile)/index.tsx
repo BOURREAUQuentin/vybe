@@ -3,8 +3,6 @@ import { useMemo } from 'react';
 import { FlatList, RefreshControl, ScrollView, SectionList, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
-import { useTabBarSpace } from '@/lib/useTabBarSpace';
-
 import { Chip } from '@/components/Chip';
 import { DiscoverSkeleton } from '@/components/DiscoverSkeleton';
 import { EmptyState } from '@/components/EmptyState';
@@ -18,6 +16,7 @@ import { ScreenHeader } from '@/components/ScreenHeader';
 import { SectionTitle } from '@/components/SectionTitle';
 import { buildDiscoverSections, type DiscoverSections } from '@/features/discover/sections';
 import { useUpcomingEvents } from '@/features/events/useUpcomingEvents';
+import { useTabBarSpace } from '@/lib/useTabBarSpace';
 import { colors, fonts, fontSizes, spacing } from '@/theme/tokens';
 
 // Onglet Découvrir : Rap à l'affiche, Cette semaine, Par ville, Par genre, À venir (par mois).

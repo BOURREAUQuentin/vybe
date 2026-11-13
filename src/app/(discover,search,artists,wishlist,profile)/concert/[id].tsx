@@ -17,6 +17,7 @@ import { getLineupLabels, sortLineup } from '@/features/events/lineup';
 import { useEvent } from '@/features/events/useEvent';
 import { formatDayAndTime, formatEventDateLong } from '@/lib/dates';
 import { formatPriceRange, roleLabels } from '@/lib/format';
+import { useTabBarSpace } from '@/lib/useTabBarSpace';
 import { colors, fonts, fontSizes, lineHeights, maxFontScale, spacing } from '@/theme/tokens';
 
 // Fiche concert.
@@ -57,6 +58,8 @@ export default function ConcertScreen() {
 
 function ConcertDetail({ event }: { event: EventDetail }) {
   const router = useRouter();
+  // Le bas du contenu ne doit pas rester caché sous la barre d'onglets (iOS).
+  const bottomSpace = useTabBarSpace();
   const { title } = getLineupLabels(event.name, event.lineup);
   const lineup = sortLineup(event.lineup);
   const price = formatPriceRange(event.price_min, event.price_max, event.currency);
@@ -79,7 +82,7 @@ function ConcertDetail({ event }: { event: EventDetail }) {
   };
 
   return (
-    <ScrollView style={styles.container} contentContainerStyle={styles.content}>
+    <ScrollView style={styles.container} contentContainerStyle={[styles.content, { paddingBottom: bottomSpace }]}>
       {/* V1.3 : cœur « Mes envies » en haut à droite de la barre. */}
       <Stack.Screen options={{ headerRight: () => <WishlistButton eventId={event.id} /> }} />
       {/* En-tête : affiche, statut, date, lieu */}

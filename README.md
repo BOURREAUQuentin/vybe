@@ -2,22 +2,26 @@
 
 Application mobile (iOS et Android) pour découvrir, suivre et garder en mémoire des concerts en France, avec le rap mis en avant.
 
-Version : **V1.2 (meilleure consultation)** — périmètre dans `docs/v1.2.md` (V1.0 : `docs/mvp.md`). Les concerts affichés sont des **données de démonstration** (artistes et salles réels, concerts fictifs). La V1.1 (données réelles Ticketmaster) est mise de côté pour l’instant.
+Version : **V1.3 (compte et favoris)** — périmètre dans `docs/v1.3.md` (V1.2 : `docs/v1.2.md`, V1.0 : `docs/mvp.md`). Les concerts affichés sont des **données de démonstration** (artistes et salles réels, concerts fictifs). La V1.1 (données réelles Ticketmaster) est faite plus tard.
 
 ## Fonctionnalités
 
-- **Découvrir** : Rap à l’affiche, **Près de chez toi** (V1.2), Cette semaine, Par ville, Par genre, À venir (par mois).
-- **Concerts** (V1.2) : filtres combinables date, ville, rayon (10 à 100 km) et genres.
-- **Près de chez toi** (V1.2) : « Me localiser » (facultatif) ou choix d’une ville, concerts à moins de 50 km.
+Cinq onglets : **Découvrir**, **Recherche**, **Artistes**, **Envies**, **Profil**. Tout se consulte sans compte ; le compte sert à suivre, enregistrer et personnaliser.
+
+- **Découvrir** : Rap à l’affiche, Près de chez toi, Cette semaine, Par ville, Par genre, À venir (par mois).
+- **Concerts** : filtres combinables date, ville, rayon (10 à 100 km) et genres.
+- **Près de chez toi** : « Me localiser » (facultatif), choix d’une ville, ou ville principale du compte.
 - **Recherche** par artiste, concert, salle ou ville (insensible aux accents).
-- **Fiche concert** : affiche, statut, date, lieu, prix indicatif, programmation, billetterie, source.
-- **Fiche salle** (V1.2) : adresse, itinéraire (app de cartes du téléphone), concerts à venir.
-- **Fiche artiste** : photo ou initiales, description, concerts à venir.
-- **Infos** : à propos, mentions légales, confidentialité.
+- **Fiches** concert (♡ envie, billetterie), artiste (Suivre), salle (Ajouter à mes salles, itinéraire).
+- **Compte** (V1.3) : connexion sans mot de passe par code à 6 chiffres reçu par e-mail.
+- **Artistes** (V1.3) : artistes suivis et leurs prochains concerts ; onboarding « Suis quelques artistes ».
+- **Envies** (V1.3) : concerts enregistrés, à venir et déjà passés.
+- **Profil** (V1.3) : villes favorites (dont une principale), salles favorites, genres préférés, **Exporter mes données**, **Supprimer mon compte**.
+- **Infos** : à propos, mentions légales, politique de confidentialité.
 
 ## Confidentialité
 
-Aucun compte, aucune donnée personnelle collectée. La localisation est **facultative** : demandée seulement quand on touche « Me localiser », approximative (arrondie à ~1 km), jamais enregistrée ni suivie en arrière-plan. Seule la ville choisie pour « Près de chez toi » est gardée, sur le téléphone.
+Le compte est facultatif. Données traitées : e-mail, artistes suivis, envies, villes, salles et genres favoris — exportables et supprimées avec le compte. Aucun outil d’analyse ni de suivi des plantages. La localisation est **facultative**, approximative (~1 km) et jamais enregistrée. Détails : politique de confidentialité (page Infos) et registre des traitements (`docs/rgpd.md`).
 
 ## Stack
 
@@ -65,6 +69,16 @@ Commandes courantes :
 | `npx supabase db push --remote` | Applique les migrations sur le projet hébergé |
 | `npx supabase db query --remote --file supabase/seed.sql --yes` | (Ré)applique les données de démo : insère ou met à jour, rafraîchit leurs dates, ne supprime rien (`db push --include-seed` ne l’exécute qu’une fois) |
 | `npx supabase gen types --lang typescript --remote --schema public > src/types/database.ts` | Régénère les types après une migration |
+| `npx supabase db query --remote --file supabase/tests/user-data-rls.sql --yes` | Teste la sécurité des données des comptes (transaction toujours annulée) ; bilan « n/n réussis » |
+
+## Configurer les e-mails de connexion (Supabase + Brevo)
+
+Ces réglages vivent dans le tableau de bord Supabase, **pas dans le code** : à refaire sur tout nouveau projet Supabase.
+
+1. **Brevo** (brevo.com) : déclarer l’expéditeur (Senders) et générer une **clé SMTP** (SMTP & API › SMTP). Ne jamais la mettre dans le code, `.env` ni Git.
+2. **Supabase › Authentication › SMTP Settings** : activer le SMTP personnalisé — hôte `smtp-relay.brevo.com`, port `587`, identifiant SMTP Brevo (`…@smtp-brevo.com`), mot de passe = clé SMTP (`xsmtpsib-…`).
+3. **Supabase › Authentication › Email Templates** : dans « Magic link » et « Confirm sign up », afficher le code avec `{{ .Token }}` (objet : « Ton code de connexion Vybe »).
+4. **Email OTP Length** = 6 ; augmenter la limite d’e-mails par heure (Rate Limits).
 
 ## Logo et icônes
 

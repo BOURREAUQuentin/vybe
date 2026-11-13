@@ -5,11 +5,14 @@ import { ScrollView, StyleSheet, Text, View } from 'react-native';
 import { DetailSection } from '@/components/DetailSection';
 import { SecondaryButton } from '@/components/SecondaryButton';
 import { about, legalNotice, privacyPolicy, publisher } from '@/features/infos/content';
+import { useTabBarSpace } from '@/lib/useTabBarSpace';
 import { colors, fonts, fontSizes, lineHeights, spacing } from '@/theme/tokens';
 
 // Page Infos, ouverte depuis Découvrir : à propos, mentions légales, confidentialité.
 export default function InfosScreen() {
   const version = Constants.expoConfig?.version;
+  // Le bas du contenu ne doit pas rester caché sous la barre d'onglets (iOS).
+  const bottomSpace = useTabBarSpace();
 
   const writeToUs = () => {
     // Ouvre l'application de messagerie ; l'adresse reste lisible dans le texte si aucune n'est installée.
@@ -17,7 +20,7 @@ export default function InfosScreen() {
   };
 
   return (
-    <ScrollView style={styles.container} contentContainerStyle={styles.content}>
+    <ScrollView style={styles.container} contentContainerStyle={[styles.content, { paddingBottom: bottomSpace }]}>
       <DetailSection title="À propos">
         <Paragraphs items={about} />
       </DetailSection>

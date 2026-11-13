@@ -8,11 +8,14 @@ import { SignInPrompt } from '@/components/SignInPrompt';
 import { VenueRow } from '@/components/VenueRow';
 import { useAuth } from '@/features/auth/AuthContext';
 import { useFavoriteVenues } from '@/features/preferences/usePreferences';
+import { useTabBarSpace } from '@/lib/useTabBarSpace';
 import { colors, spacing } from '@/theme/tokens';
 
 // « Mes salles » (V1.3) : salles favorites (ajoutées depuis la fiche salle).
 export default function FavoriteVenuesScreen() {
   const router = useRouter();
+  // Le bas du contenu ne doit pas rester caché sous la barre d'onglets (iOS).
+  const bottomSpace = useTabBarSpace();
   const { userId } = useAuth();
   const { data, error, refetch } = useFavoriteVenues();
 
@@ -52,7 +55,7 @@ export default function FavoriteVenuesScreen() {
   }
 
   return (
-    <ScrollView style={styles.container} contentContainerStyle={styles.content}>
+    <ScrollView style={styles.container} contentContainerStyle={[styles.content, { paddingBottom: bottomSpace }]}>
       {data.map((row) => (
         <VenueRow
           key={row.venue_id}

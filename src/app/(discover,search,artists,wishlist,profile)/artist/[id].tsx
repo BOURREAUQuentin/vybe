@@ -10,6 +10,7 @@ import { EventCard } from '@/components/EventCard';
 import { FollowButton } from '@/components/FollowButton';
 import type { ArtistWithEvents } from '@/features/artists/api';
 import { useArtist } from '@/features/artists/useArtist';
+import { useTabBarSpace } from '@/lib/useTabBarSpace';
 import { colors, fonts, fontSizes, lineHeights, spacing } from '@/theme/tokens';
 
 // Fiche artiste.
@@ -50,9 +51,11 @@ export default function ArtistScreen() {
 
 function ArtistDetail({ artist, events }: ArtistWithEvents) {
   const router = useRouter();
+  // Le bas du contenu ne doit pas rester caché sous la barre d'onglets (iOS).
+  const bottomSpace = useTabBarSpace();
 
   return (
-    <ScrollView style={styles.container} contentContainerStyle={styles.scroll}>
+    <ScrollView style={styles.container} contentContainerStyle={[styles.scroll, { paddingBottom: bottomSpace }]}>
       <ArtistHero name={artist.name} imageUrl={artist.image_url} />
 
       <View style={styles.content}>

@@ -29,6 +29,7 @@ import {
 } from '@/features/filters/filters';
 import { useFilteredEvents, useFilterOptions } from '@/features/filters/useFilteredEvents';
 import { datePresetLabels, type DatePreset } from '@/lib/dates';
+import { useTabBarSpace } from '@/lib/useTabBarSpace';
 import {
   colors,
   fonts,
@@ -49,6 +50,8 @@ const SKELETON_COUNT = 5;
 // Les filtres de départ viennent de l'adresse (ex. ouvert depuis « Par ville » sur Découvrir).
 export default function ConcertsScreen() {
   const router = useRouter();
+  // Le bas du contenu ne doit pas rester caché sous la barre d'onglets (iOS).
+  const bottomSpace = useTabBarSpace();
   const params = useLocalSearchParams<FilterParams>();
   const [filters, setFilters] = useState<EventFilters>(() => parseFilterParams(params));
   const [openSheet, setOpenSheet] = useState<SheetName | null>(null);
@@ -186,7 +189,11 @@ export default function ConcertsScreen() {
         ItemSeparatorComponent={Separator}
         ListHeaderComponent={header}
         ListEmptyComponent={<View style={styles.empty}>{emptyContent}</View>}
-        contentContainerStyle={[styles.listContent, sections.length === 0 && styles.grow]}
+        contentContainerStyle={[
+          styles.listContent,
+          { paddingBottom: bottomSpace },
+          sections.length === 0 && styles.grow,
+        ]}
         refreshControl={
           <RefreshControl
             refreshing={isRefetching}

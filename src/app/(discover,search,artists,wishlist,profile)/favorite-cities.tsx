@@ -14,12 +14,15 @@ import {
   useFavoriteCities,
   useUpdateFavoriteCities,
 } from '@/features/preferences/usePreferences';
+import { useTabBarSpace } from '@/lib/useTabBarSpace';
 import { colors, fonts, fontSizes, lineHeights, spacing } from '@/theme/tokens';
 
 // « Mes villes » (V1.3) : ville principale (+ rayon) qui alimente « Près de chez toi »,
 // et autres villes favorites.
 export default function FavoriteCitiesScreen() {
   const { userId } = useAuth();
+  // Le bas du contenu ne doit pas rester caché sous la barre d'onglets (iOS).
+  const bottomSpace = useTabBarSpace();
   const options = useFilterOptions();
   const favorites = useFavoriteCities();
   const update = useUpdateFavoriteCities();
@@ -59,7 +62,7 @@ export default function FavoriteCitiesScreen() {
   const radiusKm = main?.radius_km ?? NEARBY_RADIUS_KM;
 
   return (
-    <ScrollView style={styles.container} contentContainerStyle={styles.content}>
+    <ScrollView style={styles.container} contentContainerStyle={[styles.content, { paddingBottom: bottomSpace }]}>
       <DetailSection title="Ville principale">
         <Text style={styles.help}>
           Elle remplit automatiquement « Près de chez toi » sur Découvrir.

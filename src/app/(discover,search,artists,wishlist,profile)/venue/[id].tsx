@@ -11,6 +11,7 @@ import { SecondaryButton } from '@/components/SecondaryButton';
 import type { VenueWithEvents } from '@/features/venues/api';
 import { useVenue } from '@/features/venues/useVenue';
 import { openDirections } from '@/lib/maps';
+import { useTabBarSpace } from '@/lib/useTabBarSpace';
 import {
   colors,
   fonts,
@@ -58,6 +59,8 @@ export default function VenueScreen() {
 
 function VenueDetail({ venue, events }: VenueWithEvents) {
   const router = useRouter();
+  // Le bas du contenu ne doit pas rester caché sous la barre d'onglets (iOS).
+  const bottomSpace = useTabBarSpace();
   const cityLine = [venue.postal_code, venue.city.name].filter(Boolean).join(' ');
   // Lieu pour l'itinéraire, seulement si les coordonnées sont connues.
   const place =
@@ -66,7 +69,7 @@ function VenueDetail({ venue, events }: VenueWithEvents) {
       : null;
 
   return (
-    <ScrollView style={styles.container} contentContainerStyle={styles.content}>
+    <ScrollView style={styles.container} contentContainerStyle={[styles.content, { paddingBottom: bottomSpace }]}>
       <View style={styles.header}>
         <Text
           style={styles.title}

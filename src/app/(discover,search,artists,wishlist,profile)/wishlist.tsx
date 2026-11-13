@@ -12,8 +12,6 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
-import { useTabBarSpace } from '@/lib/useTabBarSpace';
-
 import { EmptyState } from '@/components/EmptyState';
 import { ErrorState } from '@/components/ErrorState';
 import { EventCard } from '@/components/EventCard';
@@ -28,6 +26,7 @@ import { groupEventsByMonth, type MonthSection } from '@/features/discover/secti
 import type { EventListItem } from '@/features/events/api';
 import { getLineupLabels } from '@/features/events/lineup';
 import { useToggleWishlist, useWishlist, useWishlistIds } from '@/features/wishlist/useWishlist';
+import { useTabBarSpace } from '@/lib/useTabBarSpace';
 import { colors, fonts, fontSizes, opacity, spacing } from '@/theme/tokens';
 
 /** Délai pendant lequel « Annuler » reste proposé après un retrait. */

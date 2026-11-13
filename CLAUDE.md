@@ -42,7 +42,8 @@ Vybe est une application mobile iOS et Android pour découvrir, suivre et garder
 ```
 src/app/              Écrans et navigation (Expo Router) — uniquement des routes
 src/components/       Composants réutilisables (cartes, badges, boutons, états vides…)
-src/features/         Logique par domaine (events, artists, venues, search, discover, filters, nearby, infos)
+src/features/         Logique par domaine (events, artists, venues, search, discover, filters, nearby, infos ;
+                      V1.3 : auth, follows, wishlist, preferences, account)
 src/lib/              Client Supabase, utilitaires (dates, formatage)
 src/theme/            tokens.ts et helpers de style
 src/types/            Types partagés, dont les types générés depuis Supabase
@@ -71,7 +72,10 @@ Conçue dès le MVP pour les versions suivantes. Elle doit prévoir :
 Fonctions SQL appelées par l’app avec `supabase.rpc(...)`, toutes en `security invoker` (la RLS s’applique) :
 
 - recherche : `search_artists`, `search_cities`, `search_venues`, `search_events`, insensibles à la casse et aux accents (`unaccent`) ;
-- filtres (V1.2) : `filter_events` (période, ville, genres, rayon autour d’une ville ou d’une position), distance calculée par `distance_km` (haversine) à partir des coordonnées des salles. Ne jamais enregistrer la position reçue.
+- filtres (V1.2) : `filter_events` (période, ville, genres, rayon autour d’une ville ou d’une position), distance calculée par `distance_km` (haversine) à partir des coordonnées des salles. Ne jamais enregistrer la position reçue ;
+- compte (V1.3) : `set_main_city` (ville principale atomique, `security invoker`) et `delete_my_account()` (`security definer` verrouillé : supprime uniquement le compte connecté, cascade sur toutes ses données).
+
+Tables utilisateur (V1.3) : `user_events`, `user_artist_follows`, `user_venue_follows`, `user_favorite_cities` (au plus une `is_main`), `user_genre_preferences` ; `user_id default auth.uid()`, `on delete cascade`. E-mails de connexion envoyés par Brevo (SMTP configuré dans Supabase, voir README).
 
 Conventions : noms en anglais et en `snake_case`, clés primaires `uuid`, colonnes `created_at` et `updated_at`, dates en `timestamptz`. Les données factices du MVP sont fictives mais réalistes et calquées sur les champs documentés de la Discovery API de Ticketmaster.
 

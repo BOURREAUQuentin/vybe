@@ -3,8 +3,6 @@ import { useState } from 'react';
 import { ActivityIndicator, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
-import { useTabBarSpace } from '@/lib/useTabBarSpace';
-
 import { DetailSection } from '@/components/DetailSection';
 import { LinkRow } from '@/components/LinkRow';
 import { MyDataSection } from '@/components/MyDataSection';
@@ -20,6 +18,7 @@ import {
   useGenrePreferences,
   useToggleGenrePreference,
 } from '@/features/preferences/usePreferences';
+import { useTabBarSpace } from '@/lib/useTabBarSpace';
 import { colors, fonts, fontSizes, spacing } from '@/theme/tokens';
 
 // Onglet « Profil » (V1.3) : compte, préférences, mes données (export, suppression),

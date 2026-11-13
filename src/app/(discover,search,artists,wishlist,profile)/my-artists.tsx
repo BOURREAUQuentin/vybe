@@ -13,8 +13,6 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
-import { useTabBarSpace } from '@/lib/useTabBarSpace';
-
 import { ArtistAvatar } from '@/components/ArtistAvatar';
 import { EmptyState } from '@/components/EmptyState';
 import { ErrorState } from '@/components/ErrorState';
@@ -28,6 +26,7 @@ import { useAuth } from '@/features/auth/AuthContext';
 import { groupEventsByMonth } from '@/features/discover/sections';
 import type { FollowedArtist } from '@/features/follows/api';
 import { useFollowedArtists, useFollowedArtistsEvents } from '@/features/follows/useFollows';
+import { useTabBarSpace } from '@/lib/useTabBarSpace';
 import {
   colors,
   fonts,
