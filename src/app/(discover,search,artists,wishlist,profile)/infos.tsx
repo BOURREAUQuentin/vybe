@@ -27,7 +27,16 @@ export default function InfosScreen() {
       </DetailSection>
 
       <DetailSection title="Politique de confidentialité">
-        <Paragraphs items={privacyPolicy} />
+        <View style={styles.policy}>
+          {privacyPolicy.map((section) => (
+            <View key={section.title} style={styles.policySection}>
+              <Text style={styles.policyTitle} accessibilityRole="header">
+                {section.title}
+              </Text>
+              <Paragraphs items={section.paragraphs} />
+            </View>
+          ))}
+        </View>
       </DetailSection>
 
       <View style={styles.contact}>
@@ -72,6 +81,17 @@ const styles = StyleSheet.create({
     fontFamily: fonts.regular,
     fontSize: fontSizes.md,
     lineHeight: fontSizes.md * lineHeights.normal,
+    color: colors.text,
+  },
+  policy: {
+    gap: spacing.md,
+  },
+  policySection: {
+    gap: spacing.xs,
+  },
+  policyTitle: {
+    fontFamily: fonts.semibold,
+    fontSize: fontSizes.md,
     color: colors.text,
   },
   contact: {

@@ -3,6 +3,8 @@ import { useState, type ReactNode } from 'react';
 import { ScrollView, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
+import { useTabBarSpace } from '@/lib/useTabBarSpace';
+
 import { ArtistRow } from '@/components/ArtistRow';
 import { Chip } from '@/components/Chip';
 import { EmptyState } from '@/components/EmptyState';
@@ -83,6 +85,7 @@ function SearchResultsList({ results, query, stale, refreshFailed }: SearchResul
   // Nombre de concerts par ville, si la liste de Découvrir est déjà en cache.
   const { data: upcoming } = useUpcomingEvents();
   const { artists, cities, venues, events } = results;
+  const bottomSpace = useTabBarSpace();
 
   if (!stale && artists.length + cities.length + venues.length + events.length === 0) {
     return (
@@ -96,7 +99,7 @@ function SearchResultsList({ results, query, stale, refreshFailed }: SearchResul
   return (
     <ScrollView
       style={stale && styles.stale}
-      contentContainerStyle={styles.results}
+      contentContainerStyle={[styles.results, { paddingBottom: bottomSpace }]}
       keyboardDismissMode="on-drag"
       keyboardShouldPersistTaps="handled">
       {refreshFailed ? (

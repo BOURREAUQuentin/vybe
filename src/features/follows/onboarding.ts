@@ -13,6 +13,15 @@ export function hasSeenOnboarding(userId: string): boolean {
   }
 }
 
+/** Efface l'indicateur (ex. après la suppression du compte). */
+export function clearOnboardingSeen(userId: string): void {
+  try {
+    Storage.removeItemSync(key(userId));
+  } catch {
+    // Stockage indisponible : sans conséquence.
+  }
+}
+
 export function markOnboardingSeen(userId: string): void {
   try {
     Storage.setItemSync(key(userId), '1');

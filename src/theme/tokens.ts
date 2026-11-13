@@ -90,6 +90,7 @@ export const sizes = {
   avatarLarge: 64, // vignette d'artiste suivi (onglet Mes artistes)
   featuredWidth: 220, // carte vedette (format affiche)
   featuredHeight: 300,
+  tabBarClearance: 64, // hauteur de la barre d'onglets iOS qui flotte au-dessus du contenu
   sheetHandleWidth: 36, // petite barre de prise en haut des panneaux de filtre
   sheetHandleHeight: 4,
   sheetMaxHeight: '75%', // hauteur maximale d'un panneau de filtre

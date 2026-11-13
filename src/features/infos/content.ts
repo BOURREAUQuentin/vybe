@@ -1,6 +1,6 @@
 // Textes de la page Infos (à propos, mentions légales, confidentialité).
-// Version minimale du MVP : à faire relire avant toute diffusion publique
-// (cahier des charges, section 10.8).
+// V1.3 : politique de confidentialité couvrant les comptes. À faire relire par un juriste
+// avant toute diffusion publique (cahier des charges, 10.8 ; points listés dans docs/rgpd.md).
 
 export const publisher = {
   name: 'Quentin Bourreau',
@@ -22,13 +22,68 @@ export const legalNotice = [
   `Éditeur et directeur de la publication : ${publisher.name}, à titre personnel.`,
   `Contact : ${publisher.email}`,
   `Hébergement des données : ${host.name}, région ${host.region}.`,
+  'Envoi des e-mails de connexion : Brevo.',
 ] as const;
 
-export const privacyPolicy = [
-  'Vybe ne demande aucun compte et ne collecte aucune donnée personnelle : pas d’inscription, pas d’outil de mesure d’audience, pas de suivi des plantages.',
-  'Localisation (facultative) : elle n’est demandée que si tu touches « Me localiser », pour te montrer les concerts proches. Ta position est approximative (arrondie à environ 1 km), utilisée uniquement pour cette recherche et jamais enregistrée, ni sur ton téléphone ni sur nos serveurs. Elle n’est jamais suivie en arrière-plan. Tu peux toujours choisir une ville à la place, et retirer l’autorisation dans les réglages de ton téléphone.',
-  'Si tu choisis une ville pour « Près de chez toi », ce choix est gardé uniquement sur ton téléphone, pour le prochain lancement. Tu peux l’effacer à tout moment depuis « Modifier ».',
-  'Pour afficher les concerts, l’application interroge une base de données hébergée par Supabase dans l’Union européenne. Comme pour toute connexion à internet, l’hébergeur peut traiter des données techniques (comme l’adresse IP) le temps nécessaire au fonctionnement du service.',
-  'Le bouton « Billetterie » ouvre un site tiers, qui applique ses propres règles de confidentialité.',
-  `Pour toute question : ${publisher.email}.`,
-] as const;
+export type PolicySection = { title: string; paragraphs: readonly string[] };
+
+export const privacyPolicy: readonly PolicySection[] = [
+  {
+    title: 'En bref',
+    paragraphs: [
+      'Vybe se consulte sans compte. Le compte est facultatif : il sert uniquement à suivre des artistes, enregistrer tes envies et garder tes favoris. Pas de publicité, pas de revente de données, pas d’outil de mesure d’audience ni de suivi des plantages.',
+    ],
+  },
+  {
+    title: 'Responsable',
+    paragraphs: [`${publisher.name}, à titre personnel. Contact : ${publisher.email}.`],
+  },
+  {
+    title: 'Données traitées',
+    paragraphs: [
+      'Si tu crées un compte : ton adresse e-mail, et les choix que tu fais dans l’application (artistes suivis, concerts enregistrés dans tes envies, villes et salles favorites, genres préférés).',
+      'Localisation (facultative, avec ou sans compte) : demandée seulement si tu touches « Me localiser ». Ta position est approximative (arrondie à environ 1 km), utilisée uniquement pour cette recherche et jamais enregistrée, ni sur ton téléphone ni sur nos serveurs. Elle n’est jamais suivie en arrière-plan.',
+      'Données techniques : comme pour toute connexion à internet, nos hébergeurs traitent des informations techniques (par exemple ton adresse IP) le temps nécessaire au fonctionnement et à la sécurité du service.',
+    ],
+  },
+  {
+    title: 'Pourquoi',
+    paragraphs: [
+      'Faire fonctionner ton compte et les fonctions que tu utilises (suivi d’artistes, envies, favoris, « Près de chez toi ») : c’est nécessaire au service que tu demandes.',
+      'Assurer la sécurité du service (connexion, prévention des abus) : intérêt légitime.',
+      'Te montrer les concerts proches : uniquement à ta demande, quand tu touches « Me localiser ».',
+    ],
+  },
+  {
+    title: 'Qui y a accès',
+    paragraphs: [
+      'Personne d’autre que toi et l’éditeur. Deux prestataires techniques interviennent pour faire fonctionner Vybe :',
+      'Supabase : hébergement de la base de données et des comptes. Ses données sont stockées dans l’Union européenne (région Paris) ; la société a son siège aux États-Unis.',
+      'Brevo (société française) : envoi des e-mails contenant ton code de connexion. Il reçoit ton adresse e-mail pour cela.',
+      'Le bouton « Billetterie » ouvre un site tiers, qui applique ses propres règles de confidentialité.',
+    ],
+  },
+  {
+    title: 'Combien de temps',
+    paragraphs: [
+      'Tes données de compte sont conservées tant que ton compte existe. Quand tu le supprimes, elles sont effacées immédiatement et définitivement.',
+      'Le code de connexion reçu par e-mail n’est valable que peu de temps (1 heure au plus).',
+    ],
+  },
+  {
+    title: 'Sur ton téléphone',
+    paragraphs: [
+      'L’application garde sur ton téléphone : ta session de connexion (effacée à la déconnexion), la ville choisie pour « Près de chez toi » (effaçable depuis « Modifier ») et un indicateur pour ne pas te reproposer « Suis quelques artistes ». Tout disparaît si tu désinstalles l’application.',
+    ],
+  },
+  {
+    title: 'Tes droits',
+    paragraphs: [
+      'Accès et portabilité : Profil › Mes données › « Exporter mes données ».',
+      'Rectification : modifie tes choix directement dans l’application (Profil, fiches artiste, concert et salle).',
+      'Effacement : Profil › Mes données › « Supprimer mon compte ».',
+      `Opposition, limitation ou toute autre question : écris à ${publisher.email}. Réponse sous un mois.`,
+      'Tu peux aussi adresser une réclamation à la CNIL (cnil.fr).',
+    ],
+  },
+];

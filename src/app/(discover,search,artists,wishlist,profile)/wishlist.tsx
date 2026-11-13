@@ -12,6 +12,8 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
+import { useTabBarSpace } from '@/lib/useTabBarSpace';
+
 import { EmptyState } from '@/components/EmptyState';
 import { ErrorState } from '@/components/ErrorState';
 import { EventCard } from '@/components/EventCard';
@@ -72,6 +74,7 @@ function WishlistContent() {
   const { data: savedIds } = useWishlistIds();
   const toggle = useToggleWishlist();
   const saved = useMemo(() => new Set(savedIds ?? []), [savedIds]);
+  const bottomSpace = useTabBarSpace();
 
   // Concerts retirés depuis cet onglet, encore affichés avec « Annuler ».
   const [pending, setPending] = useState<Set<string>>(new Set());
@@ -199,7 +202,7 @@ function WishlistContent() {
             : 'Aucun concert à venir dans tes envies'}
         </Text>
       }
-      contentContainerStyle={styles.listContent}
+      contentContainerStyle={[styles.listContent, { paddingBottom: bottomSpace }]}
       refreshControl={
         <RefreshControl
           refreshing={isRefetching}

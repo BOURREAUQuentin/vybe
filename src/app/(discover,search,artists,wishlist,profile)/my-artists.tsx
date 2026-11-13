@@ -13,6 +13,8 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
+import { useTabBarSpace } from '@/lib/useTabBarSpace';
+
 import { ArtistAvatar } from '@/components/ArtistAvatar';
 import { EmptyState } from '@/components/EmptyState';
 import { ErrorState } from '@/components/ErrorState';
@@ -73,6 +75,7 @@ function FollowedArtistsContent() {
   const artistIds = useMemo(() => followed.data?.map((row) => row.artist_id) ?? [], [followed.data]);
   const events = useFollowedArtistsEvents(artistIds);
   const sections = useMemo(() => (events.data ? groupEventsByMonth(events.data) : []), [events.data]);
+  const bottomSpace = useTabBarSpace();
 
   const openOnboarding = () => router.push('/onboarding');
 
@@ -154,7 +157,7 @@ function FollowedArtistsContent() {
       ItemSeparatorComponent={Separator}
       ListHeaderComponent={header}
       ListEmptyComponent={<View style={styles.emptyConcerts}>{emptyConcerts}</View>}
-      contentContainerStyle={styles.listContent}
+      contentContainerStyle={[styles.listContent, { paddingBottom: bottomSpace }]}
       refreshControl={
         <RefreshControl
           refreshing={isRefreshing}

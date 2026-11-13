@@ -3,6 +3,8 @@ import { useMemo } from 'react';
 import { FlatList, RefreshControl, ScrollView, SectionList, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
+import { useTabBarSpace } from '@/lib/useTabBarSpace';
+
 import { Chip } from '@/components/Chip';
 import { DiscoverSkeleton } from '@/components/DiscoverSkeleton';
 import { EmptyState } from '@/components/EmptyState';
@@ -23,6 +25,8 @@ export default function DiscoverScreen() {
   const router = useRouter();
   const { data, error, isRefetching, refetch } = useUpcomingEvents();
   const sections = useMemo(() => (data ? buildDiscoverSections(data) : null), [data]);
+  // Le bas de la liste ne doit pas rester caché sous la barre d'onglets (iOS).
+  const bottomSpace = useTabBarSpace();
 
   const openConcert = (id: string) => router.push({ pathname: '/concert/[id]', params: { id } });
 
@@ -88,7 +92,7 @@ export default function DiscoverScreen() {
           </View>
         )}
         ItemSeparatorComponent={Separator}
-        contentContainerStyle={styles.listContent}
+        contentContainerStyle={[styles.listContent, { paddingBottom: bottomSpace }]}
         refreshControl={refreshControl}
         ListHeaderComponent={
           <DiscoverTopSections

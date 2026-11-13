@@ -9,6 +9,8 @@ type SecondaryButtonProps = {
   disabled?: boolean;
   /** Action en cours : petite roue de chargement, bouton inactif. */
   loading?: boolean;
+  /** « danger » : action destructrice (contour et texte en couleur d'alerte). */
+  tone?: 'default' | 'danger';
 };
 
 // Bouton secondaire : contour clair, fond transparent, texte clair (pas de lime).
@@ -18,8 +20,10 @@ export function SecondaryButton({
   accessibilityHint,
   disabled = false,
   loading = false,
+  tone = 'default',
 }: SecondaryButtonProps) {
   const inactive = disabled || loading;
+  const isDanger = tone === 'danger';
 
   return (
     <Pressable
@@ -28,9 +32,15 @@ export function SecondaryButton({
       accessibilityRole="button"
       accessibilityHint={accessibilityHint}
       accessibilityState={{ disabled: inactive, busy: loading }}
-      style={({ pressed }) => [styles.button, (pressed || disabled) && styles.pressed]}>
-      {loading ? <ActivityIndicator size="small" color={colors.text} /> : null}
-      <Text style={styles.label}>{label}</Text>
+      style={({ pressed }) => [
+        styles.button,
+        isDanger && styles.dangerButton,
+        (pressed || disabled) && styles.pressed,
+      ]}>
+      {loading ? (
+        <ActivityIndicator size="small" color={isDanger ? colors.alert : colors.text} />
+      ) : null}
+      <Text style={[styles.label, isDanger && styles.dangerLabel]}>{label}</Text>
     </Pressable>
   );
 }
@@ -54,5 +64,11 @@ const styles = StyleSheet.create({
     fontFamily: fonts.semibold,
     fontSize: fontSizes.md,
     color: colors.text,
+  },
+  dangerButton: {
+    borderColor: colors.alert,
+  },
+  dangerLabel: {
+    color: colors.alert,
   },
 });

@@ -3,11 +3,16 @@ import { useState } from 'react';
 import { ActivityIndicator, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
+import { useTabBarSpace } from '@/lib/useTabBarSpace';
+
 import { DetailSection } from '@/components/DetailSection';
+import { LinkRow } from '@/components/LinkRow';
+import { MyDataSection } from '@/components/MyDataSection';
 import { ScreenHeader } from '@/components/ScreenHeader';
 import { SecondaryButton } from '@/components/SecondaryButton';
 import { SignInPrompt } from '@/components/SignInPrompt';
 import { ToggleChip } from '@/components/ToggleChip';
+import { useAuth } from '@/features/auth/AuthContext';
 import { useFilterOptions } from '@/features/filters/useFilteredEvents';
 import {
   useFavoriteCities,
@@ -15,16 +20,19 @@ import {
   useGenrePreferences,
   useToggleGenrePreference,
 } from '@/features/preferences/usePreferences';
-import { LinkRow } from '@/components/LinkRow';
-import { useAuth } from '@/features/auth/AuthContext';
-import { colors, fonts, fontSizes, lineHeights, spacing } from '@/theme/tokens';
+import { colors, fonts, fontSizes, spacing } from '@/theme/tokens';
 
-// Onglet « Profil » (V1.3). Étape 4 : compte et déconnexion ; préférences (étape 7)
-// et « Mes données » (étape 8) à venir.
+// Onglet « Profil » (V1.3) : compte, préférences, mes données (export, suppression),
+// à propos et déconnexion.
 export default function ProfileScreen() {
   const router = useRouter();
   const { email, isRestoring, signOut } = useAuth();
   const [isSigningOut, setIsSigningOut] = useState(false);
+  // Le bas de la page (« Se déconnecter ») ne doit pas rester caché sous la barre d'onglets (iOS).
+  const bottomSpace = useTabBarSpace();
+  // Pendant le menu de partage (et un court instant après), l'écran ignore les touchers :
+  // le toucher qui ferme le menu ne doit pas « traverser » jusqu'à une ligne du Profil.
+  const [blockTouches, setBlockTouches] = useState(false);
 
   const handleSignOut = async () => {
     setIsSigningOut(true);
@@ -65,7 +73,8 @@ export default function ProfileScreen() {
   return (
     <SafeAreaView style={styles.container} edges={['top']}>
       <ScreenHeader title="Profil" />
-      <ScrollView contentContainerStyle={styles.content}>
+      <View style={styles.container} pointerEvents={blockTouches ? 'none' : 'auto'}>
+      <ScrollView contentContainerStyle={[styles.content, { paddingBottom: bottomSpace }]}>
         <DetailSection title="Compte">
           <Text style={styles.body} accessibilityLabel={`Connecté avec ${email}`}>
             {email}
@@ -74,11 +83,7 @@ export default function ProfileScreen() {
 
         <PreferencesSection />
 
-        <DetailSection title="Mes données">
-          <Text style={styles.soon}>
-            Export de tes données et suppression du compte : bientôt disponibles.
-          </Text>
-        </DetailSection>
+        <MyDataSection onShareStateChange={setBlockTouches} />
 
         {aboutLink}
 
@@ -90,6 +95,7 @@ export default function ProfileScreen() {
           />
         </View>
       </ScrollView>
+      </View>
     </SafeAreaView>
   );
 }
@@ -183,12 +189,6 @@ const styles = StyleSheet.create({
     fontFamily: fonts.semibold,
     fontSize: fontSizes.md,
     color: colors.text,
-  },
-  soon: {
-    fontFamily: fonts.regular,
-    fontSize: fontSizes.sm,
-    lineHeight: fontSizes.sm * lineHeights.normal,
-    color: colors.textSecondary,
   },
   signOut: {
     alignItems: 'flex-start',
