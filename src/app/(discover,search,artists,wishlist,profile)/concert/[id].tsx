@@ -1,4 +1,4 @@
-import { useLocalSearchParams, useRouter } from 'expo-router';
+import { Stack, useLocalSearchParams, useRouter } from 'expo-router';
 import * as WebBrowser from 'expo-web-browser';
 import { ScrollView, StyleSheet, Text, View } from 'react-native';
 
@@ -11,6 +11,7 @@ import { PrimaryButton } from '@/components/PrimaryButton';
 import { SourceNote } from '@/components/SourceNote';
 import { StatusBadge } from '@/components/StatusBadge';
 import { VenueRow } from '@/components/VenueRow';
+import { WishlistButton } from '@/components/WishlistButton';
 import type { EventDetail } from '@/features/events/api';
 import { getLineupLabels, sortLineup } from '@/features/events/lineup';
 import { useEvent } from '@/features/events/useEvent';
@@ -79,6 +80,8 @@ function ConcertDetail({ event }: { event: EventDetail }) {
 
   return (
     <ScrollView style={styles.container} contentContainerStyle={styles.content}>
+      {/* V1.3 : cœur « Mes envies » en haut à droite de la barre. */}
+      <Stack.Screen options={{ headerRight: () => <WishlistButton eventId={event.id} /> }} />
       {/* En-tête : affiche, statut, date, lieu */}
       <View style={styles.header}>
         <Text
