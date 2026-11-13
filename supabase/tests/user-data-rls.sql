@@ -57,6 +57,23 @@ exception when unique_violation then
   insert into t_results (test, ok) values ('4b. Suivre deux fois le même artiste est refusé', true);
 end $$;
 
+-- Ville principale (V1.3, set_main_city) : changement en une seule opération.
+select public.set_main_city((select city2 from t_ids), 25::smallint);
+insert into t_results (test, ok) select
+  '7a. set_main_city : une seule ville principale (la nouvelle, rayon 25), l''ancienne reste favorite',
+  (select count(*) from public.user_favorite_cities where is_main) = 1
+  and (select city_id = (select city2 from t_ids) and radius_km = 25
+       from public.user_favorite_cities where is_main)
+  and exists (select 1 from public.user_favorite_cities
+              where city_id = (select city1 from t_ids) and not is_main);
+
+do $$ begin
+  perform public.set_main_city((select city1 from t_ids), 999::smallint);
+  insert into t_results (test, ok) values ('7b. set_main_city : rayon invalide refusé', false);
+exception when invalid_parameter_value then
+  insert into t_results (test, ok) values ('7b. set_main_city : rayon invalide refusé', true);
+end $$;
+
 -- ===================== En tant que B =====================
 select set_config('request.jwt.claims', '{"sub":"bbbbbbbb-0000-4000-8000-00000000000b","role":"authenticated"}', true);
 
@@ -86,6 +103,18 @@ insert into public.user_genre_preferences (genre_id) select genre_id from t_ids;
 insert into t_results (test, ok) select
   '2e. B peut gérer ses propres lignes', (select count(*) from public.user_genre_preferences) = 1;
 
+-- B pose sa propre ville principale : celle de A ne bouge pas.
+select public.set_main_city((select city1 from t_ids), 10::smallint);
+reset role;
+insert into t_results (test, ok) select
+  '7c. set_main_city de B ne touche pas à la ville principale de A',
+  (select city_id = (select city2 from t_ids) and radius_km = 25 from public.user_favorite_cities
+   where user_id = 'aaaaaaaa-0000-4000-8000-00000000000a' and is_main)
+  and (select count(*) from public.user_favorite_cities
+       where user_id = 'bbbbbbbb-0000-4000-8000-00000000000b' and is_main) = 1;
+set local role authenticated;
+select set_config('request.jwt.claims', '{"sub":"bbbbbbbb-0000-4000-8000-00000000000b","role":"authenticated"}', true);
+
 -- ===================== Visiteur non connecté =====================
 set local role anon;
 select set_config('request.jwt.claims', '{"role":"anon"}', true);
@@ -103,6 +132,13 @@ do $$ begin
   insert into t_results (test, ok) values ('3b. Visiteur non connecté : écriture refusée', false);
 exception when insufficient_privilege then
   insert into t_results (test, ok) values ('3b. Visiteur non connecté : écriture refusée', true);
+end $$;
+
+do $$ begin
+  perform public.set_main_city((select city1 from t_ids), 50::smallint);
+  insert into t_results (test, ok) values ('7d. Visiteur non connecté : set_main_city() refusé', false);
+exception when insufficient_privilege then
+  insert into t_results (test, ok) values ('7d. Visiteur non connecté : set_main_city() refusé', true);
 end $$;
 
 do $$ begin
@@ -135,8 +171,14 @@ insert into t_results (test, ok) select
   exists (select 1 from auth.users where id = 'bbbbbbbb-0000-4000-8000-00000000000b')
   and (select count(*) from public.user_genre_preferences where user_id = 'bbbbbbbb-0000-4000-8000-00000000000b') = 1;
 
--- Bilan + annulation de TOUT (erreur volontaire).
+-- Bilan + annulation de TOUT (erreur volontaire). Bilan compact (la CLI tronque les longs
+-- messages) : nombre de réussites, puis uniquement les cas en échec.
 do $$ begin
-  raise exception E'BILAN (transaction annulée, rien n''est enregistré) :\n%',
-    (select string_agg(case when ok then '✓ ' else '✗ ÉCHEC ' end || test, E'\n' order by n) from t_results);
+  raise exception E'BILAN (transaction annulée, rien n''est enregistré) : %/% réussis%',
+    (select count(*) filter (where ok) from t_results),
+    (select count(*) from t_results),
+    coalesce(
+      E'\n' || (select string_agg('✗ ÉCHEC ' || test, E'\n' order by n) from t_results where not ok),
+      ' ✓ — aucun échec'
+    );
 end $$;

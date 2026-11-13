@@ -6,6 +6,7 @@ import { DetailSkeleton } from '@/components/DetailSkeleton';
 import { EmptyState } from '@/components/EmptyState';
 import { ErrorState } from '@/components/ErrorState';
 import { EventCard } from '@/components/EventCard';
+import { FavoriteVenueButton } from '@/components/FavoriteVenueButton';
 import { SecondaryButton } from '@/components/SecondaryButton';
 import type { VenueWithEvents } from '@/features/venues/api';
 import { useVenue } from '@/features/venues/useVenue';
@@ -75,6 +76,9 @@ function VenueDetail({ venue, events }: VenueWithEvents) {
         </Text>
         <Text style={styles.city}>{venue.city.name}</Text>
       </View>
+
+      {/* V1.3 : seule action principale (lime) de la fiche salle. */}
+      <FavoriteVenueButton venue={venue} />
 
       {venue.address || cityLine || place ? (
         <DetailSection title="Adresse">

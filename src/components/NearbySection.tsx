@@ -10,8 +10,8 @@ import { SecondaryButton } from '@/components/SecondaryButton';
 import { SectionTitle } from '@/components/SectionTitle';
 import { useFilterOptions } from '@/features/filters/useFilteredEvents';
 import { locateFailureMessages } from '@/features/nearby/location';
-import { NEARBY_RADIUS_KM, useNearby, type NearbyPlace } from '@/features/nearby/NearbyContext';
-import { useNearbyEvents } from '@/features/nearby/useNearbyEvents';
+import { useNearby, type NearbyPlace } from '@/features/nearby/NearbyContext';
+import { toRadiusOption, useNearbyEvents } from '@/features/nearby/useNearbyEvents';
 import {
   colors,
   fonts,
@@ -26,24 +26,26 @@ import {
 const PREVIEW_COUNT = 5;
 
 /** Paramètres de l'écran « Concerts » pour voir tous les concerts proches. */
-function concertsParams(place: NearbyPlace) {
-  const radiusKm = String(NEARBY_RADIUS_KM);
+function concertsParams(place: NearbyPlace, radiusKm: number) {
+  const radiusParam = String(toRadiusOption(radiusKm));
   return place.kind === 'city'
-    ? { city: place.cityId, radius: radiusKm }
+    ? { city: place.cityId, radius: radiusParam }
     : {
         lat: String(place.position.latitude),
         lng: String(place.position.longitude),
-        radius: radiusKm,
+        radius: radiusParam,
       };
 }
 
 // Section « Près de chez toi » de Découvrir (V1.2) : géolocalisation facultative ou ville choisie.
 export function NearbySection() {
   const router = useRouter();
-  const { place, isLocating, locateError, locate, chooseCity, clear } = useNearby();
+  const { place, radiusKm, canClear, isLocating, locateError, locate, chooseCity, clear } =
+    useNearby();
+  const nearbyRadius = toRadiusOption(radiusKm);
   const [chooserOpen, setChooserOpen] = useState(false);
   const { data: options } = useFilterOptions();
-  const { data, error, refetch } = useNearbyEvents(place);
+  const { data, error, refetch } = useNearbyEvents(place, nearbyRadius);
 
   const title = !place
     ? 'Près de chez toi'
@@ -76,7 +78,7 @@ export function NearbySection() {
       onDismiss={() => setChooserOpen(false)}
       scrollable
       footer={
-        place ? (
+        canClear ? (
           <SecondaryButton
             label="Effacer mon choix"
             accessibilityHint="Oublie la ville ou la position choisie"
@@ -116,7 +118,7 @@ export function NearbySection() {
         <SectionTitle title={title} />
         <View style={styles.card}>
           <Text style={styles.intro}>
-            Trouve les concerts autour de toi, dans un rayon de {NEARBY_RADIUS_KM} km.
+            Trouve les concerts autour de toi, dans un rayon de {nearbyRadius} km.
           </Text>
           <View style={styles.actions}>
             <SecondaryButton
@@ -158,7 +160,7 @@ export function NearbySection() {
   } else if (data.length === 0) {
     content = (
       <Text style={styles.empty}>
-        Aucun concert à moins de {NEARBY_RADIUS_KM} km pour le moment.
+        Aucun concert à moins de {nearbyRadius} km pour le moment.
       </Text>
     );
   } else {
@@ -174,9 +176,9 @@ export function NearbySection() {
           ))}
         </View>
         <Pressable
-          onPress={() => router.push({ pathname: '/concerts', params: concertsParams(place) })}
+          onPress={() => router.push({ pathname: '/concerts', params: concertsParams(place, nearbyRadius) })}
           accessibilityRole="link"
-          accessibilityLabel={`Voir les ${data.length} concerts à moins de ${NEARBY_RADIUS_KM} km`}
+          accessibilityLabel={`Voir les ${data.length} concerts à moins de ${nearbyRadius} km`}
           style={({ pressed }) => [styles.seeAll, pressed && styles.pressed]}>
           <Text style={styles.seeAllLabel}>
             Tout voir ({data.length}) ›
@@ -197,7 +199,11 @@ export function NearbySection() {
         }}
       />
       <View style={styles.body}>
-        <Text style={styles.radius}>Dans un rayon de {NEARBY_RADIUS_KM} km</Text>
+        <Text style={styles.radius}>
+          {place.kind === 'city' && place.isMain
+            ? `Ta ville principale · dans un rayon de ${nearbyRadius} km`
+            : `Dans un rayon de ${nearbyRadius} km`}
+        </Text>
         {isLocating ? <Text style={styles.radius}>Localisation en cours…</Text> : null}
         {errorBlock}
         {content}

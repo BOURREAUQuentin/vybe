@@ -7,6 +7,14 @@ import { DetailSection } from '@/components/DetailSection';
 import { ScreenHeader } from '@/components/ScreenHeader';
 import { SecondaryButton } from '@/components/SecondaryButton';
 import { SignInPrompt } from '@/components/SignInPrompt';
+import { ToggleChip } from '@/components/ToggleChip';
+import { useFilterOptions } from '@/features/filters/useFilteredEvents';
+import {
+  useFavoriteCities,
+  useFavoriteVenues,
+  useGenrePreferences,
+  useToggleGenrePreference,
+} from '@/features/preferences/usePreferences';
 import { LinkRow } from '@/components/LinkRow';
 import { useAuth } from '@/features/auth/AuthContext';
 import { colors, fonts, fontSizes, lineHeights, spacing } from '@/theme/tokens';
@@ -64,11 +72,7 @@ export default function ProfileScreen() {
           </Text>
         </DetailSection>
 
-        <DetailSection title="Préférences">
-          <Text style={styles.soon}>
-            Villes, salles et genres favoris : bientôt disponibles.
-          </Text>
-        </DetailSection>
+        <PreferencesSection />
 
         <DetailSection title="Mes données">
           <Text style={styles.soon}>
@@ -87,6 +91,64 @@ export default function ProfileScreen() {
         </View>
       </ScrollView>
     </SafeAreaView>
+  );
+}
+
+// Préférences (V1.3) : villes (dont la principale), salles favorites, genres préférés.
+function PreferencesSection() {
+  const router = useRouter();
+  const options = useFilterOptions();
+  const cities = useFavoriteCities();
+  const venues = useFavoriteVenues();
+  const genres = useGenrePreferences();
+  const toggleGenre = useToggleGenrePreference();
+
+  const main = cities.data?.find((row) => row.is_main);
+  const otherCities = cities.data?.filter((row) => !row.is_main) ?? [];
+  const citiesSummary = cities.data
+    ? [main ? `${main.city.name} (principale)` : null, ...otherCities.map((row) => row.city.name)]
+        .filter(Boolean)
+        .join(' · ') || 'Aucune ville'
+    : 'Chargement…';
+  const venuesSummary = venues.data
+    ? venues.data.map((row) => row.venue.name).join(' · ') || 'Aucune salle'
+    : 'Chargement…';
+  const selectedGenres = new Set(genres.data ?? []);
+
+  return (
+    <DetailSection title="Préférences">
+      <LinkRow
+        icon={{ ios: 'building.2', android: 'location_city' }}
+        title="Mes villes"
+        subtitle={citiesSummary}
+        onPress={() => router.push('/favorite-cities')}
+      />
+      <LinkRow
+        icon={{ ios: 'music.mic', android: 'stadium' }}
+        title="Mes salles"
+        subtitle={venuesSummary}
+        onPress={() => router.push('/favorite-venues')}
+      />
+      <Text style={styles.subTitle}>Mes genres</Text>
+      <View style={styles.chips}>
+        {(options.data?.genres ?? []).map((genre) => {
+          const selected = selectedGenres.has(genre.id);
+          return (
+            <ToggleChip
+              key={genre.id}
+              label={genre.name}
+              selected={selected}
+              onPress={() => toggleGenre.mutate({ genreId: genre.id, add: !selected })}
+            />
+          );
+        })}
+      </View>
+      {toggleGenre.isError ? (
+        <Text style={styles.error} accessibilityLiveRegion="polite">
+          Impossible d’enregistrer ce genre. Vérifie ta connexion et réessaie.
+        </Text>
+      ) : null}
+    </DetailSection>
   );
 }
 
@@ -130,5 +192,21 @@ const styles = StyleSheet.create({
   },
   signOut: {
     alignItems: 'flex-start',
+  },
+  subTitle: {
+    fontFamily: fonts.semibold,
+    fontSize: fontSizes.md,
+    color: colors.text,
+    marginTop: spacing.xs,
+  },
+  chips: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: spacing.xs,
+  },
+  error: {
+    fontFamily: fonts.regular,
+    fontSize: fontSizes.sm,
+    color: colors.alert,
   },
 });

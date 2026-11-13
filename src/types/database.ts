@@ -617,6 +617,10 @@ export type Database = {
           isSetofReturn: true
         }
       }
+      set_main_city: {
+        Args: { p_city_id: string; p_radius_km?: number }
+        Returns: undefined
+      }
     }
     Enums: {
       artist_role: "headliner" | "support" | "guest" | "co_headliner"

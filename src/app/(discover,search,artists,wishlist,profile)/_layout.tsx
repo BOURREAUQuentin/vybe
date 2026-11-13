@@ -60,6 +60,9 @@ export default function SharedStackLayout({ segment }: SharedStackLayoutProps) {
       <Stack.Screen name="artist/[id]" options={{ title: '' }} />
       <Stack.Screen name="venue/[id]" options={{ title: '' }} />
       <Stack.Screen name="concerts" options={{ title: '' }} />
+      {/* Préférences du Profil (V1.3). */}
+      <Stack.Screen name="favorite-cities" options={{ title: 'Mes villes' }} />
+      <Stack.Screen name="favorite-venues" options={{ title: 'Mes salles' }} />
       {/* Connexion (V1.3) : fenêtre modale par-dessus l'onglet en cours. */}
       <Stack.Screen name="sign-in" options={{ title: '', presentation: 'modal' }} />
       {/* Onboarding « Suis quelques artistes » (V1.3) : modale aussi. */}
