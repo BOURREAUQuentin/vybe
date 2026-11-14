@@ -15,7 +15,8 @@ export const host = {
 
 export const about = [
   'Vybe t’aide à découvrir les concerts en France, avec le rap mis en avant : les dates à venir, les artistes, les salles et la billetterie.',
-  'Cette version est une démonstration. Les artistes et les salles sont réels, mais les concerts, dates, prix et statuts affichés sont fictifs. Les photos sont des images d’illustration et ne représentent pas les artistes.',
+  'Les concerts viennent de Ticketmaster (Discovery API) et sont mis à jour chaque nuit. Les dates, salles et statuts peuvent changer : vérifie toujours sur la billetterie officielle avant d’acheter. Vybe n’est pas affilié à Ticketmaster et ne vend aucun billet.',
+  'Les photos des concerts et des artistes sont fournies par Ticketmaster ; celles des villes viennent de Wikimedia Commons (voir « Crédits photos »).',
 ] as const;
 
 export const legalNotice = [
@@ -23,6 +24,7 @@ export const legalNotice = [
   `Contact : ${publisher.email}`,
   `Hébergement des données : ${host.name}, région ${host.region}.`,
   'Envoi des e-mails de connexion : Brevo.',
+  'Données des concerts : Ticketmaster (Discovery API), sous ses conditions d’utilisation. Les noms, marques et images restent la propriété de leurs titulaires.',
 ] as const;
 
 export type PolicySection = { title: string; paragraphs: readonly string[] };
@@ -60,7 +62,8 @@ export const privacyPolicy: readonly PolicySection[] = [
       'Personne d’autre que toi et l’éditeur. Deux prestataires techniques interviennent pour faire fonctionner Vybe :',
       'Supabase : hébergement de la base de données et des comptes. Ses données sont stockées dans l’Union européenne (région Paris) ; la société a son siège aux États-Unis.',
       'Brevo (société française) : envoi des e-mails contenant ton code de connexion. Il reçoit ton adresse e-mail pour cela.',
-      'Le bouton « Billetterie » ouvre un site tiers, qui applique ses propres règles de confidentialité.',
+      'Les concerts viennent de Ticketmaster, mais l’application ne lui transmet aucune donnée : c’est notre serveur qui récupère le catalogue, sans rien savoir de toi.',
+      'Le bouton « Billetterie officielle » ouvre le site du vendeur de billets (le plus souvent Ticketmaster), qui applique ses propres règles de confidentialité.',
     ],
   },
   {

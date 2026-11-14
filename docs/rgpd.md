@@ -22,6 +22,8 @@ Données gardées **sur le téléphone** (non transmises) : session de connexion
 
 Aucun outil d’analyse, de publicité ou de suivi des plantages. Aucune revente de données.
 
+**Ticketmaster (V1.1)** : source du catalogue de concerts, **pas un destinataire de données personnelles**. Le serveur (fonction `sync-ticketmaster`) récupère le catalogue chaque nuit sans aucune donnée d’utilisateur ; l’application n’appelle jamais Ticketmaster. Le bouton « Billetterie officielle » ouvre le site du vendeur, sous ses propres règles (mentionné dans la politique de confidentialité).
+
 ## Exercice des droits
 
 | Droit | Comment |

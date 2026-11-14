@@ -90,6 +90,8 @@ function ConcertDetail({ event }: { event: EventDetail }) {
   const price = formatPriceRange(event.price_min, event.price_max, event.currency);
   const isWished = wishIds?.includes(event.id) ?? false;
 
+  // V1.1 : lien officiel fourni par la source (attribution demandée par Ticketmaster).
+  const ticketLabel = event.source === 'ticketmaster' ? 'Billetterie officielle' : 'Billetterie';
   const isClosed = event.status === 'cancelled' || event.status === 'past';
   const ticketUrl = isClosed ? null : event.ticket_url;
   const onSaleSoon =
@@ -139,10 +141,10 @@ function ConcertDetail({ event }: { event: EventDetail }) {
             <PressableScale
               onPress={openTickets}
               accessibilityRole="button"
-              accessibilityLabel="Billetterie"
+              accessibilityLabel={ticketLabel}
               accessibilityHint="Ouvre la billetterie dans le navigateur"
               style={styles.ticketButton}>
-              <Text style={styles.ticketLabel}>Billetterie</Text>
+              <Text style={styles.ticketLabel}>{ticketLabel}</Text>
             </PressableScale>
             {onSaleSoon && event.on_sale_at ? (
               <Text style={styles.hint}>Ouverture de la billetterie le {formatDayAndTime(event.on_sale_at)}</Text>
