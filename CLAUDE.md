@@ -7,7 +7,7 @@ Ce fichier est lu au début de chaque session. Il décrit le projet, la stack et
 Vybe est une application mobile iOS et Android pour découvrir, suivre et garder en mémoire des concerts en France, avec le rap mis en avant.
 
 - Cahier des charges complet : `docs/cahier-des-charges.md` (le périmètre de chaque version est en section 12).
-- Version en cours : **V1.3.1 (refonte de l’interface, direction « Hybride »)** : chantier de design uniquement, aucune nouvelle fonctionnalité. Périmètre dans `docs/v1.3.1.md`, travail sur la branche `refonte-ui`. Versions livrées : V1.0 (MVP, `docs/mvp.md`), V1.0.1 (logo), V1.2 (filtres, près de moi, fiche salle, `docs/v1.2.md`), V1.3 (compte et favoris, `docs/v1.3.md`).
+- Dernière version livrée : **V1.3.1 (refonte de l’interface, direction « Hybride »)**, design uniquement (`docs/v1.3.1.md`). Versions livrées : V1.0 (MVP, `docs/mvp.md`), V1.0.1 (logo), V1.2 (filtres, près de moi, fiche salle, `docs/v1.2.md`), V1.3 (compte et favoris, `docs/v1.3.md`), V1.3.1 (refonte). Prochaine version : à décider (V1.1 Ticketmaster ou V1.4 notifications).
 - **Ordre modifié** : V1.0 → V1.2 → V1.3 ; la V1.1 (données Ticketmaster) est faite plus tard. L’app fonctionne toujours sur les données de démonstration.
 - Direction artistique : `docs/design.md`. Valeurs de design : `src/theme/tokens.ts`.
 
@@ -19,7 +19,7 @@ Vybe est une application mobile iOS et Android pour découvrir, suivre et garder
 
 ## Règles absolues
 
-1. **Ne développe que le périmètre de la version en cours** (`docs/v1.3.1.md` : design seulement ; les fonctionnalités restent celles de `docs/v1.3.md`). Si une demande en sort, signale-le avant d’agir.
+1. **Ne développe que le périmètre de la version en cours.** Fonctionnalités actuelles : `docs/v1.3.md` ; interface : `docs/design.md` (V1.3.1). Toute nouvelle version commence par son document de périmètre. Si une demande en sort, signale-le avant d’agir.
 2. **L’application lit uniquement la base Supabase.** Elle n’appelle jamais d’API externe (Ticketmaster ou autre). Seul le backend (fonctions Supabase, tâches planifiées) appelle les sources externes, à partir de la V1.1.
 3. **Aucun secret dans le code ni dans Git.** Les variables d’environnement vont dans `.env` (ignoré par Git), avec un `.env.example` à jour. L’application ne contient que l’URL Supabase et la clé publique (anon / publishable), jamais la clé `service_role`.
 4. **Row Level Security activée sur toutes les tables.** Catalogue (genres, villes, salles, artistes, événements) : lecture publique seule, aucune écriture depuis l’application. Tables utilisateur (V1.3) : un utilisateur connecté ne lit et n’écrit **que ses propres lignes** (`user_id = auth.uid()`), jamais celles des autres.
@@ -43,7 +43,6 @@ Vybe est une application mobile iOS et Android pour découvrir, suivre et garder
 ```
 src/app/              Écrans et navigation (Expo Router) — uniquement des routes
 src/components/       Composants réutilisables (billet, pastilles, verre, boutons, états vides…)
-src/mockups/          TEMPORAIRE (V1.3.1) : laboratoire de maquettes, supprimé à la fin de la refonte
 src/features/         Logique par domaine (events, artists, venues, search, discover, filters, nearby, infos ;
                       V1.3 : auth, follows, wishlist, preferences, account)
 src/lib/              Client Supabase, utilitaires (dates, formatage)
@@ -115,9 +114,8 @@ Respecter `docs/design.md`. En résumé : thème sombre, accent lime **utilisé 
 - `npx supabase gen types --lang typescript --remote --schema public > src/types/database.ts` : régénère les types après chaque migration.
 - `npx supabase db query --remote --file supabase/tests/user-data-rls.sql --yes` : teste la sécurité des tables utilisateur (RLS, suppression du compte) avec deux utilisateurs fictifs, dans une transaction **toujours annulée** (rien n’est enregistré). Le bilan s’affiche dans le message d’erreur final (✓ / ✗). À relancer après chaque migration touchant ces tables.
 - `npm run icons` : régénère icônes et écran de démarrage depuis `assets/brand/*.svg` (ne pas retoucher les PNG à la main).
-- `EXPO_PUBLIC_DEV_MOCKUPS=1 npx expo start --clear` : ouvre au démarrage le laboratoire de maquettes de la refonte (développement uniquement, `src/mockups/`). **Temporaire** : supprimé à la fin de la V1.3.1.
 - `supabase login` et `supabase link` demandent un vrai terminal : les lancer dans l’app Terminal de macOS, pas avec `!` dans Claude Code.
 
 ## Définition de « terminé »
 
-Une version est terminée quand : toutes ses fonctionnalités sont testées sur iPhone et sur Android ; les états vides, chargements et erreurs sont gérés ; aucun plantage n’est constaté ; le code est sur GitHub avec un tag de version ; ce fichier et la documentation sont à jour ; le critère « Terminé quand » de la version (voir `docs/v1.3.1.md` pour la version en cours) est atteint.
+Une version est terminée quand : toutes ses fonctionnalités sont testées sur iPhone et sur Android ; les états vides, chargements et erreurs sont gérés ; aucun plantage n’est constaté ; le code est sur GitHub avec un tag de version ; ce fichier et la documentation sont à jour ; le critère « Terminé quand » de la version (dans son document `docs/v…md`) est atteint.

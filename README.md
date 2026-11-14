@@ -2,13 +2,17 @@
 
 Application mobile (iOS et Android) pour découvrir, suivre et garder en mémoire des concerts en France, avec le rap mis en avant.
 
-Version : **V1.3 (compte et favoris)** — périmètre dans `docs/v1.3.md` (V1.2 : `docs/v1.2.md`, V1.0 : `docs/mvp.md`). Les concerts affichés sont des **données de démonstration** (artistes et salles réels, concerts fictifs). La V1.1 (données réelles Ticketmaster) est faite plus tard.
+Version : **V1.3.1 (refonte de l’interface)** — fonctionnalités de la V1.3 (`docs/v1.3.md`) avec la nouvelle direction artistique « Hybride » (`docs/v1.3.1.md`, `docs/design.md`). Versions précédentes : `docs/v1.2.md`, `docs/mvp.md`. Les concerts affichés sont des **données de démonstration** (artistes et salles réels, concerts fictifs). La V1.1 (données réelles Ticketmaster) est faite plus tard.
+
+## Interface
+
+Direction **« Hybride »** (V1.3.1) : chaque concert est un **billet** (talon date, perforation, statut signalé seulement s’il sort de la normale), sur une structure claire façon app de streaming : grands visuels photo en parallaxe, verre dépoli, retours haptiques, animations courtes (coupées si « Réduire les animations » est activé). Détails : `docs/design.md`.
 
 ## Fonctionnalités
 
 Cinq onglets : **Découvrir**, **Recherche**, **Artistes**, **Envies**, **Profil**. Tout se consulte sans compte ; le compte sert à suivre, enregistrer et personnaliser.
 
-- **Découvrir** : Rap à l’affiche, Près de chez toi, Cette semaine, Par ville, Par genre, À venir (par mois).
+- **Découvrir** : grand visuel « Rap à l’affiche », carrousel À l’affiche, Près de chez toi, Cette semaine, Villes, Par genre, À venir (par mois).
 - **Concerts** : filtres combinables date, ville, rayon (10 à 100 km) et genres.
 - **Près de chez toi** : « Me localiser » (facultatif), choix d’une ville, ou ville principale du compte.
 - **Recherche** par artiste, concert, salle ou ville (insensible aux accents).
@@ -28,6 +32,7 @@ Le compte est facultatif. Données traitées : e-mail, artistes suivis, envies, 
 - Expo (SDK 58) + React Native, TypeScript strict, Expo Router.
 - Supabase (PostgreSQL, région UE) : lecture seule depuis l’app, protégée par Row Level Security.
 - TanStack Query pour les requêtes et le cache.
+- Reanimated (animations), expo-haptics (retours haptiques), expo-blur (verre dépoli sur iOS).
 
 ## Installation
 
@@ -102,4 +107,5 @@ npx expo lint      # style du code
 - `CLAUDE.md` — règles du projet, conventions, commandes
 - `docs/cahier-des-charges.md` — cahier des charges complet
 - `docs/mvp.md` — périmètre et critères de fin du MVP
-- `docs/design.md` — direction artistique
+- `docs/design.md` — direction artistique (Hybride, V1.3.1)
+- `docs/v1.3.md`, `docs/v1.3.1.md` — périmètres des dernières versions

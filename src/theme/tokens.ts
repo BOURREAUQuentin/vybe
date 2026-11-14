@@ -48,10 +48,8 @@ export const fontSizes = {
   display: 32,
   screenTitle: 34, // titre d'écran (Inter gras), ex. « Recherche »
   detailTitle: 46, // nom d'artiste en tête de fiche (Anton)
-  hero: 48,
   heroTitle: 56, // nom d'artiste du grand visuel de Découvrir (Anton)
   initials: 72, // initiales d'une carte vedette sans photo
-  initialsHero: 96, // initiales de l'en-tête de fiche artiste sans photo
   initialsGiant: 144, // initiales d'un grand visuel sans photo
 } as const;
 
@@ -72,7 +70,6 @@ export const letterSpacing = {
   // Espacement normal, à préciser explicitement sur les champs de saisie : sur iOS, un champ
   // natif recyclé peut garder l'espacement d'un autre champ (ex. celui du code).
   none: 0,
-  wide: 1, // petits titres de section en majuscules
   label: 1.5, // étiquettes du billet (« SALLE », « SAM »)
   code: 8, // chiffres d'un code de connexion
 } as const;
@@ -106,11 +103,8 @@ export const iconSizes = {
 } as const;
 
 export const sizes = {
-  heroHeight: 280, // en-tête photo de la fiche artiste
   avatar: 40, // vignette d'artiste dans une programmation
   avatarLarge: 64, // vignette d'artiste suivi (onglet Mes artistes)
-  featuredWidth: 220, // carte vedette (format affiche)
-  featuredHeight: 300,
   tabBarClearance: 64, // hauteur de la barre d'onglets iOS qui flotte au-dessus du contenu
   sheetHandleWidth: 36, // petite barre de prise en haut des panneaux de filtre
   sheetHandleHeight: 4,
