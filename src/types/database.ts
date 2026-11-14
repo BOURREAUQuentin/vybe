@@ -153,6 +153,7 @@ export type Database = {
           id: string
           image_url: string | null
           is_hidden: boolean
+          last_seen_at: string | null
           name: string
           on_sale_at: string | null
           price_max: number | null
@@ -177,6 +178,7 @@ export type Database = {
           id?: string
           image_url?: string | null
           is_hidden?: boolean
+          last_seen_at?: string | null
           name: string
           on_sale_at?: string | null
           price_max?: number | null
@@ -201,6 +203,7 @@ export type Database = {
           id?: string
           image_url?: string | null
           is_hidden?: boolean
+          last_seen_at?: string | null
           name?: string
           on_sale_at?: string | null
           price_max?: number | null
@@ -232,6 +235,44 @@ export type Database = {
           },
         ]
       }
+      genre_mappings: {
+        Row: {
+          created_at: string
+          external_genre: string
+          external_sub_genre: string | null
+          genre_id: string
+          id: string
+          source: Database["public"]["Enums"]["data_source"]
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          external_genre: string
+          external_sub_genre?: string | null
+          genre_id: string
+          id?: string
+          source: Database["public"]["Enums"]["data_source"]
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          external_genre?: string
+          external_sub_genre?: string | null
+          genre_id?: string
+          id?: string
+          source?: Database["public"]["Enums"]["data_source"]
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "genre_mappings_genre_id_fkey"
+            columns: ["genre_id"]
+            isOneToOne: false
+            referencedRelation: "genres"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       genres: {
         Row: {
           created_at: string
@@ -252,6 +293,51 @@ export type Database = {
           id?: string
           name?: string
           slug?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      sync_runs: {
+        Row: {
+          api_calls: number
+          created_at: string
+          errors: Json
+          events_created: number
+          events_removed: number
+          events_updated: number
+          finished_at: string | null
+          id: string
+          source: Database["public"]["Enums"]["data_source"]
+          started_at: string
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          api_calls?: number
+          created_at?: string
+          errors?: Json
+          events_created?: number
+          events_removed?: number
+          events_updated?: number
+          finished_at?: string | null
+          id?: string
+          source: Database["public"]["Enums"]["data_source"]
+          started_at?: string
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          api_calls?: number
+          created_at?: string
+          errors?: Json
+          events_created?: number
+          events_removed?: number
+          events_updated?: number
+          finished_at?: string | null
+          id?: string
+          source?: Database["public"]["Enums"]["data_source"]
+          started_at?: string
+          status?: string
           updated_at?: string
         }
         Relationships: []
@@ -508,6 +594,7 @@ export type Database = {
           id: string
           image_url: string | null
           is_hidden: boolean
+          last_seen_at: string | null
           name: string
           on_sale_at: string | null
           price_max: number | null
@@ -529,7 +616,19 @@ export type Database = {
           isSetofReturn: true
         }
       }
+      import_ticketmaster_events: {
+        Args: { p_events: Json; p_seen_at?: string }
+        Returns: Json
+      }
       normalize_search: { Args: { value: string }; Returns: string }
+      resolve_genre: {
+        Args: {
+          p_genre: string
+          p_source: Database["public"]["Enums"]["data_source"]
+          p_sub_genre: string
+        }
+        Returns: string
+      }
       search_artists: {
         Args: { search_query: string }
         Returns: {
@@ -584,6 +683,7 @@ export type Database = {
           id: string
           image_url: string | null
           is_hidden: boolean
+          last_seen_at: string | null
           name: string
           on_sale_at: string | null
           price_max: number | null
