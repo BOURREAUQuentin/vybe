@@ -55,11 +55,10 @@ export default function SharedStackLayout({ segment }: SharedStackLayoutProps) {
       }}>
       <Stack.Screen name={rootScreen} options={{ headerShown: false }} />
       <Stack.Screen name="infos" options={{ title: 'Infos' }} />
-      {/* Fiches : pas de titre dans la barre, le titre est affiché dans la page. */}
-      {/* Fiche concert (V1.3.1) : barre masquée, remplacée par des boutons en verre sur la photo. */}
+      {/* Fiches à photo (V1.3.1) : barre masquée, remplacée par des boutons en verre (DetailTopBar). */}
       <Stack.Screen name="concert/[id]" options={{ headerShown: false }} />
-      <Stack.Screen name="artist/[id]" options={{ title: '' }} />
-      <Stack.Screen name="venue/[id]" options={{ title: '' }} />
+      <Stack.Screen name="artist/[id]" options={{ headerShown: false }} />
+      <Stack.Screen name="venue/[id]" options={{ headerShown: false }} />
       {/* Concerts : titre dans la barre, filtres fixes juste en dessous (V1.3.1). */}
       <Stack.Screen name="concerts" options={{ title: 'Concerts' }} />
       {/* Préférences du Profil (V1.3). */}

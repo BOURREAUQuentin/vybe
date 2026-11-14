@@ -1,25 +1,17 @@
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import * as WebBrowser from 'expo-web-browser';
-import { useEffect, type ReactNode } from 'react';
+import type { ReactNode } from 'react';
 import { StyleSheet, Text, View } from 'react-native';
-import Animated, {
-  FadeIn,
-  useAnimatedScrollHandler,
-  useAnimatedStyle,
-  useReducedMotion,
-  useSharedValue,
-  withTiming,
-} from 'react-native-reanimated';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import Animated, { FadeIn, useAnimatedScrollHandler, useReducedMotion, useSharedValue } from 'react-native-reanimated';
 
 import { EmptyState } from '@/components/EmptyState';
 import { ErrorState } from '@/components/ErrorState';
 import { EventPass } from '@/components/EventPass';
-import { GlassIconButton } from '@/components/GlassIconButton';
+import { DetailTopBar } from '@/components/DetailTopBar';
 import { GlassPill } from '@/components/GlassPill';
 import { LineupAvatars } from '@/components/LineupAvatars';
-import { ParallaxPhoto } from '@/components/ParallaxPhoto';
 import { PhotoDetailSkeleton } from '@/components/PhotoDetailSkeleton';
+import { PhotoHeader } from '@/components/PhotoHeader';
 import { PressableScale } from '@/components/PressableScale';
 import { SectionTitle } from '@/components/SectionTitle';
 import { SourceNote } from '@/components/SourceNote';
@@ -44,7 +36,6 @@ import {
   maxFontScale,
   motion,
   radius,
-  sizes,
   spacing,
   touch,
 } from '@/theme/tokens';
@@ -80,30 +71,14 @@ export default function ConcertScreen() {
   return (
     <View style={styles.container}>
       {content}
-      <TopBar eventId={data ? data.id : null} />
-    </View>
-  );
-}
-
-// Boutons en verre fixes en haut : retour à gauche, cœur à droite (une fois le concert chargé).
-function TopBar({ eventId }: { eventId: string | null }) {
-  const router = useRouter();
-  const insets = useSafeAreaInsets();
-  return (
-    <View style={[styles.topBar, { top: insets.top + spacing.xs }]} pointerEvents="box-none">
-      <GlassIconButton
-        icon={{ ios: 'chevron.left', android: 'arrow_back' }}
-        accessibilityLabel="Retour"
-        onPress={() => (router.canGoBack() ? router.back() : router.replace('/'))}
-      />
-      {eventId ? <WishlistGlassButton eventId={eventId} /> : null}
+      {/* Boutons en verre fixes : retour, et cœur une fois le concert chargé. */}
+      <DetailTopBar right={data ? <WishlistGlassButton eventId={data.id} /> : null} />
     </View>
   );
 }
 
 function ConcertDetail({ event }: { event: EventDetail }) {
   const router = useRouter();
-  const insets = useSafeAreaInsets();
   // Le bas du contenu ne doit pas rester caché sous la barre d'onglets (iOS).
   const bottomSpace = useTabBarSpace();
   const reduceMotion = useReducedMotion();
@@ -119,13 +94,6 @@ function ConcertDetail({ event }: { event: EventDetail }) {
   const ticketUrl = isClosed ? null : event.ticket_url;
   const onSaleSoon =
     event.status === 'announced' && event.on_sale_at !== null && new Date(event.on_sale_at) > new Date();
-
-  // La photo se pose en arrivant (léger zoom arrière), sauf si « Réduire les animations ».
-  const zoom = useSharedValue(reduceMotion ? 1 : motion.imageZoomFrom);
-  useEffect(() => {
-    zoom.set(withTiming(1, { duration: motion.imageZoomMs }));
-  }, [zoom]);
-  const zoomStyle = useAnimatedStyle(() => ({ transform: [{ scale: zoom.get() }] }));
 
   const scrollY = useSharedValue(0);
   const onScroll = useAnimatedScrollHandler((e) => {
@@ -148,17 +116,7 @@ function ConcertDetail({ event }: { event: EventDetail }) {
   return (
     <Animated.ScrollView onScroll={onScroll} scrollEventThrottle={16} contentContainerStyle={{ paddingBottom: bottomSpace }}>
       {/* En-tête : photo, pastilles (date, statut, envie), nom de l'affiche. */}
-      <View style={styles.header}>
-        <Animated.View style={[StyleSheet.absoluteFill, zoomStyle]}>
-          <ParallaxPhoto
-            name={view.title}
-            imageUrl={view.imageUrl}
-            height={sizes.detailHeader}
-            scrollY={scrollY}
-            initialsSize={fontSizes.initialsGiant}
-          />
-        </Animated.View>
-        <View style={[styles.headerText, { paddingTop: insets.top + touch.minSize }]}>
+      <PhotoHeader name={view.title} imageUrl={view.imageUrl} scrollY={scrollY}>
           <View style={styles.chips}>
             <GlassPill label={`${view.weekday} ${view.day} ${view.month} · ${view.time}`} />
             <StatusChip status={event.status} />
@@ -172,8 +130,7 @@ function ConcertDetail({ event }: { event: EventDetail }) {
             {view.title.toUpperCase()}
           </Text>
           {view.others ? <Text style={styles.others}>avec {view.others}</Text> : null}
-        </View>
-      </View>
+      </PhotoHeader>
 
       <View style={styles.body}>
         {/* Action principale : seul élément lime de l'écran. */}
@@ -242,23 +199,6 @@ const styles = StyleSheet.create({
   centered: {
     flex: 1,
     justifyContent: 'center',
-  },
-  topBar: {
-    position: 'absolute',
-    left: spacing.md,
-    right: spacing.md,
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-  },
-  header: {
-    height: sizes.detailHeader,
-    justifyContent: 'flex-end',
-    overflow: 'hidden',
-    backgroundColor: colors.surface,
-  },
-  headerText: {
-    padding: spacing.md,
-    gap: spacing.xs,
   },
   chips: {
     flexDirection: 'row',

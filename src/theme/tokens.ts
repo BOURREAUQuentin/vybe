@@ -102,6 +102,7 @@ export const iconSizes = {
   sm: 14, // flèche des pastilles de filtre
   md: 24,
   lg: 40,
+  xl: 80, // icône de lieu d'une fiche salle sans photo
 } as const;
 
 export const sizes = {
