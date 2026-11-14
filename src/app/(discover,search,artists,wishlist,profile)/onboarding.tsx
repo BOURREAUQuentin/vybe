@@ -174,11 +174,9 @@ const styles = StyleSheet.create({
     paddingBottom: spacing.xl,
   },
   title: {
-    fontFamily: fonts.display,
-    fontSize: fontSizes.display,
-    lineHeight: fontSizes.display * lineHeights.display,
+    fontFamily: fonts.bold,
+    fontSize: fontSizes.screenTitle,
     color: colors.text,
-    textTransform: 'uppercase',
   },
   intro: {
     fontFamily: fonts.regular,
@@ -199,14 +197,15 @@ const styles = StyleSheet.create({
   chips: {
     flexDirection: 'row',
     flexWrap: 'wrap',
-    gap: spacing.xs,
+    rowGap: spacing.md,
+    columnGap: spacing.xs,
   },
   footer: {
     gap: spacing.xs,
     paddingHorizontal: spacing.md,
     paddingTop: spacing.sm,
-    borderTopWidth: 1,
-    borderTopColor: colors.border,
+    borderTopWidth: StyleSheet.hairlineWidth,
+    borderTopColor: colors.hairlineStrong,
     backgroundColor: colors.background,
   },
   error: {

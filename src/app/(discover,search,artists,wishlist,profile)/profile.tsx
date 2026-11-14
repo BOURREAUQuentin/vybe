@@ -19,7 +19,7 @@ import {
   useToggleGenrePreference,
 } from '@/features/preferences/usePreferences';
 import { useTabBarSpace } from '@/lib/useTabBarSpace';
-import { colors, fonts, fontSizes, spacing } from '@/theme/tokens';
+import { colors, fonts, fontSizes, lineHeights, radius, sizes, spacing } from '@/theme/tokens';
 
 // Onglet « Profil » (V1.3) : compte, préférences, mes données (export, suppression),
 // à propos et déconnexion.
@@ -75,17 +75,24 @@ export default function ProfileScreen() {
       <ScreenHeader title="Profil" />
       <View style={styles.container} pointerEvents={blockTouches ? 'none' : 'auto'}>
       <ScrollView contentContainerStyle={[styles.content, { paddingBottom: bottomSpace }]}>
-        <DetailSection title="Compte">
-          <Text style={styles.body} accessibilityLabel={`Connecté avec ${email}`}>
-            {email}
-          </Text>
-        </DetailSection>
+        {/* Carte compte : initiale dans un rond, e-mail. */}
+        <View style={styles.account} accessible accessibilityLabel={`Connecté avec ${email}`}>
+          <View style={styles.initial}>
+            <Text style={styles.initialText}>{email.charAt(0).toUpperCase()}</Text>
+          </View>
+          <View style={styles.accountText}>
+            <Text style={styles.accountLabel}>Connecté avec</Text>
+            <Text style={styles.body} numberOfLines={1}>
+              {email}
+            </Text>
+          </View>
+        </View>
 
         <PreferencesSection />
 
         <MyDataSection onShareStateChange={setBlockTouches} />
 
-        {aboutLink}
+        <DetailSection title="À propos">{aboutLink}</DetailSection>
 
         <View style={styles.signOut}>
           <SecondaryButton
@@ -191,7 +198,38 @@ const styles = StyleSheet.create({
     color: colors.text,
   },
   signOut: {
-    alignItems: 'flex-start',
+    alignItems: 'stretch',
+  },
+  account: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.sm,
+    padding: spacing.md,
+    borderRadius: radius.lg,
+    backgroundColor: colors.surface,
+  },
+  initial: {
+    width: sizes.avatarLarge,
+    height: sizes.avatarLarge,
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderRadius: radius.pill,
+    backgroundColor: colors.text,
+  },
+  initialText: {
+    fontFamily: fonts.display,
+    fontSize: fontSizes.xl,
+    lineHeight: fontSizes.xl * lineHeights.display,
+    color: colors.background,
+  },
+  accountText: {
+    flex: 1,
+    gap: spacing.xxs,
+  },
+  accountLabel: {
+    fontFamily: fonts.regular,
+    fontSize: fontSizes.sm,
+    color: colors.textSecondary,
   },
   subTitle: {
     fontFamily: fonts.semibold,

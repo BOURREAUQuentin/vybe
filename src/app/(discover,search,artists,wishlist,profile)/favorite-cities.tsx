@@ -31,6 +31,7 @@ export default function FavoriteCitiesScreen() {
     return (
       <View style={styles.container}>
         <SignInPrompt
+          icon={{ ios: 'building.2', android: 'location_city' }}
           title="Tes villes"
           message="Connecte-toi pour garder tes villes favorites et ta ville principale."
         />

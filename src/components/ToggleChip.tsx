@@ -1,6 +1,8 @@
 import { SymbolView } from 'expo-symbols';
 import { Pressable, StyleSheet, Text } from 'react-native';
 
+import { haptics } from '@/lib/haptics';
+
 import {
   colors,
   fonts,
@@ -18,11 +20,15 @@ type ToggleChipProps = {
   onPress: () => void;
 };
 
-// Pastille à cocher (ex. genre préféré) : contour clair et coche une fois choisie. Pas de lime.
+// Pastille à cocher (ex. genre préféré, rayon) : blanc plein et coche une fois choisie, comme
+// les filtres actifs. Petite vibration au choix. Pas de lime.
 export function ToggleChip({ label, selected, onPress }: ToggleChipProps) {
   return (
     <Pressable
-      onPress={onPress}
+      onPress={() => {
+        haptics.select();
+        onPress();
+      }}
       accessibilityRole="checkbox"
       accessibilityState={{ checked: selected }}
       accessibilityLabel={label}
@@ -32,7 +38,7 @@ export function ToggleChip({ label, selected, onPress }: ToggleChipProps) {
         <SymbolView
           name={{ ios: 'checkmark', android: 'check' }}
           size={iconSizes.sm}
-          tintColor={colors.text}
+          tintColor={colors.background}
         />
       ) : null}
     </Pressable>
@@ -52,7 +58,7 @@ const styles = StyleSheet.create({
     borderRadius: radius.pill,
   },
   selected: {
-    backgroundColor: colors.surfaceRaised,
+    backgroundColor: colors.text,
     borderColor: colors.text,
   },
   pressed: {
@@ -65,6 +71,6 @@ const styles = StyleSheet.create({
   },
   labelSelected: {
     fontFamily: fonts.semibold,
-    color: colors.text,
+    color: colors.background,
   },
 });
