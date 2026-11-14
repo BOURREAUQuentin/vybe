@@ -154,6 +154,7 @@ export type Database = {
           image_url: string | null
           is_hidden: boolean
           last_seen_at: string | null
+          missed_syncs: number
           name: string
           on_sale_at: string | null
           price_max: number | null
@@ -167,6 +168,7 @@ export type Database = {
           type: Database["public"]["Enums"]["event_type"]
           updated_at: string
           venue_id: string | null
+          withdrawn_at: string | null
         }
         Insert: {
           created_at?: string
@@ -179,6 +181,7 @@ export type Database = {
           image_url?: string | null
           is_hidden?: boolean
           last_seen_at?: string | null
+          missed_syncs?: number
           name: string
           on_sale_at?: string | null
           price_max?: number | null
@@ -192,6 +195,7 @@ export type Database = {
           type?: Database["public"]["Enums"]["event_type"]
           updated_at?: string
           venue_id?: string | null
+          withdrawn_at?: string | null
         }
         Update: {
           created_at?: string
@@ -204,6 +208,7 @@ export type Database = {
           image_url?: string | null
           is_hidden?: boolean
           last_seen_at?: string | null
+          missed_syncs?: number
           name?: string
           on_sale_at?: string | null
           price_max?: number | null
@@ -217,6 +222,7 @@ export type Database = {
           type?: Database["public"]["Enums"]["event_type"]
           updated_at?: string
           venue_id?: string | null
+          withdrawn_at?: string | null
         }
         Relationships: [
           {
@@ -303,6 +309,7 @@ export type Database = {
           created_at: string
           errors: Json
           events_created: number
+          events_purged: number
           events_removed: number
           events_updated: number
           finished_at: string | null
@@ -317,6 +324,7 @@ export type Database = {
           created_at?: string
           errors?: Json
           events_created?: number
+          events_purged?: number
           events_removed?: number
           events_updated?: number
           finished_at?: string | null
@@ -331,6 +339,7 @@ export type Database = {
           created_at?: string
           errors?: Json
           events_created?: number
+          events_purged?: number
           events_removed?: number
           events_updated?: number
           finished_at?: string | null
@@ -595,6 +604,7 @@ export type Database = {
           image_url: string | null
           is_hidden: boolean
           last_seen_at: string | null
+          missed_syncs: number
           name: string
           on_sale_at: string | null
           price_max: number | null
@@ -608,6 +618,7 @@ export type Database = {
           type: Database["public"]["Enums"]["event_type"]
           updated_at: string
           venue_id: string | null
+          withdrawn_at: string | null
         }[]
         SetofOptions: {
           from: "*"
@@ -616,10 +627,20 @@ export type Database = {
           isSetofReturn: true
         }
       }
+      finish_ticketmaster_sync: {
+        Args: {
+          p_complete: boolean
+          p_now?: string
+          p_seen_at: string
+          p_until: string
+        }
+        Returns: Json
+      }
       import_ticketmaster_events: {
         Args: { p_events: Json; p_seen_at?: string }
         Returns: Json
       }
+      is_in_my_wishlist: { Args: { p_event_id: string }; Returns: boolean }
       normalize_search: { Args: { value: string }; Returns: string }
       resolve_genre: {
         Args: {
@@ -684,6 +705,7 @@ export type Database = {
           image_url: string | null
           is_hidden: boolean
           last_seen_at: string | null
+          missed_syncs: number
           name: string
           on_sale_at: string | null
           price_max: number | null
@@ -697,6 +719,7 @@ export type Database = {
           type: Database["public"]["Enums"]["event_type"]
           updated_at: string
           venue_id: string | null
+          withdrawn_at: string | null
         }[]
         SetofOptions: {
           from: "*"

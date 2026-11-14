@@ -22,6 +22,10 @@ type SyncSummary = {
   importable: number;
   created: number;
   updated: number;
+  /** Fin d'import (étape 4) : concerts passés, retirés, purgés (et artistes / salles purgés). */
+  past: number;
+  withdrawn: number;
+  purged: number;
   errors: string[];
 };
 
@@ -68,6 +72,9 @@ Deno.serve(async (request) => {
     importable: 0,
     created: 0,
     updated: 0,
+    past: 0,
+    withdrawn: 0,
+    purged: 0,
     errors: [],
   };
 
@@ -83,11 +90,14 @@ Deno.serve(async (request) => {
     runId = data.id;
   }
 
+  const windows = buildWindows(startedAt, months);
+  const until = windows[windows.length - 1].end; // fin de la période importée
+
   // 1. Récupération, tranche par tranche (une tranche en échec n'arrête pas les autres,
   //    sauf un dépassement de quota : on s'arrête aussitôt).
   const tm = createTicketmasterClient({ apiKey });
   const byId = new Map<string, ImportEvent>();
-  for (const window of buildWindows(startedAt, months)) {
+  for (const window of windows) {
     try {
       for (const event of await tm.collectWindow(window)) {
         summary.received += 1;
@@ -121,6 +131,22 @@ Deno.serve(async (request) => {
     }
   }
 
+  // 3. Fin d'import : concerts passés, retraits (seulement si tout s'est bien passé), purge.
+  if (!dryRun) {
+    const { data, error } = await db.rpc('finish_ticketmaster_sync', {
+      p_seen_at: startedAt.toISOString(),
+      p_until: until.toISOString(),
+      p_complete: summary.errors.length === 0,
+    });
+    if (error) {
+      summary.errors.push(`Fin d'import : ${error.message}`);
+    } else {
+      summary.past = data?.past ?? 0;
+      summary.withdrawn = data?.withdrawn ?? 0;
+      summary.purged = (data?.purged_events ?? 0) + (data?.purged_artists ?? 0) + (data?.purged_venues ?? 0);
+    }
+  }
+
   if (summary.errors.length > 0) {
     summary.status = summary.created + summary.updated > 0 || (dryRun && summary.importable > 0) ? 'partial' : 'failed';
   }
@@ -134,6 +160,8 @@ Deno.serve(async (request) => {
         api_calls: summary.apiCalls,
         events_created: summary.created,
         events_updated: summary.updated,
+        events_removed: summary.withdrawn,
+        events_purged: summary.purged,
         errors: summary.errors,
       })
       .eq('id', runId);

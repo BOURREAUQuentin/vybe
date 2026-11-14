@@ -151,22 +151,129 @@ insert into t_results (test, ok) select
   (select result from t_out where step = 'import3') = '{"created": 0, "updated": 1}'::jsonb
   and exists (select 1 from public.events where external_id = 'TEST-EV-2' and is_hidden);
 
+-- ===================== Cycle de vie (étape 4) =====================
+-- Lot n° 3 : EV-3 (à venir, gardé en envie par l'utilisateur), EV-6 (à venir, gardé par personne),
+-- EV-4 (passé, seul concert de l'artiste AR-4 et de la salle VE-2), EV-5 (passé, gardé en envie).
+create temp table t_batch3 as select $json$[
+  { "external_id": "TEST-EV-3", "name": "Concert test 3", "status": "on_sale", "starts_at": "2030-05-01T19:00:00Z",
+    "venue": { "external_id": "TEST-VE-1", "name": "Salle test", "city": { "name": "Testville", "country_code": "FR" } },
+    "attractions": [ { "external_id": "TEST-AR-1", "name": "Artiste test 1" } ] },
+  { "external_id": "TEST-EV-6", "name": "Concert test 6", "status": "on_sale", "starts_at": "2030-06-01T19:00:00Z",
+    "attractions": [] },
+  { "external_id": "TEST-EV-4", "name": "Concert test 4", "status": "on_sale", "starts_at": "2020-01-10T19:00:00Z",
+    "venue": { "external_id": "TEST-VE-2", "name": "Salle test 2", "city": { "name": "Testville", "country_code": "FR" } },
+    "attractions": [ { "external_id": "TEST-AR-4", "name": "Artiste test 4" } ] },
+  { "external_id": "TEST-EV-5", "name": "Concert test 5", "status": "on_sale", "starts_at": "2020-02-10T19:00:00Z",
+    "attractions": [] }
+]$json$::jsonb as batch;
+grant select on t_batch3 to service_role;
+
+set local role service_role;
+insert into t_out select 'import4', public.import_ticketmaster_events((select batch from t_batch3), now());
+reset role;
+
+insert into public.user_events (user_id, event_id)
+  select 'cccccccc-0000-4000-8000-00000000000c', id from public.events where external_id in ('TEST-EV-3', 'TEST-EV-5');
+
+-- Fin d'un import INCOMPLET (un jour plus tard, rien revu) : passés oui, retraits non, purge oui.
+set local role service_role;
+insert into t_out select 'finish0', public.finish_ticketmaster_sync(now() + interval '1 day', '2031-01-01', false, now());
+reset role;
+
+insert into t_results (test, ok) select
+  '14. Import incomplet : aucun compteur d''absence n''avance (le catalogue n''est jamais vidé)',
+  (select coalesce(max(missed_syncs), 0) from public.events where external_id like 'TEST-EV-%') = 0
+  and (select (result ->> 'withdrawn')::int from t_out where step = 'finish0') = 0;
+
+insert into t_results (test, ok) select
+  '15. Concert passé gardé en envie : statut « Passé », non purgé ; passé gardé par personne : purgé',
+  exists (select 1 from public.events where external_id = 'TEST-EV-5' and status = 'past')
+  and not exists (select 1 from public.events where external_id = 'TEST-EV-4');
+
+-- Trois imports COMPLETS où EV-3 et EV-6 manquent.
+set local role service_role;
+insert into t_out select 'finish1', public.finish_ticketmaster_sync(now() + interval '2 days', '2031-01-01', true, now());
+insert into t_out select 'finish2', public.finish_ticketmaster_sync(now() + interval '3 days', '2031-01-01', true, now());
+reset role;
+
+insert into t_results (test, ok) select
+  '16. Absent de 2 imports complets : pas encore retiré',
+  exists (select 1 from public.events where external_id = 'TEST-EV-3' and missed_syncs = 2 and withdrawn_at is null);
+
+set local role service_role;
+insert into t_out select 'finish3', public.finish_ticketmaster_sync(now() + interval '4 days', '2031-01-01', true, now());
+-- Un concert au-delà de la période importée n'a pas pu être vu : jamais compté absent.
+insert into t_out select 'finish_court', public.finish_ticketmaster_sync(now() + interval '5 days', '2030-05-15', true, now());
+reset role;
+
+insert into t_results (test, ok) select
+  '17. Absent de 3 imports complets : retiré ; hors période importée : pas compté',
+  exists (select 1 from public.events where external_id = 'TEST-EV-3' and withdrawn_at is not null)
+  and exists (select 1 from public.events where external_id = 'TEST-EV-6' and withdrawn_at is not null and missed_syncs = 3);
+
+-- Visibilité : retiré invisible au public, visible pour qui l'a en envie.
+set local role anon;
+insert into t_results (test, ok) select
+  '18. Visiteur : concerts retirés invisibles',
+  not exists (select 1 from public.events where external_id in ('TEST-EV-3', 'TEST-EV-6'));
+reset role;
+
+set local role authenticated;
+select set_config('request.jwt.claims', '{"sub":"cccccccc-0000-4000-8000-00000000000c","role":"authenticated"}', true);
+insert into t_results (test, ok) select
+  '19. Utilisateur : son envie retirée reste visible, l''autre concert retiré non',
+  exists (select 1 from public.events where external_id = 'TEST-EV-3')
+  and not exists (select 1 from public.events where external_id = 'TEST-EV-6');
+reset role;
+
+-- EV-3 revient chez la source.
+set local role service_role;
+insert into t_out select 'import5', public.import_ticketmaster_events(jsonb_build_array((select batch from t_batch3) -> 0), now());
+reset role;
+
+insert into t_results (test, ok) select
+  '20. Concert revu chez la source : réaffiché, compteur remis à zéro',
+  exists (select 1 from public.events where external_id = 'TEST-EV-3' and withdrawn_at is null and missed_syncs = 0);
+
+-- Purge 60 jours plus tard (aucun nouvel import).
+set local role service_role;
+insert into t_out select 'finish_purge', public.finish_ticketmaster_sync(now() + interval '60 days', '2031-01-01', false, now() + interval '60 days');
+reset role;
+
+insert into t_results (test, ok) select
+  '21. Purge : retiré depuis plus de 30 jours supprimé ; retiré mais en envie gardé',
+  not exists (select 1 from public.events where external_id = 'TEST-EV-6')
+  and exists (select 1 from public.events where external_id = 'TEST-EV-1' and withdrawn_at is not null);
+
+insert into t_results (test, ok) select
+  '22. Purge : artiste et salle orphelins supprimés ; artiste suivi gardé',
+  not exists (select 1 from public.artists where external_id = 'TEST-AR-4')
+  and not exists (select 1 from public.venues where external_id = 'TEST-VE-2')
+  and exists (select 1 from public.artists where external_id = 'TEST-AR-1');
+
 -- ===================== Depuis l'app : interdit =====================
 set local role authenticated;
 select set_config('request.jwt.claims', '{"sub":"cccccccc-0000-4000-8000-00000000000c","role":"authenticated"}', true);
 
 do $$ begin
   perform public.import_ticketmaster_events('[]'::jsonb, now());
-  insert into t_results (test, ok) values ('14. Un utilisateur connecté ne peut pas lancer l''import', false);
+  insert into t_results (test, ok) values ('23. Un utilisateur connecté ne peut pas lancer l''import', false);
 exception when insufficient_privilege then
-  insert into t_results (test, ok) values ('14. Un utilisateur connecté ne peut pas lancer l''import', true);
+  insert into t_results (test, ok) values ('23. Un utilisateur connecté ne peut pas lancer l''import', true);
+end $$;
+
+do $$ begin
+  perform public.finish_ticketmaster_sync(now(), now(), true);
+  insert into t_results (test, ok) values ('26. Un utilisateur connecté ne peut pas lancer la fin d''import (purge)', false);
+exception when insufficient_privilege then
+  insert into t_results (test, ok) values ('26. Un utilisateur connecté ne peut pas lancer la fin d''import (purge)', true);
 end $$;
 
 do $$ begin
   perform 1 from public.sync_runs limit 1;
-  insert into t_results (test, ok) values ('15. Le journal de synchronisation est illisible depuis l''app', false);
+  insert into t_results (test, ok) values ('24. Le journal de synchronisation est illisible depuis l''app', false);
 exception when insufficient_privilege then
-  insert into t_results (test, ok) values ('15. Le journal de synchronisation est illisible depuis l''app', true);
+  insert into t_results (test, ok) values ('24. Le journal de synchronisation est illisible depuis l''app', true);
 end $$;
 
 reset role;
@@ -174,9 +281,9 @@ set local role anon;
 
 do $$ begin
   perform public.import_ticketmaster_events('[]'::jsonb, now());
-  insert into t_results (test, ok) values ('16. Un visiteur sans compte ne peut pas lancer l''import', false);
+  insert into t_results (test, ok) values ('25. Un visiteur sans compte ne peut pas lancer l''import', false);
 exception when insufficient_privilege then
-  insert into t_results (test, ok) values ('16. Un visiteur sans compte ne peut pas lancer l''import', true);
+  insert into t_results (test, ok) values ('25. Un visiteur sans compte ne peut pas lancer l''import', true);
 end $$;
 
 reset role;
