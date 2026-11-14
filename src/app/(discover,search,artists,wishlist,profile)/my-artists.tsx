@@ -1,6 +1,6 @@
 import { useRouter } from 'expo-router';
 import { SymbolView } from 'expo-symbols';
-import { useMemo } from 'react';
+import { useMemo, useRef } from 'react';
 import {
   ActivityIndicator,
   FlatList,
@@ -23,13 +23,15 @@ import { SignInPrompt } from '@/components/SignInPrompt';
 import { Ticket } from '@/components/Ticket';
 import { TicketSkeleton } from '@/components/TicketSkeleton';
 import { useAuth } from '@/features/auth/AuthContext';
-import { groupEventsByMonth } from '@/features/discover/sections';
+import { groupEventsByMonth, type MonthSection } from '@/features/discover/sections';
+import type { EventListItem } from '@/features/events/api';
 import { describeEvent } from '@/features/events/eventView';
 import type { FollowedArtist } from '@/features/follows/api';
 import { useFollowedArtists, useFollowedArtistsEvents } from '@/features/follows/useFollows';
 import { useWishlistIds } from '@/features/wishlist/useWishlist';
 import { haptics } from '@/lib/haptics';
 import { useTabBarSpace } from '@/lib/useTabBarSpace';
+import { useTabScrollToTop } from '@/lib/useTabScrollToTop';
 import {
   colors,
   fonts,
@@ -81,6 +83,9 @@ function FollowedArtistsContent() {
   const sections = useMemo(() => (events.data ? groupEventsByMonth(events.data) : []), [events.data]);
   const bottomSpace = useTabBarSpace();
   const { data: wishIds } = useWishlistIds();
+  // Re-toucher l'onglet Artistes remonte la liste tout en haut.
+  const listRef = useRef<SectionList<EventListItem, MonthSection>>(null);
+  useTabScrollToTop(() => listRef.current?.getScrollResponder()?.scrollTo({ y: 0, animated: true }));
 
   const openOnboarding = () => router.push('/onboarding');
 
@@ -147,6 +152,7 @@ function FollowedArtistsContent() {
 
   return (
     <SectionList
+      ref={listRef}
       sections={sections}
       keyExtractor={(event) => event.id}
       stickySectionHeadersEnabled={false}

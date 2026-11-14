@@ -26,6 +26,7 @@ import { useUpcomingEvents } from '@/features/events/useUpcomingEvents';
 import { useWishlistIds } from '@/features/wishlist/useWishlist';
 import { haptics } from '@/lib/haptics';
 import { useTabBarSpace } from '@/lib/useTabBarSpace';
+import { useTabScrollToTop } from '@/lib/useTabScrollToTop';
 import { colors, fonts, fontSizes, spacing } from '@/theme/tokens';
 
 const AnimatedSectionList = Animated.createAnimatedComponent(SectionList<EventListItem>);
@@ -48,6 +49,10 @@ export default function DiscoverScreen() {
   const onScroll = useAnimatedScrollHandler((event) => {
     scrollY.set(event.contentOffset.y);
   });
+
+  // Re-toucher l'onglet Découvrir quand on est déjà dessus remonte la page tout en haut.
+  const listRef = useRef<SectionList<EventListItem>>(null);
+  useTabScrollToTop(() => listRef.current?.getScrollResponder()?.scrollTo({ y: 0, animated: true }));
 
   const isWished = (id: string) => wishIds?.includes(id) ?? false;
   const openConcert = (id: string) => router.push({ pathname: '/concert/[id]', params: { id } });
@@ -134,6 +139,7 @@ export default function DiscoverScreen() {
   return (
     <View style={styles.container}>
       <AnimatedSectionList
+        ref={listRef}
         sections={sections.months}
         keyExtractor={(event) => event.id}
         stickySectionHeadersEnabled={false}

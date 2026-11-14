@@ -28,6 +28,7 @@ import { describeEvent } from '@/features/events/eventView';
 import { getLineupLabels } from '@/features/events/lineup';
 import { useToggleWishlist, useWishlist, useWishlistIds } from '@/features/wishlist/useWishlist';
 import { useTabBarSpace } from '@/lib/useTabBarSpace';
+import { useTabScrollToTop } from '@/lib/useTabScrollToTop';
 import { colors, fonts, fontSizes, spacing } from '@/theme/tokens';
 
 /** Délai pendant lequel « Annuler » reste proposé après un retrait. */
@@ -76,6 +77,9 @@ function WishlistContent() {
   const toggle = useToggleWishlist();
   const saved = useMemo(() => new Set(savedIds ?? []), [savedIds]);
   const bottomSpace = useTabBarSpace();
+  // Re-toucher l'onglet Envies remonte la liste tout en haut.
+  const listRef = useRef<SectionList<EventListItem, WishlistSection>>(null);
+  useTabScrollToTop(() => listRef.current?.getScrollResponder()?.scrollTo({ y: 0, animated: true }));
 
   // Concerts retirés depuis cet onglet, encore affichés avec « Annuler ».
   const [pending, setPending] = useState<Set<string>>(new Set());
@@ -164,6 +168,7 @@ function WishlistContent() {
 
   return (
     <SectionList<EventListItem, WishlistSection>
+      ref={listRef}
       sections={sections}
       keyExtractor={(event) => event.id}
       stickySectionHeadersEnabled={false}

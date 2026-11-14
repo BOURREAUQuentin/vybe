@@ -1,6 +1,6 @@
 import { useRouter } from 'expo-router';
-import { useMemo, useState, type ReactNode } from 'react';
-import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { useMemo, useRef, useState, type ReactNode } from 'react';
+import { Pressable, ScrollView, StyleSheet, Text, View, type ScrollViewInstance } from 'react-native';
 import Animated, { FadeIn } from 'react-native-reanimated';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
@@ -27,6 +27,7 @@ import { useWishlistIds } from '@/features/wishlist/useWishlist';
 import { haptics } from '@/lib/haptics';
 import { useDebouncedValue } from '@/lib/useDebouncedValue';
 import { useTabBarSpace } from '@/lib/useTabBarSpace';
+import { useTabScrollToTop } from '@/lib/useTabScrollToTop';
 import { colors, fonts, fontSizes, motion, opacity, sizes, spacing, touch } from '@/theme/tokens';
 
 const DEBOUNCE_MS = 300;
@@ -79,6 +80,9 @@ export default function SearchScreen() {
 function Suggestions() {
   const router = useRouter();
   const bottomSpace = useTabBarSpace();
+  // Re-toucher l'onglet Recherche remonte la page tout en haut.
+  const scrollRef = useRef<ScrollViewInstance>(null);
+  useTabScrollToTop(() => scrollRef.current?.scrollTo({ y: 0, animated: true }));
   const { data: upcoming } = useUpcomingEvents();
 
   const { artists, cities } = useMemo(() => {
@@ -101,6 +105,7 @@ function Suggestions() {
 
   return (
     <ScrollView
+      ref={scrollRef}
       contentContainerStyle={[styles.results, { paddingBottom: bottomSpace }]}
       keyboardDismissMode="on-drag"
       keyboardShouldPersistTaps="handled">
@@ -168,6 +173,8 @@ function SearchResultsList({ results, query, stale, refreshFailed }: SearchResul
   const { data: wishIds } = useWishlistIds();
   const { artists, cities, venues, events } = results;
   const bottomSpace = useTabBarSpace();
+  const scrollRef = useRef<ScrollViewInstance>(null);
+  useTabScrollToTop(() => scrollRef.current?.scrollTo({ y: 0, animated: true }));
 
   if (!stale && artists.length + cities.length + venues.length + events.length === 0) {
     return (
@@ -179,8 +186,10 @@ function SearchResultsList({ results, query, stale, refreshFailed }: SearchResul
   }
 
   return (
-    <Animated.ScrollView
-      entering={FadeIn.duration(motion.enterMs)}
+    // Apparition en fondu sur une vue parente : la liste garde une référence ScrollView simple.
+    <Animated.View entering={FadeIn.duration(motion.enterMs)} style={styles.fill}>
+    <ScrollView
+      ref={scrollRef}
       style={stale && styles.stale}
       contentContainerStyle={[styles.results, { paddingBottom: bottomSpace }]}
       keyboardDismissMode="on-drag"
@@ -244,7 +253,8 @@ function SearchResultsList({ results, query, stale, refreshFailed }: SearchResul
           ))}
         </ResultSection>
       ) : null}
-    </Animated.ScrollView>
+    </ScrollView>
+    </Animated.View>
   );
 }
 
@@ -262,6 +272,9 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: colors.background,
+  },
+  fill: {
+    flex: 1,
   },
   field: {
     paddingHorizontal: spacing.md,

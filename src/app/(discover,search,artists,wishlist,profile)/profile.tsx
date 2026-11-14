@@ -1,6 +1,13 @@
 import { useRouter } from 'expo-router';
-import { useState } from 'react';
-import { ActivityIndicator, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { useRef, useState } from 'react';
+import {
+  ActivityIndicator,
+  ScrollView,
+  StyleSheet,
+  Text,
+  View,
+  type ScrollViewInstance,
+} from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { DetailSection } from '@/components/DetailSection';
@@ -19,6 +26,7 @@ import {
   useToggleGenrePreference,
 } from '@/features/preferences/usePreferences';
 import { useTabBarSpace } from '@/lib/useTabBarSpace';
+import { useTabScrollToTop } from '@/lib/useTabScrollToTop';
 import { colors, fonts, fontSizes, lineHeights, radius, sizes, spacing } from '@/theme/tokens';
 
 // Onglet « Profil » (V1.3) : compte, préférences, mes données (export, suppression),
@@ -29,6 +37,9 @@ export default function ProfileScreen() {
   const [isSigningOut, setIsSigningOut] = useState(false);
   // Le bas de la page (« Se déconnecter ») ne doit pas rester caché sous la barre d'onglets (iOS).
   const bottomSpace = useTabBarSpace();
+  // Re-toucher l'onglet Profil remonte la page tout en haut.
+  const scrollRef = useRef<ScrollViewInstance>(null);
+  useTabScrollToTop(() => scrollRef.current?.scrollTo({ y: 0, animated: true }));
   // Pendant le menu de partage (et un court instant après), l'écran ignore les touchers :
   // le toucher qui ferme le menu ne doit pas « traverser » jusqu'à une ligne du Profil.
   const [blockTouches, setBlockTouches] = useState(false);
@@ -74,7 +85,7 @@ export default function ProfileScreen() {
     <SafeAreaView style={styles.container} edges={['top']}>
       <ScreenHeader title="Profil" />
       <View style={styles.container} pointerEvents={blockTouches ? 'none' : 'auto'}>
-      <ScrollView contentContainerStyle={[styles.content, { paddingBottom: bottomSpace }]}>
+      <ScrollView ref={scrollRef} contentContainerStyle={[styles.content, { paddingBottom: bottomSpace }]}>
         {/* Carte compte : initiale dans un rond, e-mail. */}
         <View style={styles.account} accessible accessibilityLabel={`Connecté avec ${email}`}>
           <View style={styles.initial}>
