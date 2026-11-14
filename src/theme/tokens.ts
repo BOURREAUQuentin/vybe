@@ -124,6 +124,7 @@ export const sizes = {
   cityTileHeight: 104,
   gridTileWidth: '48%', // tuile en grille de 2 colonnes (Recherche)
   wishBadge: 30, // rond « cœur » dans le coin d'une photo
+  passSkeleton: 220, // silhouette du pass pendant le chargement de la fiche concert
 } as const;
 
 export const opacity = {

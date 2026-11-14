@@ -13,7 +13,6 @@ export function WishChip() {
 
 const styles = StyleSheet.create({
   chip: {
-    alignSelf: 'flex-start',
     paddingHorizontal: spacing.xs,
     paddingVertical: spacing.xxs / 2,
     borderRadius: radius.pill,
