@@ -7,6 +7,7 @@ import {
   buildWindows,
   mapStatus,
   normalizeCityName,
+  normalizeVenueName,
   pickImage,
   splitWindow,
   toApiDate,
@@ -127,6 +128,14 @@ test('statuts', () => {
   assert.equal(mapStatus(withCode('inconnu'), NOW), 'announced');
 });
 
+test('hors musique (film, théâtre…) ignoré', () => {
+  const film = toImportEvent(
+    { ...sample, classifications: [{ primary: true, segment: { name: 'Film' }, genre: { name: 'Music' } }] },
+    NOW,
+  );
+  assert.equal(film, null);
+});
+
 test('festival détecté par sa classification', () => {
   const festival = toImportEvent(
     { ...sample, classifications: [{ primary: true, genre: { name: 'Pop' }, type: { name: 'Festival' } }] },
@@ -145,6 +154,23 @@ test('utilitaires : villes, images, fuseau, tranches', () => {
   assert.equal(normalizeCityName("VILLENEUVE-D'ASCQ"), "Villeneuve-d'Ascq");
   assert.equal(normalizeCityName('BOULOGNE-SUR-MER'), 'Boulogne-sur-Mer');
   assert.equal(normalizeCityName('SAINT-NAZAIRE'), 'Saint-Nazaire');
+  // Écritures réelles relevées par la sonde (novembre 2026).
+  assert.equal(normalizeCityName('St Herblain'), 'Saint-Herblain');
+  assert.equal(normalizeCityName('Aix En Provence'), 'Aix-en-Provence');
+  assert.equal(normalizeCityName('Clermont Ferrand'), 'Clermont-Ferrand');
+  assert.equal(normalizeCityName('Decines Charpieu'), 'Decines-Charpieu');
+  assert.equal(normalizeCityName('Ramonville St Agne'), 'Ramonville-Saint-Agne');
+  assert.equal(normalizeCityName('Le Havre'), 'Le Havre');
+  assert.equal(normalizeCityName('Castres Cedex'), 'Castres');
+  assert.equal(normalizeCityName('SAVIGNY LE TEMPLE CEDEX 01'), 'Savigny-le-Temple');
+  assert.equal(normalizeCityName('LA ROCHELLE'), 'La Rochelle');
+  assert.equal(normalizeCityName("Les Sables D'Olonne"), "Les Sables-d'Olonne");
+  assert.equal(normalizeCityName('Villeneuve d’Ascq'), "Villeneuve-d'Ascq");
+  assert.equal(normalizeVenueName('LE REX DE TOULOUSE'), 'Le Rex de Toulouse');
+  assert.equal(normalizeVenueName('ARKEA ARENA'), 'Arkea Arena');
+  assert.equal(normalizeVenueName('LDLC ARENA'), 'LDLC Arena');
+  assert.equal(normalizeVenueName("L'AUTRE CANAL"), "L'Autre Canal");
+  assert.equal(normalizeVenueName('La Maroquinerie'), 'La Maroquinerie');
   assert.equal(normalizeCityName('Lyon'), 'Lyon');
   assert.equal(pickImage([{ url: 'a', fallback: true }]), null);
   assert.equal(zonedToUtc('2027-01-15', '20:00:00', 'Europe/Paris'), '2027-01-15T19:00:00.000Z'); // hiver : UTC+1

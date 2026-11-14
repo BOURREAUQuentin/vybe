@@ -110,28 +110,62 @@ function clean(value: string | undefined | null): string | null {
   return text;
 }
 
-/** Petits mots qui restent en minuscules au milieu d'un nom de ville (« Villeneuve-d'Ascq »). */
-const CITY_PARTICLES = new Set(['d', 'de', 'du', 'des', 'la', 'le', 'les', 'l', 'sur', 'sous', 'en', 'lès', 'et']);
+/** Petits mots qui restent en minuscules au milieu d'un nom (« Aix-en-Provence », « Le Rex de Toulouse »). */
+const PARTICLES = new Set([
+  'd', 'de', 'du', 'des', 'la', 'le', 'les', 'l', 'sur', 'sous', 'en', 'lès', 'et', 'à', 'au', 'aux',
+]);
+/** Articles qui ouvrent un nom de ville et restent séparés par un espace (« Le Havre »). */
+const LEADING_ARTICLES = new Set(['le', 'la', 'les']);
+
+const capitalize = (word: string) => word.charAt(0).toUpperCase() + word.slice(1);
+
+/** Mot d'un nom : particule en minuscules (sauf en tête), « d'ascq » → « d'Ascq », sinon majuscule initiale. */
+function formatWord(word: string, isFirst: boolean): string {
+  const elided = /^([dl])['’](.+)$/i.exec(word);
+  if (elided) {
+    const article = isFirst ? elided[1].toUpperCase() : elided[1].toLowerCase();
+    return `${article}'${capitalize(elided[2])}`;
+  }
+  if (!isFirst && PARTICLES.has(word.toLowerCase())) return word.toLowerCase();
+  return capitalize(word);
+}
 
 /**
- * « PARIS » → « Paris », « SAINT-NAZAIRE » → « Saint-Nazaire », « VILLENEUVE-D'ASCQ » →
- * « Villeneuve-d'Ascq ». Un nom déjà en casse mixte est gardé tel quel.
+ * Nom de ville à la française, pour éviter les doublons (« St Nazaire » ≠ « Saint-Nazaire ») :
+ * « St Herblain » → « Saint-Herblain », « Aix En Provence » → « Aix-en-Provence »,
+ * « CLERMONT FERRAND » → « Clermont-Ferrand », « Les Sables D'Olonne » → « Les Sables-d'Olonne »,
+ * « Le Havre » reste « Le Havre ». Les accents absents de la source ne peuvent pas être restitués.
  */
 export function normalizeCityName(name: string): string {
-  const trimmed = name.trim();
-  if (trimmed !== trimmed.toUpperCase()) return trimmed;
-  // Découpe en mots en gardant les séparateurs (espace, tiret, apostrophe).
-  return trimmed
-    .toLowerCase()
-    .split(/([\s'’-])/)
-    .map((part, index, parts) => {
-      if (!part || /^[\s'’-]$/.test(part)) return part;
-      const nextIsApostrophe = /^['’]$/.test(parts[index + 1] ?? '');
-      const isParticle = index > 0 && (CITY_PARTICLES.has(part) || (nextIsApostrophe && part.length === 1));
-      return isParticle ? part : part.charAt(0).toUpperCase() + part.slice(1);
-    })
-    .join('');
+  // « Cedex » (et son numéro) est une mention postale, pas une partie du nom : « Castres Cedex » → « Castres ».
+  const trimmed = name.trim().replace(/[\s-]*\bcedex\b[\s\d]*$/i, '').replace(/\s+/g, ' ');
+  const base = trimmed === trimmed.toUpperCase() ? trimmed.toLowerCase() : trimmed;
+  const words = base
+    .split(/[\s-]+/)
+    .filter(Boolean)
+    .map((word) => (/^st\.?$/i.test(word) ? 'Saint' : /^ste\.?$/i.test(word) ? 'Sainte' : word));
+
+  const startsWithArticle = words.length > 1 && LEADING_ARTICLES.has(words[0].toLowerCase());
+  const formatted = words.map((word, index) => formatWord(word, index === 0 || (startsWithArticle && index === 1)));
+  return startsWithArticle ? `${formatted[0]} ${formatted.slice(1).join('-')}` : formatted.join('-');
 }
+
+/**
+ * Nom de salle écrit tout en majuscules → casse normale (« LE REX DE TOULOUSE » → « Le Rex de
+ * Toulouse »). Les sigles sans voyelle restent en majuscules (« LDLC ARENA » → « LDLC Arena »).
+ * Un nom déjà en casse mixte est gardé. Les noms d'artistes ne passent jamais par ici (PLK, SCH…).
+ */
+export function normalizeVenueName(name: string): string {
+  const trimmed = name.trim().replace(/\s+/g, ' ');
+  if (trimmed !== trimmed.toUpperCase() || !/\p{L}/u.test(trimmed)) return trimmed;
+  return trimmed
+    .split(' ')
+    .map((word, index) => (/^[^AEIOUYÀÂÉÈÊËÎÏÔÛÙÜ]+$/u.test(word) && /\p{L}{2,}/u.test(word) ? word : formatWord(word.toLowerCase(), index === 0)))
+    .join(' ');
+}
+
+/** Segments Ticketmaster retenus : uniquement la musique (pas le cinéma, le théâtre, l'humour…). */
+const MUSIC_SEGMENT = 'Music';
 
 function toNumber(value: string | undefined): number | null {
   if (value === undefined) return null;
@@ -240,6 +274,9 @@ export function toImportEvent(event: TmEvent, now: Date): ImportEvent | null {
   }
 
   const classification = mainClassification(event.classifications);
+  // Hors musique (film, théâtre, humour…) : ignoré, même s'il remonte avec le filtre « musique ».
+  const segment = clean(classification?.segment?.name);
+  if (segment && segment !== MUSIC_SEGMENT) return null;
   const price = event.priceRanges?.find((range) => range.type === 'standard') ?? event.priceRanges?.[0];
   const priceMin = typeof price?.min === 'number' ? price.min : null;
   const priceMax = typeof price?.max === 'number' ? price.max : null;
@@ -250,7 +287,7 @@ export function toImportEvent(event: TmEvent, now: Date): ImportEvent | null {
     rawVenue?.id && cityName
       ? {
           external_id: rawVenue.id,
-          name: clean(rawVenue.name) ?? 'Salle à confirmer',
+          name: normalizeVenueName(clean(rawVenue.name) ?? 'Salle à confirmer'),
           address: clean(rawVenue.address?.line1),
           postal_code: clean(rawVenue.postalCode),
           latitude: toNumber(rawVenue.location?.latitude),
