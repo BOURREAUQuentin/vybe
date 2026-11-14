@@ -48,6 +48,7 @@ src/features/         Logique par domaine (events, artists, venues, search, disc
 src/lib/              Client Supabase, utilitaires (dates, formatage)
 src/theme/            tokens.ts et helpers de style
 src/types/            Types partagés, dont les types générés depuis Supabase
+supabase/functions/   Fonctions serveur (Deno), V1.1 : sync-ticketmaster (import Ticketmaster)
 supabase/migrations/  Migrations SQL
 supabase/seed.sql     Données factices du MVP
 supabase/seed-assets/ Fichiers des données de démo (V1.3.2 : photos des villes, à envoyer dans Storage)
@@ -119,6 +120,8 @@ Respecter `docs/design.md`. En résumé : thème sombre, accent lime **utilisé 
 - `npx supabase gen types --lang typescript --remote --schema public > src/types/database.ts` : régénère les types après chaque migration.
 - `npx supabase db query --remote --file supabase/tests/user-data-rls.sql --yes` : teste la sécurité des tables utilisateur (RLS, suppression du compte) avec deux utilisateurs fictifs, dans une transaction **toujours annulée** (rien n’est enregistré). Le bilan s’affiche dans le message d’erreur final (✓ / ✗). À relancer après chaque migration touchant ces tables.
 - `npx supabase db query --remote --file supabase/tests/ticketmaster-import.sql --yes` : teste l’import Ticketmaster (création, mise à jour sans doublon, statut, line-up, envies préservées, accès interdit depuis l’app) dans une transaction **toujours annulée**. Astuce : pour tester une migration **avant** de l’appliquer, concaténer `begin;`, la migration et le test (sans son `begin;`) dans un fichier temporaire et le lancer de la même façon.
+- `npx supabase functions deploy sync-ticketmaster --remote --use-api` : déploie la fonction d’import (Deno, compilée chez Supabase). Le code de la fonction est exclu du `tsc` de l’app : `transform.ts` et `ticketmaster.ts` sont purs (sans Deno) et testés avec `node --test supabase/functions/sync-ticketmaster/transform.test.mts`.
+- `npx supabase secrets set NOM=valeur --remote` : secrets de la fonction (`TICKETMASTER_API_KEY`, `SYNC_SECRET`) ; **à lancer dans l’app Terminal de macOS**, jamais dans Claude Code (la valeur apparaîtrait dans la conversation).
 - `npx supabase storage cp -r supabase/seed-assets/city-images ss:///city-images --remote` : envoie les photos des villes dans le bucket Storage (après la migration `city_images`, avant le seed).
 - `npm run icons` : régénère icônes et écran de démarrage depuis `assets/brand/*.svg` (ne pas retoucher les PNG à la main).
 - `supabase login` et `supabase link` demandent un vrai terminal : les lancer dans l’app Terminal de macOS, pas avec `!` dans Claude Code.

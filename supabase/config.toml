@@ -397,6 +397,11 @@ deno_version = 2
 # [edge_runtime.secrets]
 # secret_key = "env(SECRET_VALUE)"
 
+# V1.1 : import Ticketmaster. Pas de jeton utilisateur : la fonction vérifie elle-même le secret
+# partagé SYNC_SECRET (en-tête x-sync-secret), envoyé par la tâche planifiée.
+[functions.sync-ticketmaster]
+verify_jwt = false
+
 [analytics]
 enabled = true
 port = 54327
