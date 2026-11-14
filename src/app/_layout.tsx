@@ -17,6 +17,7 @@ import { CrashScreen } from '@/components/CrashScreen';
 import { AuthProvider } from '@/features/auth/AuthContext';
 import { NearbyProvider } from '@/features/nearby/NearbyContext';
 import { queryClient } from '@/lib/queryClient';
+import { DevMockupsLauncher } from '@/mockups/DevMockupsLauncher';
 import { colors } from '@/theme/tokens';
 
 // Onglet ouvert au démarrage. Sans ce réglage, Expo Router départage les groupes
@@ -71,6 +72,8 @@ export default function RootLayout() {
         <NearbyProvider>
           <ThemeProvider value={navigationTheme}>
             <StatusBar style="light" />
+            {/* TEMPORAIRE (refonte) : ouvre les maquettes si EXPO_PUBLIC_DEV_MOCKUPS=1, en dev seulement. */}
+            <DevMockupsLauncher />
             {/* Barre d'onglets native. Pas de lime ici : l'accent est réservé à l'action principale de chaque écran. */}
             <NativeTabs
               backgroundColor={colors.background}
