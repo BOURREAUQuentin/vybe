@@ -14,20 +14,21 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { EmptyState } from '@/components/EmptyState';
 import { ErrorState } from '@/components/ErrorState';
-import { EventCard } from '@/components/EventCard';
-import { EventCardSkeleton } from '@/components/EventCardSkeleton';
-import { IconButton } from '@/components/IconButton';
+import { HeartButton } from '@/components/HeartButton';
 import { MonthHeader } from '@/components/MonthHeader';
 import { ScreenHeader } from '@/components/ScreenHeader';
 import { SignInPrompt } from '@/components/SignInPrompt';
+import { Ticket } from '@/components/Ticket';
+import { TicketSkeleton } from '@/components/TicketSkeleton';
 import { UndoRow } from '@/components/UndoRow';
 import { useAuth } from '@/features/auth/AuthContext';
 import { groupEventsByMonth, type MonthSection } from '@/features/discover/sections';
 import type { EventListItem } from '@/features/events/api';
+import { describeEvent } from '@/features/events/eventView';
 import { getLineupLabels } from '@/features/events/lineup';
 import { useToggleWishlist, useWishlist, useWishlistIds } from '@/features/wishlist/useWishlist';
 import { useTabBarSpace } from '@/lib/useTabBarSpace';
-import { colors, fonts, fontSizes, opacity, spacing } from '@/theme/tokens';
+import { colors, fonts, fontSizes, spacing } from '@/theme/tokens';
 
 /** Délai pendant lequel « Annuler » reste proposé après un retrait. */
 const UNDO_DELAY_MS = 4000;
@@ -48,6 +49,7 @@ export default function WishlistScreen() {
   } else if (!userId) {
     body = (
       <SignInPrompt
+        icon={{ ios: 'heart', android: 'favorite' }}
         title="Garde tes concerts en tête"
         message="Connecte-toi pour enregistrer les concerts qui te font envie et les retrouver ici."
       />
@@ -143,9 +145,9 @@ function WishlistContent() {
       <ErrorState title="Impossible de charger tes envies" onRetry={() => refetch()} />
     ) : (
       <View style={styles.skeletons} accessibilityLabel="Chargement de tes envies">
-        <EventCardSkeleton />
-        <EventCardSkeleton />
-        <EventCardSkeleton />
+        <TicketSkeleton />
+        <TicketSkeleton />
+        <TicketSkeleton />
       </View>
     );
   }
@@ -177,19 +179,17 @@ function WishlistContent() {
           </View>
         ) : (
           <View style={styles.item}>
-            <View style={[styles.card, section.past && styles.dimmed]}>
-              <EventCard
-                event={item}
-                onPress={() =>
-                  router.push({ pathname: '/concert/[id]', params: { id: item.id } })
-                }
-              />
-            </View>
-            {/* Même cœur que sur la fiche concert : on retire comme on a ajouté. */}
-            <IconButton
-              icon={{ ios: 'heart.fill', android: 'heart_check' }}
-              accessibilityLabel={`Retirer ${getLineupLabels(item.name, item.lineup).title} de mes envies`}
-              onPress={() => remove(item.id)}
+            {/* Billet ; un concert déjà passé prend le talon et la pastille « Passé ». Le cœur est
+                dans le billet : on retire comme on a ajouté. */}
+            <Ticket
+              view={section.past ? { ...describeEvent(item), status: 'past' } : describeEvent(item)}
+              onPress={() => router.push({ pathname: '/concert/[id]', params: { id: item.id } })}
+              action={
+                <HeartButton
+                  accessibilityLabel={`Retirer ${getLineupLabels(item.name, item.lineup).title} de mes envies`}
+                  onPress={() => remove(item.id)}
+                />
+              }
             />
           </View>
         )
@@ -230,35 +230,25 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   skeletons: {
-    gap: spacing.xs,
+    gap: spacing.sm,
     paddingHorizontal: spacing.md,
   },
   listContent: {
     paddingBottom: spacing.xxl,
   },
   count: {
-    fontFamily: fonts.regular,
-    fontSize: fontSizes.sm,
-    color: colors.textSecondary,
+    fontFamily: fonts.bold,
+    fontSize: fontSizes.md,
+    color: colors.text,
     paddingHorizontal: spacing.md,
   },
   item: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: spacing.xxs,
-    paddingLeft: spacing.md,
-    paddingRight: spacing.xs,
-  },
-  card: {
-    flex: 1,
-  },
-  dimmed: {
-    opacity: opacity.disabled,
+    paddingHorizontal: spacing.md,
   },
   undoRow: {
     paddingHorizontal: spacing.md,
   },
   separator: {
-    height: spacing.xs,
+    height: spacing.sm,
   },
 });

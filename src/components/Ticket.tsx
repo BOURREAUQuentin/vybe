@@ -1,3 +1,4 @@
+import type { ReactNode } from 'react';
 import { StyleSheet, Text, View } from 'react-native';
 
 import { PressableScale } from '@/components/PressableScale';
@@ -26,12 +27,14 @@ type TicketProps = {
   isWished?: boolean;
   /** Ligne mise en avant à la place des invités (ex. « Bekar · Première partie » en recherche). */
   note?: string | null;
+  /** Bouton à droite du billet (ex. cœur pour retirer une envie) ; il garde son propre toucher. */
+  action?: ReactNode;
 };
 
 // Billet de concert (toutes les listes) : talon date | perforation | artiste, invités, lieu,
 // heure et pastilles. Statut hors normale : talon coloré (complet, reporté, passé) ou billet
 // assombri (annulé), voir statusLooks dans les tokens.
-export function Ticket({ view, onPress, isWished = false, note }: TicketProps) {
+export function Ticket({ view, onPress, isWished = false, note, action }: TicketProps) {
   const look = statusLooks[view.status];
   const stub = look?.stub;
 
@@ -68,7 +71,7 @@ export function Ticket({ view, onPress, isWished = false, note }: TicketProps) {
 
       <VerticalPerforation outline={stub?.outline} />
 
-      <View style={styles.body}>
+      <View style={[styles.body, action ? styles.bodyWithAction : null]}>
         <Text style={styles.title} numberOfLines={1}>
           {view.title}
         </Text>
@@ -92,6 +95,7 @@ export function Ticket({ view, onPress, isWished = false, note }: TicketProps) {
           <StatusChip status={view.status} />
         </View>
       </View>
+      {action ? <View style={styles.action}>{action}</View> : null}
     </PressableScale>
   );
 }
@@ -135,6 +139,13 @@ const styles = StyleSheet.create({
     gap: spacing.xxs,
     paddingVertical: spacing.sm,
     paddingRight: spacing.md,
+  },
+  bodyWithAction: {
+    paddingRight: spacing.xs,
+  },
+  action: {
+    justifyContent: 'center',
+    paddingRight: spacing.sm,
   },
   title: {
     fontFamily: fonts.bold,

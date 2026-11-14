@@ -61,6 +61,7 @@ export default function ProfileScreen() {
         <ScreenHeader title="Profil" />
         {/* Le lien « À propos » est sous le bouton : en bas d'écran, la barre d'onglets le masquait. */}
         <SignInPrompt
+          icon={{ ios: 'person.crop.circle', android: 'account_circle' }}
           title="Ton compte Vybe"
           message="Un compte pour suivre tes artistes, enregistrer tes envies et garder tes villes et salles favorites. Sans mot de passe.">
           {aboutLink}

@@ -16,16 +16,19 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { ArtistAvatar } from '@/components/ArtistAvatar';
 import { EmptyState } from '@/components/EmptyState';
 import { ErrorState } from '@/components/ErrorState';
-import { EventCard } from '@/components/EventCard';
-import { EventCardSkeleton } from '@/components/EventCardSkeleton';
 import { MonthHeader } from '@/components/MonthHeader';
 import { ScreenHeader } from '@/components/ScreenHeader';
 import { SectionTitle } from '@/components/SectionTitle';
 import { SignInPrompt } from '@/components/SignInPrompt';
+import { Ticket } from '@/components/Ticket';
+import { TicketSkeleton } from '@/components/TicketSkeleton';
 import { useAuth } from '@/features/auth/AuthContext';
 import { groupEventsByMonth } from '@/features/discover/sections';
+import { describeEvent } from '@/features/events/eventView';
 import type { FollowedArtist } from '@/features/follows/api';
 import { useFollowedArtists, useFollowedArtistsEvents } from '@/features/follows/useFollows';
+import { useWishlistIds } from '@/features/wishlist/useWishlist';
+import { haptics } from '@/lib/haptics';
 import { useTabBarSpace } from '@/lib/useTabBarSpace';
 import {
   colors,
@@ -36,6 +39,7 @@ import {
   radius,
   sizes,
   spacing,
+  touch,
 } from '@/theme/tokens';
 
 // Onglet « Artistes » (V1.3) : artistes suivis et leurs prochains concerts.
@@ -52,6 +56,7 @@ export default function MyArtistsScreen() {
   } else if (!userId) {
     body = (
       <SignInPrompt
+        icon={{ ios: 'person.2', android: 'group' }}
         title="Suis tes artistes"
         message="Connecte-toi pour suivre tes artistes et retrouver tous leurs concerts au même endroit."
       />
@@ -75,6 +80,7 @@ function FollowedArtistsContent() {
   const events = useFollowedArtistsEvents(artistIds);
   const sections = useMemo(() => (events.data ? groupEventsByMonth(events.data) : []), [events.data]);
   const bottomSpace = useTabBarSpace();
+  const { data: wishIds } = useWishlistIds();
 
   const openOnboarding = () => router.push('/onboarding');
 
@@ -84,8 +90,8 @@ function FollowedArtistsContent() {
       <ErrorState title="Impossible de charger tes artistes" onRetry={() => followed.refetch()} />
     ) : (
       <View style={styles.skeletons} accessibilityLabel="Chargement de tes artistes">
-        <EventCardSkeleton />
-        <EventCardSkeleton />
+        <TicketSkeleton />
+        <TicketSkeleton />
       </View>
     );
   }
@@ -129,8 +135,8 @@ function FollowedArtistsContent() {
       <ErrorState title="Impossible de charger leurs concerts" onRetry={() => events.refetch()} />
     ) : (
       <View style={styles.skeletons}>
-        <EventCardSkeleton />
-        <EventCardSkeleton />
+        <TicketSkeleton />
+        <TicketSkeleton />
       </View>
     );
   } else {
@@ -147,8 +153,9 @@ function FollowedArtistsContent() {
       renderSectionHeader={({ section }) => <MonthHeader title={section.title} />}
       renderItem={({ item }) => (
         <View style={styles.cardRow}>
-          <EventCard
-            event={item}
+          <Ticket
+            view={describeEvent(item)}
+            isWished={wishIds?.includes(item.id) ?? false}
             onPress={() => router.push({ pathname: '/concert/[id]', params: { id: item.id } })}
           />
         </View>
@@ -176,12 +183,15 @@ function FollowedArtistItem({ row }: { row: FollowedArtist }) {
   const router = useRouter();
   return (
     <Pressable
-      onPress={() => router.push({ pathname: '/artist/[id]', params: { id: row.artist.id } })}
+      onPress={() => {
+        haptics.tap();
+        router.push({ pathname: '/artist/[id]', params: { id: row.artist.id } });
+      }}
       accessibilityRole="button"
       accessibilityLabel={row.artist.name}
       accessibilityHint="Ouvre la fiche de l’artiste"
       style={({ pressed }) => [styles.artistItem, pressed && styles.pressed]}>
-      <ArtistAvatar name={row.artist.name} imageUrl={row.artist.image_url} size="lg" />
+      <ArtistAvatar name={row.artist.name} imageUrl={row.artist.image_url} size="xl" />
       <Text style={styles.artistName} numberOfLines={1}>
         {row.artist.name}
       </Text>
@@ -224,7 +234,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   skeletons: {
-    gap: spacing.xs,
+    gap: spacing.sm,
     paddingHorizontal: spacing.md,
   },
   header: {
@@ -236,7 +246,8 @@ const styles = StyleSheet.create({
     paddingHorizontal: spacing.md,
   },
   artistItem: {
-    width: sizes.avatarLarge,
+    width: sizes.avatarXL + spacing.sm,
+    minHeight: touch.minSize,
     alignItems: 'center',
     gap: spacing.xxs,
   },
@@ -244,20 +255,21 @@ const styles = StyleSheet.create({
     opacity: opacity.pressed,
   },
   artistName: {
-    fontFamily: fonts.medium,
-    fontSize: fontSizes.xs,
+    fontFamily: fonts.semibold,
+    fontSize: fontSizes.sm,
     color: colors.text,
     textAlign: 'center',
   },
   addCircle: {
-    width: sizes.avatarLarge,
-    height: sizes.avatarLarge,
+    width: sizes.avatarXL,
+    height: sizes.avatarXL,
     borderRadius: radius.pill,
     alignItems: 'center',
     justifyContent: 'center',
     borderWidth: 1,
-    borderColor: colors.border,
+    borderColor: colors.hairlineStrong,
     borderStyle: 'dashed',
+    backgroundColor: colors.surface,
   },
   listContent: {
     paddingBottom: spacing.xxl,
@@ -266,7 +278,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: spacing.md,
   },
   separator: {
-    height: spacing.xs,
+    height: spacing.sm,
   },
   emptyConcerts: {
     paddingHorizontal: spacing.md,
