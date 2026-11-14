@@ -49,6 +49,52 @@ on conflict (name, country_code) do update
   set latitude = excluded.latitude, longitude = excluded.longitude;
 
 -- ---------------------------------------------------------------------------
+-- V1.3.2 : photos des villes (Wikimedia Commons, licences libres), copiées dans le bucket
+-- Storage « city-images » (fichiers dans supabase/seed-assets/city-images/, voir README).
+-- ---------------------------------------------------------------------------
+
+update public.cities c
+set image_path = v.image_path,
+    image_credit = v.image_credit,
+    image_source_url = v.image_source_url
+from (values
+  ('Paris', 'paris.jpg',
+    'Yann Caradec from Paris, France · CC BY-SA 2.0',
+    'https://commons.wikimedia.org/wiki/File:La_Tour_Eiffel_vue_de_la_Tour_Saint-Jacques,_Paris_ao%C3%BBt_2014_(2).jpg'),
+  ('Nantes', 'nantes.jpg',
+    'Olga.Mach · CC BY-SA 4.0',
+    'https://commons.wikimedia.org/wiki/File:Ch%C3%A2teau_des_Ducs_de_Bretagne_%C3%A0_Nantes_-_Anne.jpg'),
+  ('Lyon', 'lyon.jpg',
+    'Herbert Frank from Wien (Vienna), AT · CC BY 2.0',
+    'https://commons.wikimedia.org/wiki/File:Lyon,_an_der_Sa%C3%B4ne,_Cath%C3%A9drale_Saint-Jean-Baptiste_(12.),_hinten_Notre-Dame_de_Fourvi%C3%A8re_(19.)_(41976210304).jpg'),
+  ('Marseille', 'marseille.jpg',
+    'Benh LIEU SONG · CC BY-SA 3.0',
+    'https://commons.wikimedia.org/wiki/File:Notre_Dame_de_la_Garde.jpg'),
+  ('Bordeaux', 'bordeaux.jpg',
+    'Mariette · Public domain',
+    'https://commons.wikimedia.org/wiki/File:Bordeaux_Place_de_la_Bourse_de_nuit.jpg'),
+  ('Lille', 'lille.jpg',
+    'Zairon · CC BY-SA 4.0',
+    'https://commons.wikimedia.org/wiki/File:Lille_Grand-Place_01.jpg'),
+  ('Toulouse', 'toulouse.jpg',
+    'Antoine Montulé · CC BY-SA 4.0',
+    'https://commons.wikimedia.org/wiki/File:Pont_Neuf_de_Toulouse_-_cr%C3%A9puscule_hiver.jpg'),
+  ('Saint-Nazaire', 'saint-nazaire.jpg',
+    'KaTeznik · CC BY-SA 2.0 fr',
+    'https://commons.wikimedia.org/wiki/File:Base_ssmarin_stnazaire.jpg'),
+  ('Angers', 'angers.jpg',
+    'DXR · CC BY-SA 4.0',
+    'https://commons.wikimedia.org/wiki/File:Ch%C3%A2teau_d%27Angers,_South_view_20170611_1.jpg'),
+  ('Rennes', 'rennes.jpg',
+    'Erwan Corre · CC BY-SA 4.0',
+    'https://commons.wikimedia.org/wiki/File:Rennes-Place-du-Champ-Jacquet-Statue-Leperdit-Mars-2020.jpg'),
+  ('Nanterre', 'nanterre.jpg',
+    'Guilhem Vellut from Paris, France · CC BY 2.0',
+    'https://commons.wikimedia.org/wiki/File:U_Arena_@_Nanterre_@_Rooftop_observatory_@_Grande_Arche_@_La_D%C3%A9fense_@_Paris_(34797770160).jpg')
+) as v(name, image_path, image_credit, image_source_url)
+where c.name = v.name and c.country_code = 'FR';
+
+-- ---------------------------------------------------------------------------
 -- Salles (réelles ; les salles de banlieue sont rattachées à la grande ville voisine,
 -- leur commune réelle figure dans l'adresse)
 -- ---------------------------------------------------------------------------

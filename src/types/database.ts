@@ -66,6 +66,9 @@ export type Database = {
           country_code: string
           created_at: string
           id: string
+          image_credit: string | null
+          image_path: string | null
+          image_source_url: string | null
           latitude: number | null
           longitude: number | null
           name: string
@@ -75,6 +78,9 @@ export type Database = {
           country_code?: string
           created_at?: string
           id?: string
+          image_credit?: string | null
+          image_path?: string | null
+          image_source_url?: string | null
           latitude?: number | null
           longitude?: number | null
           name: string
@@ -84,6 +90,9 @@ export type Database = {
           country_code?: string
           created_at?: string
           id?: string
+          image_credit?: string | null
+          image_path?: string | null
+          image_source_url?: string | null
           latitude?: number | null
           longitude?: number | null
           name?: string
@@ -548,6 +557,9 @@ export type Database = {
           country_code: string
           created_at: string
           id: string
+          image_credit: string | null
+          image_path: string | null
+          image_source_url: string | null
           latitude: number | null
           longitude: number | null
           name: string

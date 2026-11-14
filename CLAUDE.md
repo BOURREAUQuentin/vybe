@@ -7,7 +7,7 @@ Ce fichier est lu au début de chaque session. Il décrit le projet, la stack et
 Vybe est une application mobile iOS et Android pour découvrir, suivre et garder en mémoire des concerts en France, avec le rap mis en avant.
 
 - Cahier des charges complet : `docs/cahier-des-charges.md` (le périmètre de chaque version est en section 12).
-- Dernière version livrée : **V1.3.1 (refonte de l’interface, direction « Hybride »)**, design uniquement (`docs/v1.3.1.md`). Versions livrées : V1.0 (MVP, `docs/mvp.md`), V1.0.1 (logo), V1.2 (filtres, près de moi, fiche salle, `docs/v1.2.md`), V1.3 (compte et favoris, `docs/v1.3.md`), V1.3.1 (refonte). Prochaine version : à décider (V1.1 Ticketmaster ou V1.4 notifications).
+- Dernière version livrée : **V1.3.2 (photos des villes, `docs/v1.3.2.md`)**. Versions livrées : V1.0 (MVP, `docs/mvp.md`), V1.0.1 (logo), V1.2 (filtres, près de moi, fiche salle, `docs/v1.2.md`), V1.3 (compte et favoris, `docs/v1.3.md`), V1.3.1 (refonte de l’interface, direction « Hybride », `docs/v1.3.1.md`), V1.3.2. Prochaine version : à décider (V1.1 Ticketmaster ou V1.4 notifications).
 - **Ordre modifié** : V1.0 → V1.2 → V1.3 ; la V1.1 (données Ticketmaster) est faite plus tard. L’app fonctionne toujours sur les données de démonstration.
 - Direction artistique : `docs/design.md`. Valeurs de design : `src/theme/tokens.ts`.
 
@@ -50,6 +50,7 @@ src/theme/            tokens.ts et helpers de style
 src/types/            Types partagés, dont les types générés depuis Supabase
 supabase/migrations/  Migrations SQL
 supabase/seed.sql     Données factices du MVP
+supabase/seed-assets/ Fichiers des données de démo (V1.3.2 : photos des villes, à envoyer dans Storage)
 docs/                 Cahier des charges, périmètre MVP, design
 ```
 
@@ -77,6 +78,8 @@ Fonctions SQL appelées par l’app avec `supabase.rpc(...)`, toutes en `securit
 - compte (V1.3) : `set_main_city` (ville principale atomique, `security invoker`) et `delete_my_account()` (`security definer` verrouillé : supprime uniquement le compte connecté, cascade sur toutes ses données).
 
 Tables utilisateur (V1.3) : `user_events`, `user_artist_follows`, `user_venue_follows`, `user_favorite_cities` (au plus une `is_main`), `user_genre_preferences` ; `user_id default auth.uid()`, `on delete cascade`. E-mails de connexion envoyés par Brevo (SMTP configuré dans Supabase, voir README).
+
+Images (V1.3.2) : photos des villes dans le bucket Storage **public** `city-images` (lecture seule depuis l’app), chemin dans `cities.image_path`, URL construite par `src/lib/cityImages.ts`. L’app ne charge jamais d’image depuis un site externe : toute nouvelle image du catalogue passe par Storage, avec son crédit (`image_credit`) affiché dans Infos si la licence l’exige.
 
 Conventions : noms en anglais et en `snake_case`, clés primaires `uuid`, colonnes `created_at` et `updated_at`, dates en `timestamptz`. Les données factices du MVP sont fictives mais réalistes et calquées sur les champs documentés de la Discovery API de Ticketmaster.
 
@@ -113,6 +116,7 @@ Respecter `docs/design.md`. En résumé : thème sombre, accent lime **utilisé 
 - `npx supabase db query --remote --file supabase/seed.sql --yes` : (ré)applique les données de démo (insère ou met à jour, rafraîchit les dates, ne supprime rien). Attention : `db push --include-seed` n’exécute le seed qu’une seule fois, puis ne fait que mémoriser son empreinte.
 - `npx supabase gen types --lang typescript --remote --schema public > src/types/database.ts` : régénère les types après chaque migration.
 - `npx supabase db query --remote --file supabase/tests/user-data-rls.sql --yes` : teste la sécurité des tables utilisateur (RLS, suppression du compte) avec deux utilisateurs fictifs, dans une transaction **toujours annulée** (rien n’est enregistré). Le bilan s’affiche dans le message d’erreur final (✓ / ✗). À relancer après chaque migration touchant ces tables.
+- `npx supabase storage cp -r supabase/seed-assets/city-images ss:///city-images --remote` : envoie les photos des villes dans le bucket Storage (après la migration `city_images`, avant le seed).
 - `npm run icons` : régénère icônes et écran de démarrage depuis `assets/brand/*.svg` (ne pas retoucher les PNG à la main).
 - `supabase login` et `supabase link` demandent un vrai terminal : les lancer dans l’app Terminal de macOS, pas avec `!` dans Claude Code.
 

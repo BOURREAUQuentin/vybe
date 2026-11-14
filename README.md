@@ -2,7 +2,7 @@
 
 Application mobile (iOS et Android) pour découvrir, suivre et garder en mémoire des concerts en France, avec le rap mis en avant.
 
-Version : **V1.3.1 (refonte de l’interface)** — fonctionnalités de la V1.3 (`docs/v1.3.md`) avec la nouvelle direction artistique « Hybride » (`docs/v1.3.1.md`, `docs/design.md`). Versions précédentes : `docs/v1.2.md`, `docs/mvp.md`. Les concerts affichés sont des **données de démonstration** (artistes et salles réels, concerts fictifs). La V1.1 (données réelles Ticketmaster) est faite plus tard.
+Version : **V1.3.2 (photos des villes)** — fonctionnalités de la V1.3 (`docs/v1.3.md`) avec la direction artistique « Hybride » (`docs/v1.3.1.md`, `docs/design.md`) et de vraies photos de villes (`docs/v1.3.2.md`). Versions précédentes : `docs/v1.2.md`, `docs/mvp.md`. Les concerts affichés sont des **données de démonstration** (artistes et salles réels, concerts fictifs). La V1.1 (données réelles Ticketmaster) est faite plus tard.
 
 ## Interface
 
@@ -73,6 +73,7 @@ Commandes courantes :
 | `npx supabase db push --remote --dry-run` | Simule l’envoi des migrations |
 | `npx supabase db push --remote` | Applique les migrations sur le projet hébergé |
 | `npx supabase db query --remote --file supabase/seed.sql --yes` | (Ré)applique les données de démo : insère ou met à jour, rafraîchit leurs dates, ne supprime rien (`db push --include-seed` ne l’exécute qu’une fois) |
+| `npx supabase storage cp -r supabase/seed-assets/city-images ss:///city-images --remote` | Envoie les photos des villes dans Supabase Storage (bucket public `city-images`) |
 | `npx supabase gen types --lang typescript --remote --schema public > src/types/database.ts` | Régénère les types après une migration |
 | `npx supabase db query --remote --file supabase/tests/user-data-rls.sql --yes` | Teste la sécurité des données des comptes (transaction toujours annulée) ; bilan « n/n réussis » |
 

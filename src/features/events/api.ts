@@ -10,7 +10,7 @@ export const EVENT_LIST_SELECT = `
   starts_at,
   time_tba,
   genre:genres ( id, slug, name ),
-  venue:venues ( id, name, city:cities ( id, name ) ),
+  venue:venues ( id, name, city:cities ( id, name, image_path ) ),
   lineup:event_artists ( role, position, artist:artists ( id, name, image_url ) )
 `;
 

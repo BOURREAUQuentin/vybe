@@ -3,6 +3,7 @@
 
 import type { EventListItem } from '@/features/events/api';
 import { sortLineup } from '@/features/events/lineup';
+import { cityImageUrl } from '@/lib/cityImages';
 import { formatMonthTitle, getMonthKey, isWithinNextDays } from '@/lib/dates';
 
 const FEATURED_GENRE_SLUG = 'rap';
@@ -11,7 +12,7 @@ const THIS_WEEK_DAYS = 7;
 const NOT_FEATURED_STATUSES = new Set<EventListItem['status']>(['cancelled', 'postponed']);
 const MAIN_ROLES = new Set(['headliner', 'co_headliner']);
 
-export type CityGroup = { id: string; name: string; count: number };
+export type CityGroup = { id: string; name: string; image_path?: string | null; count: number };
 export type GenreGroup = { id: string; slug: string; name: string; count: number };
 export type MonthSection = { key: string; title: string; data: EventListItem[] };
 
@@ -103,17 +104,25 @@ export function buildDiscoverSections(
 }
 
 /**
- * Photo d'illustration de chaque ville : celle du premier artiste principal qui y joue bientôt
- * et qui a une photo (tuiles « Villes »). Les villes sans photo n'apparaissent pas dans la table.
+ * Photo d'illustration de chaque ville (tuiles « Villes ») : la photo de la ville (V1.3.2,
+ * bucket Storage « city-images ») ; à défaut, celle du premier artiste principal qui y joue
+ * bientôt. Les villes sans aucune photo n'apparaissent pas dans la table.
  */
 export function getCityPhotos(events: EventListItem[]): Map<string, string> {
-  const photos = new Map<string, string>();
+  const cityPhotos = new Map<string, string>();
+  const artistPhotos = new Map<string, string>();
   for (const event of events) {
-    const cityId = event.venue?.city.id;
-    const imageUrl = getMainArtist(event)?.image_url;
-    if (cityId && imageUrl && !photos.has(cityId)) photos.set(cityId, imageUrl);
+    const city = event.venue?.city;
+    if (!city) continue;
+    const cityPhoto = cityImageUrl(city.image_path);
+    if (cityPhoto && !cityPhotos.has(city.id)) cityPhotos.set(city.id, cityPhoto);
+    const artistPhoto = getMainArtist(event)?.image_url;
+    if (artistPhoto && !artistPhotos.has(city.id)) artistPhotos.set(city.id, artistPhoto);
   }
-  return photos;
+  for (const [cityId, photo] of artistPhotos) {
+    if (!cityPhotos.has(cityId)) cityPhotos.set(cityId, photo);
+  }
+  return cityPhotos;
 }
 
 /** Concerts d'une ville (utilisé pour le compteur des pastilles de ville). */
