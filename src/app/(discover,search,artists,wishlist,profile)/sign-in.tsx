@@ -247,11 +247,9 @@ const styles = StyleSheet.create({
     paddingBottom: spacing.xxl,
   },
   title: {
-    fontFamily: fonts.display,
-    fontSize: fontSizes.display,
-    lineHeight: fontSizes.display * lineHeights.display,
+    fontFamily: fonts.bold,
+    fontSize: fontSizes.screenTitle,
     color: colors.text,
-    textTransform: 'uppercase',
   },
   intro: {
     fontFamily: fonts.regular,

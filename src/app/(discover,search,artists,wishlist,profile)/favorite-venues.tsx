@@ -23,6 +23,7 @@ export default function FavoriteVenuesScreen() {
     return (
       <View style={styles.container}>
         <SignInPrompt
+          icon={{ ios: 'music.mic', android: 'stadium' }}
           title="Tes salles"
           message="Connecte-toi pour garder tes salles favorites."
         />

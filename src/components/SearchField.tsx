@@ -19,7 +19,7 @@ type SearchFieldProps = {
   placeholder?: string;
 };
 
-// Champ de recherche : icône loupe, saisie, bouton pour effacer.
+// Champ de recherche en forme de pilule : icône loupe, saisie, bouton ⓧ pour effacer.
 export function SearchField({
   value,
   onChangeText,
@@ -66,18 +66,20 @@ export function SearchField({
 
 const styles = StyleSheet.create({
   field: {
-    minHeight: touch.minSize,
+    minHeight: touch.minSize + spacing.xs,
     flexDirection: 'row',
     alignItems: 'center',
     gap: spacing.xs,
-    paddingLeft: spacing.sm,
+    paddingLeft: spacing.md,
     backgroundColor: colors.surface,
-    borderRadius: radius.md,
+    borderRadius: radius.pill,
+    borderWidth: StyleSheet.hairlineWidth,
+    borderColor: colors.hairlineStrong,
   },
   input: {
     flex: 1,
     minHeight: touch.minSize,
-    fontFamily: fonts.regular,
+    fontFamily: fonts.medium,
     fontSize: fontSizes.md,
     // Explicite : évite qu'un champ natif recyclé garde l'espacement du champ de code (iOS).
     letterSpacing: letterSpacing.none,

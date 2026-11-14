@@ -1,6 +1,6 @@
 import { ActivityIndicator, Pressable, StyleSheet, Text } from 'react-native';
 
-import { colors, fonts, fontSizes, opacity, radius, spacing, touch } from '@/theme/tokens';
+import { colors, fonts, fontSizes, glass, opacity, radius, spacing, touch } from '@/theme/tokens';
 
 type PrimaryButtonProps = {
   label: string;
@@ -11,7 +11,7 @@ type PrimaryButtonProps = {
   loading?: boolean;
 };
 
-// Bouton principal (lime). Un seul par écran : voir docs/design.md.
+// Bouton principal (lime, avec halo). Un seul par écran : voir docs/design.md.
 export function PrimaryButton({
   label,
   onPress,
@@ -28,7 +28,7 @@ export function PrimaryButton({
       accessibilityRole="button"
       accessibilityHint={accessibilityHint}
       accessibilityState={{ disabled: inactive, busy: loading }}
-      style={({ pressed }) => [styles.button, (pressed || disabled) && styles.pressed]}>
+      style={({ pressed }) => [styles.button, !inactive && styles.glow, (pressed || disabled) && styles.pressed]}>
       {loading ? <ActivityIndicator size="small" color={colors.onAccent} /> : null}
       <Text style={styles.label}>{label}</Text>
     </Pressable>
@@ -37,7 +37,7 @@ export function PrimaryButton({
 
 const styles = StyleSheet.create({
   button: {
-    minHeight: touch.minSize,
+    minHeight: touch.minSize + spacing.xs,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
@@ -46,6 +46,9 @@ const styles = StyleSheet.create({
     paddingHorizontal: spacing.lg,
     backgroundColor: colors.accent,
     borderRadius: radius.pill,
+  },
+  glow: {
+    boxShadow: `0 0 ${glass.glowRadius}px ${colors.accentGlow}`,
   },
   pressed: {
     opacity: opacity.pressed,

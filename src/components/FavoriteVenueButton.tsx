@@ -5,6 +5,7 @@ import { PrimaryButton } from '@/components/PrimaryButton';
 import { SecondaryButton } from '@/components/SecondaryButton';
 import { useAuth } from '@/features/auth/AuthContext';
 import { useFavoriteVenues, useToggleFavoriteVenue } from '@/features/preferences/usePreferences';
+import { haptics } from '@/lib/haptics';
 import { colors, fonts, fontSizes, spacing } from '@/theme/tokens';
 
 type FavoriteVenueButtonProps = {
@@ -31,7 +32,12 @@ export function FavoriteVenueButton({ venue }: FavoriteVenueButtonProps) {
     );
   }
 
-  const onPress = () => toggle.mutate({ venue, add: !isFavorite });
+  const onPress = () => {
+    // Vibration de succès quand on ajoute, simple appui quand on retire.
+    if (isFavorite) haptics.tap();
+    else haptics.success();
+    toggle.mutate({ venue, add: !isFavorite });
+  };
 
   return (
     <View style={styles.container}>

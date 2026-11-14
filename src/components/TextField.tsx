@@ -24,7 +24,8 @@ type TextFieldProps = Omit<TextInputProps, 'style' | 'placeholderTextColor' | 'r
   variant?: 'default' | 'code';
 };
 
-// Champ de saisie aux couleurs de la charte : libellé, saisie, message d'erreur éventuel.
+// Champ de saisie en pilule : libellé, saisie, message d'erreur éventuel. Variante « code » :
+// grands chiffres tabulaires espacés, dans un bloc arrondi.
 export function TextField({ ref, label, error, variant = 'default', ...inputProps }: TextFieldProps) {
   return (
     <View style={styles.container}>
@@ -57,24 +58,27 @@ const styles = StyleSheet.create({
     color: colors.text,
   },
   input: {
-    minHeight: touch.minSize,
-    paddingHorizontal: spacing.sm,
+    minHeight: touch.minSize + spacing.xs,
+    paddingHorizontal: spacing.md,
     paddingVertical: spacing.xs,
-    fontFamily: fonts.regular,
+    fontFamily: fonts.medium,
     fontSize: fontSizes.md,
     // Explicite : le variant « code » change l'espacement ; un champ recyclé doit revenir à 0.
     letterSpacing: letterSpacing.none,
     color: colors.text,
     backgroundColor: colors.surface,
-    borderWidth: 1,
-    borderColor: colors.border,
-    borderRadius: radius.md,
+    borderWidth: StyleSheet.hairlineWidth,
+    borderColor: colors.hairlineStrong,
+    borderRadius: radius.pill,
   },
   code: {
-    fontFamily: fonts.semibold,
-    fontSize: fontSizes.xl,
+    minHeight: touch.minSize * 1.5,
+    fontFamily: fonts.bold,
+    fontSize: fontSizes.display,
+    fontVariant: ['tabular-nums'],
     letterSpacing: letterSpacing.code,
     textAlign: 'center',
+    borderRadius: radius.lg,
   },
   inputError: {
     borderColor: colors.alert,

@@ -5,6 +5,7 @@ import { PrimaryButton } from '@/components/PrimaryButton';
 import { SecondaryButton } from '@/components/SecondaryButton';
 import { useAuth } from '@/features/auth/AuthContext';
 import { useFollowedArtists, useToggleFollow } from '@/features/follows/useFollows';
+import { haptics } from '@/lib/haptics';
 import { colors, fonts, fontSizes, spacing } from '@/theme/tokens';
 
 type FollowButtonProps = {
@@ -31,7 +32,12 @@ export function FollowButton({ artist }: FollowButtonProps) {
     );
   }
 
-  const onPress = () => toggle.mutate({ artist, follow: !isFollowing });
+  const onPress = () => {
+    // Vibration de succès quand on suit, simple appui quand on arrête.
+    if (isFollowing) haptics.tap();
+    else haptics.success();
+    toggle.mutate({ artist, follow: !isFollowing });
+  };
 
   return (
     <View style={styles.container}>

@@ -15,7 +15,7 @@ import {
 type FilterChipProps = {
   /** Nom du filtre (« Date ») ou valeur choisie (« Ce week-end »). */
   label: string;
-  /** Vrai si le filtre a une valeur : contour clair (pas de lime). */
+  /** Vrai si le filtre a une valeur : fond blanc plein, texte noir (jamais de lime). */
   active: boolean;
   /** Nom du filtre pour les lecteurs d'écran (« Date »). */
   filterName: string;
@@ -37,7 +37,7 @@ export function FilterChip({ label, active, filterName, onPress }: FilterChipPro
       <SymbolView
         name={{ ios: 'chevron.down', android: 'expand_more' }}
         size={iconSizes.sm}
-        tintColor={active ? colors.text : colors.textSecondary}
+        tintColor={active ? colors.background : colors.textSecondary}
       />
     </Pressable>
   );
@@ -56,7 +56,7 @@ const styles = StyleSheet.create({
     borderRadius: radius.pill,
   },
   active: {
-    backgroundColor: colors.surfaceRaised,
+    backgroundColor: colors.text,
     borderColor: colors.text,
   },
   pressed: {
@@ -69,6 +69,6 @@ const styles = StyleSheet.create({
   },
   labelActive: {
     fontFamily: fonts.semibold,
-    color: colors.text,
+    color: colors.background,
   },
 });

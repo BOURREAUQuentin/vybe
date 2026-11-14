@@ -2,16 +2,18 @@ import { useRouter } from 'expo-router';
 import { useState } from 'react';
 import { Linking, Pressable, StyleSheet, Text, View } from 'react-native';
 
-import { EventCard } from '@/components/EventCard';
-import { EventCardSkeleton } from '@/components/EventCardSkeleton';
 import { FilterSheet } from '@/components/FilterSheet';
 import { OptionRow } from '@/components/OptionRow';
 import { SecondaryButton } from '@/components/SecondaryButton';
 import { SectionTitle } from '@/components/SectionTitle';
+import { Ticket } from '@/components/Ticket';
+import { TicketSkeleton } from '@/components/TicketSkeleton';
+import { describeEvent } from '@/features/events/eventView';
 import { useFilterOptions } from '@/features/filters/useFilteredEvents';
 import { locateFailureMessages } from '@/features/nearby/location';
 import { useNearby, type NearbyPlace } from '@/features/nearby/NearbyContext';
 import { toRadiusOption, useNearbyEvents } from '@/features/nearby/useNearbyEvents';
+import { useWishlistIds } from '@/features/wishlist/useWishlist';
 import {
   colors,
   fonts,
@@ -46,6 +48,7 @@ export function NearbySection() {
   const [chooserOpen, setChooserOpen] = useState(false);
   const { data: options } = useFilterOptions();
   const { data, error, refetch } = useNearbyEvents(place, nearbyRadius);
+  const { data: wishIds } = useWishlistIds();
 
   const title = !place
     ? 'Près de chez toi'
@@ -153,8 +156,8 @@ export function NearbySection() {
       </View>
     ) : (
       <View style={styles.cards} accessibilityLabel="Chargement des concerts proches">
-        <EventCardSkeleton />
-        <EventCardSkeleton />
+        <TicketSkeleton />
+        <TicketSkeleton />
       </View>
     );
   } else if (data.length === 0) {
@@ -168,9 +171,10 @@ export function NearbySection() {
       <>
         <View style={styles.cards}>
           {data.slice(0, PREVIEW_COUNT).map((event) => (
-            <EventCard
+            <Ticket
               key={event.id}
-              event={event}
+              view={describeEvent(event)}
+              isWished={wishIds?.includes(event.id) ?? false}
               onPress={() => router.push({ pathname: '/concert/[id]', params: { id: event.id } })}
             />
           ))}
@@ -245,7 +249,7 @@ const styles = StyleSheet.create({
     color: colors.textSecondary,
   },
   cards: {
-    gap: spacing.xs,
+    gap: spacing.sm,
   },
   empty: {
     fontFamily: fonts.regular,

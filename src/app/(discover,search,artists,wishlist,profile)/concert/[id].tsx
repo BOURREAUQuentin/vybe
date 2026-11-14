@@ -1,178 +1,193 @@
-import { Stack, useLocalSearchParams, useRouter } from 'expo-router';
+import { useLocalSearchParams, useRouter } from 'expo-router';
 import * as WebBrowser from 'expo-web-browser';
-import { ScrollView, StyleSheet, Text, View } from 'react-native';
+import type { ReactNode } from 'react';
+import { StyleSheet, Text, View } from 'react-native';
+import Animated, { FadeIn, useAnimatedScrollHandler, useReducedMotion, useSharedValue } from 'react-native-reanimated';
 
-import { DetailSection } from '@/components/DetailSection';
-import { DetailSkeleton } from '@/components/DetailSkeleton';
 import { EmptyState } from '@/components/EmptyState';
 import { ErrorState } from '@/components/ErrorState';
-import { ArtistRow } from '@/components/ArtistRow';
-import { PrimaryButton } from '@/components/PrimaryButton';
+import { EventPass } from '@/components/EventPass';
+import { DetailTopBar } from '@/components/DetailTopBar';
+import { GlassPill } from '@/components/GlassPill';
+import { LineupAvatars } from '@/components/LineupAvatars';
+import { PhotoDetailSkeleton } from '@/components/PhotoDetailSkeleton';
+import { PhotoHeader } from '@/components/PhotoHeader';
+import { PressableScale } from '@/components/PressableScale';
+import { SectionTitle } from '@/components/SectionTitle';
 import { SourceNote } from '@/components/SourceNote';
-import { StatusBadge } from '@/components/StatusBadge';
-import { VenueRow } from '@/components/VenueRow';
-import { WishlistButton } from '@/components/WishlistButton';
+import { StatusChip } from '@/components/StatusChip';
+import { WishChip } from '@/components/WishChip';
+import { WishlistGlassButton } from '@/components/WishlistGlassButton';
 import type { EventDetail } from '@/features/events/api';
-import { getLineupLabels, sortLineup } from '@/features/events/lineup';
+import { describeEvent } from '@/features/events/eventView';
+import { sortLineup } from '@/features/events/lineup';
 import { useEvent } from '@/features/events/useEvent';
-import { formatDayAndTime, formatEventDateLong } from '@/lib/dates';
-import { formatPriceRange, roleLabels } from '@/lib/format';
+import { useWishlistIds } from '@/features/wishlist/useWishlist';
+import { formatDayAndTime } from '@/lib/dates';
+import { formatPriceRange } from '@/lib/format';
+import { haptics } from '@/lib/haptics';
 import { useTabBarSpace } from '@/lib/useTabBarSpace';
-import { colors, fonts, fontSizes, lineHeights, maxFontScale, spacing } from '@/theme/tokens';
+import {
+  colors,
+  fonts,
+  fontSizes,
+  glass,
+  lineHeights,
+  maxFontScale,
+  motion,
+  radius,
+  spacing,
+  touch,
+} from '@/theme/tokens';
 
-// Fiche concert.
+// Fiche concert (direction Hybride). La barre de navigation native est masquée : des boutons
+// en verre fixes la remplacent (retour, cœur) ; le geste de retour reste disponible.
 export default function ConcertScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
-  const router = useRouter();
   const { data, error, refetch } = useEvent(id);
 
+  let content: ReactNode;
   if (data === undefined) {
-    return (
-      <View style={styles.container}>
-        {error ? (
-          <ErrorState title="Impossible de charger ce concert" onRetry={() => refetch()} />
-        ) : (
-          <DetailSkeleton />
-        )}
+    content = error ? (
+      <View style={styles.centered}>
+        <ErrorState title="Impossible de charger ce concert" onRetry={() => refetch()} />
       </View>
+    ) : (
+      <PhotoDetailSkeleton />
     );
-  }
-
-  if (data === null) {
-    return (
-      <View style={styles.container}>
+  } else if (data === null) {
+    content = (
+      <View style={styles.centered}>
         <EmptyState
           title="Concert introuvable"
           message="Ce concert a peut-être été retiré ou le lien n’est plus valide."
-          action={{
-            label: 'Retour',
-            onPress: () => (router.canGoBack() ? router.back() : router.replace('/')),
-          }}
         />
       </View>
     );
+  } else {
+    content = <ConcertDetail event={data} />;
   }
 
-  return <ConcertDetail event={data} />;
+  return (
+    <View style={styles.container}>
+      {content}
+      {/* Boutons en verre fixes : retour, et cœur une fois le concert chargé. */}
+      <DetailTopBar right={data ? <WishlistGlassButton eventId={data.id} /> : null} />
+    </View>
+  );
 }
 
 function ConcertDetail({ event }: { event: EventDetail }) {
   const router = useRouter();
   // Le bas du contenu ne doit pas rester caché sous la barre d'onglets (iOS).
   const bottomSpace = useTabBarSpace();
-  const { title } = getLineupLabels(event.name, event.lineup);
+  const reduceMotion = useReducedMotion();
+  const { data: wishIds } = useWishlistIds();
+
+  const view = describeEvent(event);
   const lineup = sortLineup(event.lineup);
-  const price = formatPriceRange(event.price_min, event.price_max, event.currency);
   const venue = event.venue;
-  const cityLine = [venue?.postal_code, venue?.city.name].filter(Boolean).join(' ');
+  const price = formatPriceRange(event.price_min, event.price_max, event.currency);
+  const isWished = wishIds?.includes(event.id) ?? false;
 
   const isClosed = event.status === 'cancelled' || event.status === 'past';
   const ticketUrl = isClosed ? null : event.ticket_url;
   const onSaleSoon =
-    event.status === 'announced' &&
-    event.on_sale_at !== null &&
-    new Date(event.on_sale_at) > new Date();
+    event.status === 'announced' && event.on_sale_at !== null && new Date(event.on_sale_at) > new Date();
+
+  const scrollY = useSharedValue(0);
+  const onScroll = useAnimatedScrollHandler((e) => {
+    scrollY.set(e.contentOffset.y);
+  });
 
   const openTickets = () => {
     if (!ticketUrl) return;
+    haptics.tap();
     void WebBrowser.openBrowserAsync(ticketUrl, {
       toolbarColor: colors.background,
       controlsColor: colors.accent,
     });
   };
 
+  const address = venue
+    ? [venue.address, [venue.postal_code, venue.city.name].filter(Boolean).join(' ')].filter(Boolean).join(', ')
+    : null;
+
   return (
-    <ScrollView style={styles.container} contentContainerStyle={[styles.content, { paddingBottom: bottomSpace }]}>
-      {/* V1.3 : cœur « Mes envies » en haut à droite de la barre. */}
-      <Stack.Screen options={{ headerRight: () => <WishlistButton eventId={event.id} /> }} />
-      {/* En-tête : affiche, statut, date, lieu */}
-      <View style={styles.header}>
-        <Text
-          style={styles.title}
-          accessibilityRole="header"
-          maxFontSizeMultiplier={maxFontScale.display}>
-          {title}
-        </Text>
-        <View style={styles.badgeRow}>
-          <StatusBadge status={event.status} />
-        </View>
-        <Text style={styles.date}>{formatEventDateLong(event.starts_at, event.time_tba)}</Text>
-        {venue ? (
-          <Text style={styles.venue}>
-            {venue.name}
-            {venue.city.name ? ` · ${venue.city.name}` : ''}
+    <Animated.ScrollView onScroll={onScroll} scrollEventThrottle={16} contentContainerStyle={{ paddingBottom: bottomSpace }}>
+      {/* En-tête : photo, pastilles (date, statut, envie), nom de l'affiche. */}
+      <PhotoHeader name={view.title} imageUrl={view.imageUrl} scrollY={scrollY}>
+          <View style={styles.chips}>
+            <GlassPill label={`${view.weekday} ${view.day} ${view.month} · ${view.time}`} />
+            <StatusChip status={event.status} />
+            {isWished ? (
+              <Animated.View entering={reduceMotion ? undefined : FadeIn.duration(motion.likeMs)}>
+                <WishChip />
+              </Animated.View>
+            ) : null}
+          </View>
+          <Text style={styles.title} accessibilityRole="header" maxFontSizeMultiplier={maxFontScale.display}>
+            {view.title.toUpperCase()}
           </Text>
+          {view.others ? <Text style={styles.others}>avec {view.others}</Text> : null}
+      </PhotoHeader>
+
+      <View style={styles.body}>
+        {/* Action principale : seul élément lime de l'écran. */}
+        {ticketUrl ? (
+          <View style={styles.ticketBlock}>
+            <PressableScale
+              onPress={openTickets}
+              accessibilityRole="button"
+              accessibilityLabel="Billetterie"
+              accessibilityHint="Ouvre la billetterie dans le navigateur"
+              style={styles.ticketButton}>
+              <Text style={styles.ticketLabel}>Billetterie</Text>
+            </PressableScale>
+            {onSaleSoon && event.on_sale_at ? (
+              <Text style={styles.hint}>Ouverture de la billetterie le {formatDayAndTime(event.on_sale_at)}</Text>
+            ) : null}
+          </View>
         ) : null}
+        {event.status === 'cancelled' ? (
+          <Text style={styles.alert}>Ce concert est annulé : la billetterie est fermée.</Text>
+        ) : null}
+        {event.status === 'past' ? <Text style={styles.hint}>Ce concert a déjà eu lieu.</Text> : null}
+
+        <EventPass
+          eventId={event.id}
+          venue={venue ? { name: venue.name, address } : null}
+          cells={[
+            { label: 'Date', value: `${view.weekday} ${view.day} ${view.month}` },
+            { label: 'Heure', value: event.time_tba ? 'À confirmer' : view.time },
+            { label: 'Ville', value: view.cityName ?? '' },
+            { label: 'Prix indicatif', value: price ?? '' },
+          ].filter((cell) => cell.value !== '')}
+          onOpenVenue={() => venue && router.push({ pathname: '/venue/[id]', params: { id: venue.id } })}
+        />
       </View>
 
-      {/* Action principale (seul élément lime de l'écran) */}
-      {ticketUrl ? (
-        <View style={styles.ticketBlock}>
-          <PrimaryButton
-            label="Billetterie"
-            onPress={openTickets}
-            accessibilityHint="Ouvre la billetterie dans le navigateur"
-          />
-          {onSaleSoon && event.on_sale_at ? (
-            <Text style={styles.hint}>
-              Ouverture de la billetterie le {formatDayAndTime(event.on_sale_at)}
-            </Text>
-          ) : null}
-        </View>
-      ) : null}
-      {event.status === 'cancelled' ? (
-        <Text style={styles.alert}>Ce concert est annulé : la billetterie est fermée.</Text>
-      ) : null}
-      {event.status === 'past' ? (
-        <Text style={styles.hint}>Ce concert a déjà eu lieu.</Text>
-      ) : null}
-
-      {price ? (
-        <DetailSection title="Prix indicatif">
-          <Text style={styles.body}>{price}</Text>
-        </DetailSection>
-      ) : null}
-
-      {venue ? (
-        <DetailSection title="Lieu">
-          {/* Ouvre la fiche salle (V1.2). */}
-          <VenueRow
-            name={venue.name}
-            subtitle={[venue.address, cityLine].filter(Boolean).join(', ')}
-            onPress={() => router.push({ pathname: '/venue/[id]', params: { id: venue.id } })}
-          />
-        </DetailSection>
-      ) : null}
-
       {lineup.length > 0 ? (
-        <DetailSection title="Programmation">
-          {lineup.map((entry) =>
-            entry.artist ? (
-              <ArtistRow
-                key={entry.artist.id}
-                name={entry.artist.name}
-                imageUrl={entry.artist.image_url}
-                subtitle={roleLabels[entry.role]}
-                onPress={() =>
-                  router.push({
-                    pathname: '/artist/[id]',
-                    params: { id: entry.artist?.id ?? '' },
-                  })
-                }
-              />
-            ) : null,
-          )}
-        </DetailSection>
+        <View style={styles.section}>
+          <SectionTitle title="Line-up" />
+          <LineupAvatars
+            lineup={lineup}
+            onOpenArtist={(artistId) => router.push({ pathname: '/artist/[id]', params: { id: artistId } })}
+          />
+        </View>
       ) : null}
 
       {event.description ? (
-        <DetailSection title="Infos pratiques">
-          <Text style={styles.body}>{event.description}</Text>
-        </DetailSection>
+        <View style={styles.section}>
+          <SectionTitle title="Infos pratiques" />
+          <Text style={styles.description}>{event.description}</Text>
+        </View>
       ) : null}
 
-      <SourceNote source={event.source} />
-    </ScrollView>
+      <View style={styles.source}>
+        <SourceNote source={event.source} />
+      </View>
+    </Animated.ScrollView>
   );
 }
 
@@ -181,36 +196,47 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: colors.background,
   },
-  content: {
-    gap: spacing.lg,
-    padding: spacing.md,
-    paddingBottom: spacing.xxl,
+  centered: {
+    flex: 1,
+    justifyContent: 'center',
   },
-  header: {
+  chips: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    alignItems: 'center',
     gap: spacing.xs,
   },
   title: {
     fontFamily: fonts.display,
-    fontSize: fontSizes.display,
-    lineHeight: fontSizes.display * lineHeights.display,
-    color: colors.text,
-    textTransform: 'uppercase',
-  },
-  badgeRow: {
-    flexDirection: 'row',
-  },
-  date: {
-    fontFamily: fonts.semibold,
-    fontSize: fontSizes.md,
+    fontSize: fontSizes.detailTitle,
+    lineHeight: fontSizes.detailTitle * lineHeights.display,
     color: colors.text,
   },
-  venue: {
-    fontFamily: fonts.regular,
+  others: {
+    marginTop: -spacing.sm,
+    fontFamily: fonts.medium,
     fontSize: fontSizes.md,
     color: colors.textSecondary,
   },
+  body: {
+    gap: spacing.lg,
+    padding: spacing.md,
+  },
   ticketBlock: {
     gap: spacing.xs,
+  },
+  ticketButton: {
+    minHeight: touch.minSize + spacing.sm,
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderRadius: radius.pill,
+    backgroundColor: colors.accent,
+    boxShadow: `0 0 ${glass.glowRadius}px ${colors.accentGlow}`,
+  },
+  ticketLabel: {
+    fontFamily: fonts.bold,
+    fontSize: fontSizes.lg,
+    color: colors.onAccent,
   },
   hint: {
     fontFamily: fonts.regular,
@@ -222,10 +248,19 @@ const styles = StyleSheet.create({
     fontSize: fontSizes.sm,
     color: colors.alert,
   },
-  body: {
+  section: {
+    gap: spacing.sm,
+    paddingTop: spacing.sm,
+    paddingBottom: spacing.md,
+  },
+  description: {
+    paddingHorizontal: spacing.md,
     fontFamily: fonts.regular,
     fontSize: fontSizes.md,
     lineHeight: fontSizes.md * lineHeights.normal,
-    color: colors.text,
+    color: colors.textSecondary,
+  },
+  source: {
+    paddingHorizontal: spacing.md,
   },
 });

@@ -1,66 +1,85 @@
 import { useLocalSearchParams, useRouter } from 'expo-router';
-import { ScrollView, StyleSheet, Text, View } from 'react-native';
+import { SymbolView } from 'expo-symbols';
+import type { ReactNode } from 'react';
+import { StyleSheet, Text, View } from 'react-native';
+import Animated, { useAnimatedScrollHandler, useSharedValue } from 'react-native-reanimated';
 
-import { DetailSection } from '@/components/DetailSection';
-import { DetailSkeleton } from '@/components/DetailSkeleton';
+import { DetailTopBar } from '@/components/DetailTopBar';
 import { EmptyState } from '@/components/EmptyState';
 import { ErrorState } from '@/components/ErrorState';
-import { EventCard } from '@/components/EventCard';
 import { FavoriteVenueButton } from '@/components/FavoriteVenueButton';
+import { GlassPill } from '@/components/GlassPill';
+import { PhotoDetailSkeleton } from '@/components/PhotoDetailSkeleton';
+import { PhotoHeader } from '@/components/PhotoHeader';
 import { SecondaryButton } from '@/components/SecondaryButton';
+import { SectionTitle } from '@/components/SectionTitle';
+import { Ticket } from '@/components/Ticket';
+import { TicketLabel } from '@/components/TicketLabel';
+import { describeEvent } from '@/features/events/eventView';
 import type { VenueWithEvents } from '@/features/venues/api';
 import { useVenue } from '@/features/venues/useVenue';
+import { useWishlistIds } from '@/features/wishlist/useWishlist';
 import { openDirections } from '@/lib/maps';
 import { useTabBarSpace } from '@/lib/useTabBarSpace';
 import {
   colors,
   fonts,
   fontSizes,
+  iconSizes,
   lineHeights,
   maxFontScale,
+  radius,
   spacing,
+  touch,
 } from '@/theme/tokens';
 
-// Fiche salle (V1.2) : adresse, itinéraire, concerts à venir.
+// Fiche salle (direction Hybride) : en-tête illustré par l'artiste d'un prochain concert ici
+// (les salles n'ont pas de photo), Ajouter à mes salles (seul lime), adresse et itinéraire,
+// concerts en billets. Barre native masquée : bouton retour en verre.
 export default function VenueScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
-  const router = useRouter();
   const { data, error, refetch } = useVenue(id);
 
+  let content: ReactNode;
   if (data === undefined) {
-    return (
-      <View style={styles.container}>
-        {error ? (
-          <ErrorState title="Impossible de charger cette salle" onRetry={() => refetch()} />
-        ) : (
-          <DetailSkeleton />
-        )}
+    content = error ? (
+      <View style={styles.centered}>
+        <ErrorState title="Impossible de charger cette salle" onRetry={() => refetch()} />
+      </View>
+    ) : (
+      <PhotoDetailSkeleton />
+    );
+  } else if (data === null) {
+    content = (
+      <View style={styles.centered}>
+        <EmptyState title="Salle introuvable" message="Cette fiche n’existe plus ou le lien n’est plus valide." />
       </View>
     );
+  } else {
+    content = <VenueDetail venue={data.venue} events={data.events} />;
   }
 
-  if (data === null) {
-    return (
-      <View style={styles.container}>
-        <EmptyState
-          title="Salle introuvable"
-          message="Cette fiche n’existe plus ou le lien n’est plus valide."
-          action={{
-            label: 'Retour',
-            onPress: () => (router.canGoBack() ? router.back() : router.replace('/')),
-          }}
-        />
-      </View>
-    );
-  }
-
-  return <VenueDetail venue={data.venue} events={data.events} />;
+  return (
+    <View style={styles.container}>
+      {content}
+      <DetailTopBar />
+    </View>
+  );
 }
 
 function VenueDetail({ venue, events }: VenueWithEvents) {
   const router = useRouter();
   // Le bas du contenu ne doit pas rester caché sous la barre d'onglets (iOS).
   const bottomSpace = useTabBarSpace();
+  const { data: wishIds } = useWishlistIds();
+  const scrollY = useSharedValue(0);
+  const onScroll = useAnimatedScrollHandler((e) => {
+    scrollY.set(e.contentOffset.y);
+  });
+
+  const views = events.map(describeEvent);
+  // Illustration : le premier concert à venir dont l'artiste a une photo, annoncé honnêtement.
+  const featured = views.find((view) => view.imageUrl !== null) ?? null;
   const cityLine = [venue.postal_code, venue.city.name].filter(Boolean).join(' ');
   // Lieu pour l'itinéraire, seulement si les coordonnées sont connues.
   const place =
@@ -69,55 +88,61 @@ function VenueDetail({ venue, events }: VenueWithEvents) {
       : null;
 
   return (
-    <ScrollView style={styles.container} contentContainerStyle={[styles.content, { paddingBottom: bottomSpace }]}>
-      <View style={styles.header}>
-        <Text
-          style={styles.title}
-          accessibilityRole="header"
-          maxFontSizeMultiplier={maxFontScale.display}>
-          {venue.name}
+    <Animated.ScrollView onScroll={onScroll} scrollEventThrottle={16} contentContainerStyle={{ paddingBottom: bottomSpace }}>
+      <PhotoHeader name={venue.name} imageUrl={featured?.imageUrl ?? null} scrollY={scrollY} placeholder="place">
+        {featured ? <GlassPill label={`Bientôt ici : ${featured.title} · ${featured.weekday} ${featured.day} ${featured.month}`} /> : null}
+        <Text style={styles.name} accessibilityRole="header" numberOfLines={2} maxFontSizeMultiplier={maxFontScale.display}>
+          {venue.name.toUpperCase()}
         </Text>
         <Text style={styles.city}>{venue.city.name}</Text>
-      </View>
+      </PhotoHeader>
 
-      {/* V1.3 : seule action principale (lime) de la fiche salle. */}
-      <FavoriteVenueButton venue={venue} />
+      <View style={styles.body}>
+        {/* Seule action principale (lime) de la fiche salle. */}
+        <FavoriteVenueButton venue={venue} />
 
-      {venue.address || cityLine || place ? (
-        <DetailSection title="Adresse">
-          {venue.address ? <Text style={styles.body}>{venue.address}</Text> : null}
-          {cityLine ? <Text style={styles.body}>{cityLine}</Text> : null}
-          {place ? (
-            <View style={styles.action}>
+        {/* Adresse façon billet : icône, étiquette, adresse, itinéraire. */}
+        {venue.address || cityLine || place ? (
+          <View style={styles.addressCard}>
+            <View style={styles.addressRow}>
+              <View style={styles.addressIcon}>
+                <SymbolView name={{ ios: 'mappin.and.ellipse', android: 'location_on' }} size={iconSizes.md} tintColor={colors.text} />
+              </View>
+              <View style={styles.addressText}>
+                <TicketLabel>Adresse</TicketLabel>
+                {venue.address ? <Text style={styles.addressLine}>{venue.address}</Text> : null}
+                {cityLine ? <Text style={styles.addressSub}>{cityLine}</Text> : null}
+              </View>
+            </View>
+            {place ? (
               <SecondaryButton
                 label="Itinéraire"
                 accessibilityHint="Ouvre l’application de cartes du téléphone"
                 onPress={() => openDirections(place)}
               />
-            </View>
-          ) : null}
-        </DetailSection>
-      ) : null}
+            ) : null}
+          </View>
+        ) : null}
+      </View>
 
-      <DetailSection
-        title={events.length > 0 ? `Concerts à venir · ${events.length}` : 'Concerts à venir'}>
-        {events.length > 0 ? (
-          <View style={styles.events}>
-            {events.map((event) => (
-              <EventCard
-                key={event.id}
-                event={event}
-                onPress={() =>
-                  router.push({ pathname: '/concert/[id]', params: { id: event.id } })
-                }
+      <View style={styles.section}>
+        <SectionTitle title={events.length > 0 ? `Concerts à venir · ${events.length}` : 'Concerts à venir'} />
+        {views.length > 0 ? (
+          <View style={styles.tickets}>
+            {views.map((view) => (
+              <Ticket
+                key={view.id}
+                view={view}
+                isWished={wishIds?.includes(view.id) ?? false}
+                onPress={() => router.push({ pathname: '/concert/[id]', params: { id: view.id } })}
               />
             ))}
           </View>
         ) : (
           <Text style={styles.empty}>Aucun concert à venir dans cette salle.</Text>
         )}
-      </DetailSection>
-    </ScrollView>
+      </View>
+    </Animated.ScrollView>
   );
 }
 
@@ -126,40 +151,69 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: colors.background,
   },
-  content: {
-    gap: spacing.lg,
-    padding: spacing.md,
-    paddingBottom: spacing.xxl,
+  centered: {
+    flex: 1,
+    justifyContent: 'center',
   },
-  header: {
-    gap: spacing.xxs,
-  },
-  title: {
+  name: {
     fontFamily: fonts.display,
-    fontSize: fontSizes.display,
-    lineHeight: fontSizes.display * lineHeights.display,
+    fontSize: fontSizes.detailTitle,
+    lineHeight: fontSizes.detailTitle * lineHeights.display,
     color: colors.text,
-    textTransform: 'uppercase',
   },
   city: {
-    fontFamily: fonts.regular,
+    marginTop: -spacing.sm,
+    fontFamily: fonts.medium,
     fontSize: fontSizes.md,
     color: colors.textSecondary,
   },
   body: {
-    fontFamily: fonts.regular,
+    gap: spacing.lg,
+    padding: spacing.md,
+  },
+  addressCard: {
+    gap: spacing.md,
+    padding: spacing.md,
+    borderRadius: radius.lg,
+    backgroundColor: colors.surface,
+  },
+  addressRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.sm,
+  },
+  addressIcon: {
+    width: touch.minSize,
+    height: touch.minSize,
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderRadius: radius.md,
+    backgroundColor: colors.surfaceRaised,
+  },
+  addressText: {
+    flex: 1,
+    gap: spacing.xxs,
+  },
+  addressLine: {
+    fontFamily: fonts.bold,
     fontSize: fontSizes.md,
-    lineHeight: fontSizes.md * lineHeights.normal,
     color: colors.text,
   },
-  action: {
-    alignItems: 'flex-start',
-    marginTop: spacing.xs,
+  addressSub: {
+    fontFamily: fonts.regular,
+    fontSize: fontSizes.sm,
+    color: colors.textSecondary,
   },
-  events: {
-    gap: spacing.xs,
+  section: {
+    gap: spacing.sm,
+    paddingBottom: spacing.md,
+  },
+  tickets: {
+    gap: spacing.sm,
+    paddingHorizontal: spacing.md,
   },
   empty: {
+    paddingHorizontal: spacing.md,
     fontFamily: fonts.regular,
     fontSize: fontSizes.md,
     color: colors.textSecondary,

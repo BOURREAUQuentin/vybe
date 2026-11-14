@@ -1,30 +1,43 @@
 import { useRouter } from 'expo-router';
-import { useState, type ReactNode } from 'react';
-import { ScrollView, StyleSheet, Text, View } from 'react-native';
+import { useMemo, useState, type ReactNode } from 'react';
+import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import Animated, { FadeIn } from 'react-native-reanimated';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
+import { ArtistAvatar } from '@/components/ArtistAvatar';
 import { ArtistRow } from '@/components/ArtistRow';
-import { Chip } from '@/components/Chip';
+import { CityTile } from '@/components/CityTile';
 import { EmptyState } from '@/components/EmptyState';
 import { ErrorState } from '@/components/ErrorState';
-import { EventCard } from '@/components/EventCard';
-import { EventCardSkeleton } from '@/components/EventCardSkeleton';
+import { LinkRow } from '@/components/LinkRow';
 import { ScreenHeader } from '@/components/ScreenHeader';
 import { SearchField } from '@/components/SearchField';
 import { SectionTitle } from '@/components/SectionTitle';
+import { Ticket } from '@/components/Ticket';
+import { TicketSkeleton } from '@/components/TicketSkeleton';
 import { VenueRow } from '@/components/VenueRow';
-import { filterByCity } from '@/features/discover/sections';
+import { buildDiscoverSections, filterByCity, getCityPhotos } from '@/features/discover/sections';
+import type { EventListItem } from '@/features/events/api';
+import { describeEvent } from '@/features/events/eventView';
 import { useUpcomingEvents } from '@/features/events/useUpcomingEvents';
 import { MIN_QUERY_LENGTH, type SearchResults } from '@/features/search/api';
+import { getMatchNote, getTopArtists } from '@/features/search/suggestions';
 import { useSearch } from '@/features/search/useSearch';
+import { useWishlistIds } from '@/features/wishlist/useWishlist';
+import { haptics } from '@/lib/haptics';
 import { useDebouncedValue } from '@/lib/useDebouncedValue';
 import { useTabBarSpace } from '@/lib/useTabBarSpace';
-import { colors, fonts, fontSizes, opacity, spacing } from '@/theme/tokens';
+import { colors, fonts, fontSizes, motion, opacity, sizes, spacing, touch } from '@/theme/tokens';
 
 const DEBOUNCE_MS = 300;
 const SKELETON_COUNT = 3;
+const TOP_ARTISTS = 8; // « Artistes à l'affiche »
+const TOP_CITIES = 6; // « Parcourir les villes » (2 colonnes × 3)
 
-// Onglet Recherche : artistes, villes et concerts à venir (recherche côté base).
+const concertsLabel = (count: number) => `${count} concert${count > 1 ? 's' : ''}`;
+
+// Onglet Recherche (direction Hybride) : suggestions avant de taper, puis artistes, concerts
+// (en billets), salles et villes trouvés dans la base.
 export default function SearchScreen() {
   const [text, setText] = useState('');
   const query = useDebouncedValue(text, DEBOUNCE_MS).trim();
@@ -33,30 +46,20 @@ export default function SearchScreen() {
 
   let body: ReactNode;
   if (!isActive) {
-    body = (
-      <EmptyState
-        title="Cherche un artiste, un concert ou une ville"
-        message="Par exemple : Josman, Zénith, Nantes…"
-      />
-    );
+    body = <Suggestions />;
   } else if (data === undefined) {
     body = error ? (
       <ErrorState title="La recherche a échoué" onRetry={() => refetch()} />
     ) : (
       <View style={styles.skeletons} accessibilityLabel="Recherche en cours">
         {Array.from({ length: SKELETON_COUNT }, (_, index) => (
-          <EventCardSkeleton key={index} />
+          <TicketSkeleton key={index} />
         ))}
       </View>
     );
   } else {
     body = (
-      <SearchResultsList
-        results={data}
-        query={query}
-        stale={isPlaceholderData}
-        refreshFailed={Boolean(error)}
-      />
+      <SearchResultsList results={data} query={query} stale={isPlaceholderData} refreshFailed={Boolean(error)} />
     );
   }
 
@@ -68,6 +71,85 @@ export default function SearchScreen() {
       </View>
       {body}
     </SafeAreaView>
+  );
+}
+
+// Avant de taper : artistes et villes les plus programmés (à partir de la liste déjà chargée
+// pour Découvrir : aucune requête en plus).
+function Suggestions() {
+  const router = useRouter();
+  const bottomSpace = useTabBarSpace();
+  const { data: upcoming } = useUpcomingEvents();
+
+  const { artists, cities } = useMemo(() => {
+    if (!upcoming) return { artists: [], cities: [] };
+    const photos = getCityPhotos(upcoming);
+    return {
+      artists: getTopArtists(upcoming, TOP_ARTISTS),
+      cities: buildDiscoverSections(upcoming)
+        .cities.slice(0, TOP_CITIES)
+        .map((city) => ({ ...city, imageUrl: photos.get(city.id) ?? null })),
+    };
+  }, [upcoming]);
+
+  // Liste pas encore chargée (ou vide) : simple invitation.
+  if (artists.length === 0 && cities.length === 0) {
+    return (
+      <EmptyState title="Cherche un artiste, un concert ou une ville" message="Par exemple : Josman, Zénith, Nantes…" />
+    );
+  }
+
+  return (
+    <ScrollView
+      contentContainerStyle={[styles.results, { paddingBottom: bottomSpace }]}
+      keyboardDismissMode="on-drag"
+      keyboardShouldPersistTaps="handled">
+      {artists.length > 0 ? (
+        <View style={styles.section}>
+          <SectionTitle title="Artistes à l’affiche" />
+          <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.artists}>
+            {artists.map((artist) => (
+              <Pressable
+                key={artist.id}
+                onPress={() => {
+                  haptics.tap();
+                  router.push({ pathname: '/artist/[id]', params: { id: artist.id } });
+                }}
+                accessibilityRole="button"
+                accessibilityLabel={`${artist.name}, ${concertsLabel(artist.count)} à venir`}
+                accessibilityHint="Ouvre la fiche de l’artiste"
+                style={({ pressed }) => [styles.artist, pressed && styles.pressed]}>
+                <ArtistAvatar name={artist.name} imageUrl={artist.imageUrl} size="xl" />
+                <Text style={styles.artistName} numberOfLines={1}>
+                  {artist.name}
+                </Text>
+                <Text style={styles.artistCount}>
+                  {artist.count} date{artist.count > 1 ? 's' : ''}
+                </Text>
+              </Pressable>
+            ))}
+          </ScrollView>
+        </View>
+      ) : null}
+
+      {cities.length > 0 ? (
+        <View style={styles.section}>
+          <SectionTitle title="Parcourir les villes" />
+          <View style={styles.grid}>
+            {cities.map((city) => (
+              <CityTile
+                key={city.id}
+                name={city.name}
+                count={city.count}
+                imageUrl={city.imageUrl}
+                width={sizes.gridTileWidth}
+                onPress={() => router.push({ pathname: '/concerts', params: { city: city.id } })}
+              />
+            ))}
+          </View>
+        </View>
+      ) : null}
+    </ScrollView>
   );
 }
 
@@ -83,6 +165,7 @@ function SearchResultsList({ results, query, stale, refreshFailed }: SearchResul
   const router = useRouter();
   // Nombre de concerts par ville, si la liste de Découvrir est déjà en cache.
   const { data: upcoming } = useUpcomingEvents();
+  const { data: wishIds } = useWishlistIds();
   const { artists, cities, venues, events } = results;
   const bottomSpace = useTabBarSpace();
 
@@ -96,7 +179,8 @@ function SearchResultsList({ results, query, stale, refreshFailed }: SearchResul
   }
 
   return (
-    <ScrollView
+    <Animated.ScrollView
+      entering={FadeIn.duration(motion.enterMs)}
       style={stale && styles.stale}
       contentContainerStyle={[styles.results, { paddingBottom: bottomSpace }]}
       keyboardDismissMode="on-drag"
@@ -106,77 +190,71 @@ function SearchResultsList({ results, query, stale, refreshFailed }: SearchResul
       ) : null}
 
       {artists.length > 0 ? (
-        <View style={styles.section}>
-          <SectionTitle title="Artistes" />
-          <View style={styles.padded}>
-            {artists.map((artist) => (
-              <ArtistRow
-                key={artist.id}
-                name={artist.name}
-                imageUrl={artist.image_url}
-                subtitle={artist.genre?.name}
-                onPress={() =>
-                  router.push({ pathname: '/artist/[id]', params: { id: artist.id } })
-                }
-              />
-            ))}
-          </View>
-        </View>
-      ) : null}
-
-      {cities.length > 0 ? (
-        <View style={styles.section}>
-          <SectionTitle title="Villes" />
-          <View style={[styles.padded, styles.chips]}>
-            {cities.map((city) => (
-              <Chip
-                key={city.id}
-                label={city.name}
-                count={upcoming ? filterByCity(upcoming, city.id).length : undefined}
-                onPress={() =>
-                  router.push({ pathname: '/concerts', params: { city: city.id } })
-                }
-              />
-            ))}
-          </View>
-        </View>
-      ) : null}
-
-      {venues.length > 0 ? (
-        <View style={styles.section}>
-          <SectionTitle title="Salles" />
-          <View style={styles.padded}>
-            {venues.map((venue) => (
-              <VenueRow
-                key={venue.id}
-                name={venue.name}
-                subtitle={venue.city.name}
-                onPress={() =>
-                  router.push({ pathname: '/venue/[id]', params: { id: venue.id } })
-                }
-              />
-            ))}
-          </View>
-        </View>
+        <ResultSection title="Artistes">
+          {artists.map((artist) => (
+            <ArtistRow
+              key={artist.id}
+              name={artist.name}
+              imageUrl={artist.image_url}
+              subtitle={artist.genre?.name}
+              onPress={() => router.push({ pathname: '/artist/[id]', params: { id: artist.id } })}
+            />
+          ))}
+        </ResultSection>
       ) : null}
 
       {events.length > 0 ? (
-        <View style={styles.section}>
-          <SectionTitle title="Concerts" />
-          <View style={[styles.padded, styles.cards]}>
-            {events.map((event) => (
-              <EventCard
-                key={event.id}
-                event={event}
-                onPress={() =>
-                  router.push({ pathname: '/concert/[id]', params: { id: event.id } })
-                }
-              />
-            ))}
-          </View>
-        </View>
+        <ResultSection title="Concerts" spaced>
+          {events.map((event: EventListItem) => (
+            <Ticket
+              key={event.id}
+              view={describeEvent(event)}
+              note={getMatchNote(event, query)}
+              isWished={wishIds?.includes(event.id) ?? false}
+              onPress={() => router.push({ pathname: '/concert/[id]', params: { id: event.id } })}
+            />
+          ))}
+        </ResultSection>
       ) : null}
-    </ScrollView>
+
+      {venues.length > 0 ? (
+        <ResultSection title="Salles">
+          {venues.map((venue) => (
+            <VenueRow
+              key={venue.id}
+              name={venue.name}
+              subtitle={venue.city.name}
+              onPress={() => router.push({ pathname: '/venue/[id]', params: { id: venue.id } })}
+            />
+          ))}
+        </ResultSection>
+      ) : null}
+
+      {cities.length > 0 ? (
+        <ResultSection title="Villes">
+          {cities.map((city) => (
+            <LinkRow
+              key={city.id}
+              icon={{ ios: 'building.2', android: 'location_city' }}
+              title={city.name}
+              subtitle={upcoming ? concertsLabel(filterByCity(upcoming, city.id).length) : null}
+              accessibilityHint="Ouvre les concerts de cette ville"
+              onPress={() => router.push({ pathname: '/concerts', params: { city: city.id } })}
+            />
+          ))}
+        </ResultSection>
+      ) : null}
+    </Animated.ScrollView>
+  );
+}
+
+// Section de résultats : titre puis lignes ; `spaced` écarte les éléments (billets).
+function ResultSection({ title, spaced = false, children }: { title: string; spaced?: boolean; children: ReactNode }) {
+  return (
+    <View style={styles.section}>
+      <SectionTitle title={title} />
+      <View style={[styles.padded, spaced && styles.tickets]}>{children}</View>
+    </View>
   );
 }
 
@@ -190,30 +268,53 @@ const styles = StyleSheet.create({
     paddingBottom: spacing.sm,
   },
   skeletons: {
-    gap: spacing.xs,
+    gap: spacing.sm,
     paddingHorizontal: spacing.md,
   },
   results: {
     gap: spacing.lg,
-    paddingTop: spacing.xs,
-    paddingBottom: spacing.xxl,
+    paddingTop: spacing.sm,
   },
   stale: {
     opacity: opacity.pressed,
   },
   section: {
-    gap: spacing.xs,
+    gap: spacing.sm,
   },
   padded: {
     paddingHorizontal: spacing.md,
   },
-  chips: {
+  tickets: {
+    gap: spacing.sm,
+  },
+  artists: {
+    gap: spacing.md,
+    paddingHorizontal: spacing.md,
+  },
+  artist: {
+    width: sizes.avatarXL + spacing.lg,
+    minHeight: touch.minSize,
+    alignItems: 'center',
+    gap: spacing.xxs,
+  },
+  pressed: {
+    opacity: opacity.pressed,
+  },
+  artistName: {
+    fontFamily: fonts.semibold,
+    fontSize: fontSizes.sm,
+    color: colors.text,
+  },
+  artistCount: {
+    fontFamily: fonts.regular,
+    fontSize: fontSizes.xs,
+    color: colors.textSecondary,
+  },
+  grid: {
     flexDirection: 'row',
     flexWrap: 'wrap',
-    gap: spacing.xs,
-  },
-  cards: {
-    gap: spacing.xs,
+    gap: spacing.sm,
+    paddingHorizontal: spacing.md,
   },
   refreshError: {
     fontFamily: fonts.regular,

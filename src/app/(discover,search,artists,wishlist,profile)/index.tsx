@@ -1,54 +1,82 @@
 import { useRouter } from 'expo-router';
-import { useMemo } from 'react';
-import { FlatList, RefreshControl, ScrollView, SectionList, StyleSheet, Text, View } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { useMemo, useRef, type ReactNode } from 'react';
+import { RefreshControl, ScrollView, SectionList, StyleSheet, Text, View } from 'react-native';
+import Animated, { useAnimatedScrollHandler, useSharedValue } from 'react-native-reanimated';
+import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 
+import { CAROUSEL_SNAP, CarouselCard } from '@/components/CarouselCard';
 import { Chip } from '@/components/Chip';
+import { CityTile } from '@/components/CityTile';
 import { DiscoverSkeleton } from '@/components/DiscoverSkeleton';
 import { EmptyState } from '@/components/EmptyState';
 import { ErrorState } from '@/components/ErrorState';
-import { EventCard } from '@/components/EventCard';
-import { FeaturedEventCard } from '@/components/FeaturedEventCard';
+import { FeaturedHero } from '@/components/FeaturedHero';
+import { GlassHeader } from '@/components/GlassHeader';
+import { GlassIconButton } from '@/components/GlassIconButton';
 import { IconButton } from '@/components/IconButton';
 import { MonthHeader } from '@/components/MonthHeader';
 import { NearbySection } from '@/components/NearbySection';
 import { ScreenHeader } from '@/components/ScreenHeader';
 import { SectionTitle } from '@/components/SectionTitle';
-import { buildDiscoverSections, type DiscoverSections } from '@/features/discover/sections';
+import { Ticket } from '@/components/Ticket';
+import { buildDiscoverSections, getCityPhotos, type DiscoverSections } from '@/features/discover/sections';
+import type { EventListItem } from '@/features/events/api';
+import { describeEvent } from '@/features/events/eventView';
 import { useUpcomingEvents } from '@/features/events/useUpcomingEvents';
+import { useWishlistIds } from '@/features/wishlist/useWishlist';
+import { haptics } from '@/lib/haptics';
 import { useTabBarSpace } from '@/lib/useTabBarSpace';
 import { colors, fonts, fontSizes, spacing } from '@/theme/tokens';
 
-// Onglet Découvrir : Rap à l'affiche, Cette semaine, Par ville, Par genre, À venir (par mois).
+const AnimatedSectionList = Animated.createAnimatedComponent(SectionList<EventListItem>);
+
+const HERO_KICKER = 'Rap à l’affiche';
+
+// Onglet Découvrir (direction Hybride) : grand visuel, À l'affiche (carrousel), Près de chez toi,
+// Cette semaine, Villes, Par genre, puis À venir par mois. Concerts en billets.
 export default function DiscoverScreen() {
   const router = useRouter();
+  const insets = useSafeAreaInsets();
   const { data, error, isRefetching, refetch } = useUpcomingEvents();
   const sections = useMemo(() => (data ? buildDiscoverSections(data) : null), [data]);
+  const cityPhotos = useMemo(() => (data ? getCityPhotos(data) : new Map<string, string>()), [data]);
+  const { data: wishIds } = useWishlistIds();
   // Le bas de la liste ne doit pas rester caché sous la barre d'onglets (iOS).
   const bottomSpace = useTabBarSpace();
 
-  const openConcert = (id: string) => router.push({ pathname: '/concert/[id]', params: { id } });
+  const scrollY = useSharedValue(0);
+  const onScroll = useAnimatedScrollHandler((event) => {
+    scrollY.set(event.contentOffset.y);
+  });
 
-  const header = (
+  const isWished = (id: string) => wishIds?.includes(id) ?? false;
+  const openConcert = (id: string) => router.push({ pathname: '/concert/[id]', params: { id } });
+  const openInfos = () => router.push('/infos');
+
+  const plainHeader = (
     <ScreenHeader
       title="Découvrir"
       action={
         <IconButton
           icon={{ ios: 'info.circle', android: 'info' }}
           accessibilityLabel="Informations"
-          onPress={() => router.push('/infos')}
+          onPress={openInfos}
         />
       }
     />
   );
 
-  // Premier chargement : erreur ou squelette.
+  // Premier chargement : squelette (sous la barre d'état, comme le grand visuel) ou erreur.
   if (data === undefined || sections === null) {
-    return (
+    return error ? (
       <SafeAreaView style={styles.container} edges={['top']}>
-        {header}
-        {error ? <ErrorState onRetry={() => refetch()} /> : <DiscoverSkeleton />}
+        {plainHeader}
+        <ErrorState onRetry={() => refetch()} />
       </SafeAreaView>
+    ) : (
+      <View style={styles.container}>
+        <DiscoverSkeleton />
+      </View>
     );
   }
 
@@ -59,6 +87,7 @@ export default function DiscoverScreen() {
         void refetch();
       }}
       tintColor={colors.text}
+      progressViewOffset={insets.top}
     />
   );
 
@@ -66,7 +95,7 @@ export default function DiscoverScreen() {
   if (data.length === 0) {
     return (
       <SafeAreaView style={styles.container} edges={['top']}>
-        {header}
+        {plainHeader}
         <ScrollView contentContainerStyle={styles.emptyScroll} refreshControl={refreshControl}>
           <EmptyState
             title="Aucun concert à venir"
@@ -77,40 +106,77 @@ export default function DiscoverScreen() {
     );
   }
 
+  const [heroEvent, ...carouselEvents] = sections.featured;
+
+  // Haut de la page : grand visuel (ou titre simple sans concert à l'affiche) + bouton Infos.
+  const top = heroEvent ? (
+    <View>
+      <FeaturedHero
+        view={describeEvent(heroEvent)}
+        kicker={HERO_KICKER}
+        scrollY={scrollY}
+        topInset={insets.top}
+        isWished={isWished(heroEvent.id)}
+        onPress={() => openConcert(heroEvent.id)}
+      />
+      <View style={[styles.infos, { top: insets.top + spacing.xs }]}>
+        <GlassIconButton
+          icon={{ ios: 'info.circle', android: 'info' }}
+          accessibilityLabel="Informations"
+          onPress={openInfos}
+        />
+      </View>
+    </View>
+  ) : (
+    <View style={{ paddingTop: insets.top }}>{plainHeader}</View>
+  );
+
   return (
-    <SafeAreaView style={styles.container} edges={['top']}>
-      {header}
-      <SectionList
+    <View style={styles.container}>
+      <AnimatedSectionList
         sections={sections.months}
         keyExtractor={(event) => event.id}
         stickySectionHeadersEnabled={false}
+        onScroll={onScroll}
+        scrollEventThrottle={16}
         renderSectionHeader={({ section }) => <MonthHeader title={section.title} />}
         renderItem={({ item }) => (
-          <View style={styles.cardRow}>
-            <EventCard event={item} onPress={() => openConcert(item.id)} />
+          <View style={styles.ticketRow}>
+            <Ticket view={describeEvent(item)} isWished={isWished(item.id)} onPress={() => openConcert(item.id)} />
           </View>
         )}
         ItemSeparatorComponent={Separator}
-        contentContainerStyle={[styles.listContent, { paddingBottom: bottomSpace }]}
+        contentContainerStyle={{ paddingBottom: bottomSpace }}
         refreshControl={refreshControl}
         ListHeaderComponent={
-          <DiscoverTopSections
-            sections={sections}
-            refreshFailed={Boolean(error)}
-            onOpenConcert={openConcert}
-            onOpenCity={(id) => router.push({ pathname: '/concerts', params: { city: id } })}
-            onOpenGenre={(id) => router.push({ pathname: '/concerts', params: { genres: id } })}
-            onOpenAll={() => router.push('/concerts')}
-          />
+          <>
+            {top}
+            <DiscoverTopSections
+              sections={sections}
+              carouselEvents={carouselEvents}
+              cityPhotos={cityPhotos}
+              refreshFailed={Boolean(error)}
+              isWished={isWished}
+              onOpenConcert={openConcert}
+              onOpenCity={(id) => router.push({ pathname: '/concerts', params: { city: id } })}
+              onOpenGenre={(id) => router.push({ pathname: '/concerts', params: { genres: id } })}
+              onOpenAll={() => router.push('/concerts')}
+            />
+          </>
         }
       />
-    </SafeAreaView>
+      {heroEvent ? <GlassHeader title="Découvrir" scrollY={scrollY} top={insets.top} /> : null}
+    </View>
   );
 }
 
 type TopSectionsProps = {
   sections: DiscoverSections;
+  /** Concerts « À l'affiche » après celui du grand visuel. */
+  carouselEvents: EventListItem[];
+  cityPhotos: Map<string, string>;
   refreshFailed: boolean;
+  isWished: (id: string) => boolean;
   onOpenConcert: (id: string) => void;
   onOpenCity: (id: string) => void;
   onOpenGenre: (id: string) => void;
@@ -118,16 +184,19 @@ type TopSectionsProps = {
   onOpenAll: () => void;
 };
 
-// Haut de la page, au-dessus de la liste par mois. Une section vide n'est pas affichée.
+// Sections entre le grand visuel et la liste par mois. Une section vide n'est pas affichée.
 function DiscoverTopSections({
   sections,
+  carouselEvents,
+  cityPhotos,
   refreshFailed,
+  isWished,
   onOpenConcert,
   onOpenCity,
   onOpenGenre,
   onOpenAll,
 }: TopSectionsProps) {
-  const { featured, thisWeek, cities, genres, months } = sections;
+  const { thisWeek, cities, genres, months } = sections;
 
   return (
     <View style={styles.topSections}>
@@ -137,71 +206,53 @@ function DiscoverTopSections({
         </Text>
       ) : null}
 
-      {featured.length > 0 ? (
-        <View style={styles.section}>
-          <SectionTitle title="Rap à l’affiche" />
-          <FlatList
-            horizontal
-            data={featured}
-            keyExtractor={(event) => event.id}
-            renderItem={({ item }) => (
-              <FeaturedEventCard event={item} onPress={() => onOpenConcert(item.id)} />
-            )}
-            showsHorizontalScrollIndicator={false}
-            contentContainerStyle={styles.horizontalRow}
-          />
-        </View>
+      {carouselEvents.length > 0 ? (
+        <Section title="À l’affiche">
+          <AfficheCarousel events={carouselEvents} isWished={isWished} onOpenConcert={onOpenConcert} />
+        </Section>
       ) : null}
 
       <NearbySection />
 
       {thisWeek.length > 0 ? (
-        <View style={styles.section}>
-          <SectionTitle title="Cette semaine" />
-          <View style={styles.cards}>
+        <Section title="Cette semaine">
+          <View style={styles.tickets}>
             {thisWeek.map((event) => (
-              <EventCard key={event.id} event={event} onPress={() => onOpenConcert(event.id)} />
+              <Ticket
+                key={event.id}
+                view={describeEvent(event)}
+                isWished={isWished(event.id)}
+                onPress={() => onOpenConcert(event.id)}
+              />
             ))}
           </View>
-        </View>
+        </Section>
       ) : null}
 
       {cities.length > 0 ? (
-        <View style={styles.section}>
-          <SectionTitle title="Par ville" />
-          <ScrollView
-            horizontal
-            showsHorizontalScrollIndicator={false}
-            contentContainerStyle={styles.horizontalRow}>
+        <Section title="Villes">
+          <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.horizontalRow}>
             {cities.map((city) => (
-              <Chip
+              <CityTile
                 key={city.id}
-                label={city.name}
+                name={city.name}
                 count={city.count}
+                imageUrl={cityPhotos.get(city.id) ?? null}
                 onPress={() => onOpenCity(city.id)}
               />
             ))}
           </ScrollView>
-        </View>
+        </Section>
       ) : null}
 
       {genres.length > 0 ? (
-        <View style={styles.section}>
-          <SectionTitle title="Par genre" />
-          <ScrollView
-            horizontal
-            showsHorizontalScrollIndicator={false}
-            contentContainerStyle={styles.horizontalRow}>
+        <Section title="Par genre">
+          <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.horizontalRow}>
             {genres.map((genre) => (
-              <Chip
-                key={genre.id}
-                label={genre.name}
-                count={genre.count}
-                onPress={() => onOpenGenre(genre.id)}
-              />
+              <Chip key={genre.id} label={genre.name} count={genre.count} onPress={() => onOpenGenre(genre.id)} />
             ))}
           </ScrollView>
-        </View>
+        </Section>
       ) : null}
 
       {months.length > 0 ? (
@@ -218,6 +269,60 @@ function DiscoverTopSections({
   );
 }
 
+function Section({ title, children }: { title: string; children: ReactNode }) {
+  return (
+    <View style={styles.section}>
+      <SectionTitle title={title} />
+      {children}
+    </View>
+  );
+}
+
+type AfficheCarouselProps = {
+  events: EventListItem[];
+  isWished: (id: string) => boolean;
+  onOpenConcert: (id: string) => void;
+};
+
+// Carrousel « À l'affiche » : aimanté carte par carte, petit retour haptique à chaque nouvelle carte.
+function AfficheCarousel({ events, isWished, onOpenConcert }: AfficheCarouselProps) {
+  const scrollX = useSharedValue(0);
+  const lastIndex = useRef(0);
+  const onScroll = useAnimatedScrollHandler((event) => {
+    scrollX.set(event.contentOffset.x);
+  });
+
+  return (
+    <Animated.FlatList
+      horizontal
+      data={events}
+      keyExtractor={(event) => event.id}
+      showsHorizontalScrollIndicator={false}
+      snapToInterval={CAROUSEL_SNAP}
+      decelerationRate="fast"
+      onScroll={onScroll}
+      scrollEventThrottle={16}
+      onMomentumScrollEnd={(event) => {
+        const index = Math.round(event.nativeEvent.contentOffset.x / CAROUSEL_SNAP);
+        if (index !== lastIndex.current) {
+          lastIndex.current = index;
+          haptics.select();
+        }
+      }}
+      contentContainerStyle={styles.horizontalRow}
+      renderItem={({ item, index }) => (
+        <CarouselCard
+          view={describeEvent(item)}
+          index={index}
+          scrollX={scrollX}
+          isWished={isWished(item.id)}
+          onPress={() => onOpenConcert(item.id)}
+        />
+      )}
+    />
+  );
+}
+
 function Separator() {
   return <View style={styles.separator} />;
 }
@@ -230,12 +335,13 @@ const styles = StyleSheet.create({
   emptyScroll: {
     flexGrow: 1,
   },
-  listContent: {
-    paddingBottom: spacing.xxl,
+  infos: {
+    position: 'absolute',
+    right: spacing.md,
   },
   topSections: {
     gap: spacing.lg,
-    paddingTop: spacing.xs,
+    paddingTop: spacing.lg,
   },
   section: {
     gap: spacing.sm,
@@ -244,15 +350,15 @@ const styles = StyleSheet.create({
     gap: spacing.sm,
     paddingHorizontal: spacing.md,
   },
-  cards: {
-    gap: spacing.xs,
+  tickets: {
+    gap: spacing.sm,
     paddingHorizontal: spacing.md,
   },
-  cardRow: {
+  ticketRow: {
     paddingHorizontal: spacing.md,
   },
   separator: {
-    height: spacing.xs,
+    height: spacing.sm,
   },
   refreshError: {
     fontFamily: fonts.regular,

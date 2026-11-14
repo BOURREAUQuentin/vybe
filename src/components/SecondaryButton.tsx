@@ -13,7 +13,7 @@ type SecondaryButtonProps = {
   tone?: 'default' | 'danger';
 };
 
-// Bouton secondaire : contour clair, fond transparent, texte clair (pas de lime).
+// Bouton secondaire : pilule à contour fin, fond transparent, texte clair (pas de lime).
 export function SecondaryButton({
   label,
   onPress,
@@ -47,14 +47,14 @@ export function SecondaryButton({
 
 const styles = StyleSheet.create({
   button: {
-    minHeight: touch.minSize,
+    minHeight: touch.minSize + spacing.xs,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
     gap: spacing.xs,
     paddingHorizontal: spacing.lg,
     borderWidth: 1,
-    borderColor: colors.text,
+    borderColor: colors.hairlineStrong,
     borderRadius: radius.pill,
   },
   pressed: {

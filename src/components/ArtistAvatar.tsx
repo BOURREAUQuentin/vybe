@@ -7,16 +7,16 @@ import { colors, fonts, fontSizes, radius, sizes } from '@/theme/tokens';
 type ArtistAvatarProps = {
   name: string;
   imageUrl: string | null;
-  /** md : programmation, listes ; lg : rangée « Mes artistes ». */
-  size?: 'md' | 'lg';
+  /** md : listes ; lg : rangée « Mes artistes » ; xl : line-up de la fiche concert, artistes à l'affiche. */
+  size?: 'md' | 'lg' | 'xl';
 };
 
 // Vignette ronde d'un artiste : photo, ou initiales sur fond surface.
 export function ArtistAvatar({ name, imageUrl, size = 'md' }: ArtistAvatarProps) {
-  const isLarge = size === 'lg';
+  const isLarge = size !== 'md';
 
   return (
-    <View style={[styles.avatar, isLarge && styles.large]} accessible={false}>
+    <View style={[styles.avatar, size === 'lg' && styles.large, size === 'xl' && styles.extraLarge]} accessible={false}>
       {imageUrl ? (
         <Image source={imageUrl} style={StyleSheet.absoluteFill} contentFit="cover" />
       ) : (
@@ -39,6 +39,10 @@ const styles = StyleSheet.create({
   large: {
     width: sizes.avatarLarge,
     height: sizes.avatarLarge,
+  },
+  extraLarge: {
+    width: sizes.avatarXL,
+    height: sizes.avatarXL,
   },
   initials: {
     fontFamily: fonts.semibold,

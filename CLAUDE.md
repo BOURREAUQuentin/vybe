@@ -7,7 +7,7 @@ Ce fichier est lu au début de chaque session. Il décrit le projet, la stack et
 Vybe est une application mobile iOS et Android pour découvrir, suivre et garder en mémoire des concerts en France, avec le rap mis en avant.
 
 - Cahier des charges complet : `docs/cahier-des-charges.md` (le périmètre de chaque version est en section 12).
-- Version en cours : **V1.3 (compte et favoris)**. Son périmètre exact est dans `docs/v1.3.md`. Versions livrées : V1.0 (MVP, `docs/mvp.md`), V1.0.1 (logo), V1.2 (filtres, près de moi, fiche salle, `docs/v1.2.md`).
+- Dernière version livrée : **V1.3.1 (refonte de l’interface, direction « Hybride »)**, design uniquement (`docs/v1.3.1.md`). Versions livrées : V1.0 (MVP, `docs/mvp.md`), V1.0.1 (logo), V1.2 (filtres, près de moi, fiche salle, `docs/v1.2.md`), V1.3 (compte et favoris, `docs/v1.3.md`), V1.3.1 (refonte). Prochaine version : à décider (V1.1 Ticketmaster ou V1.4 notifications).
 - **Ordre modifié** : V1.0 → V1.2 → V1.3 ; la V1.1 (données Ticketmaster) est faite plus tard. L’app fonctionne toujours sur les données de démonstration.
 - Direction artistique : `docs/design.md`. Valeurs de design : `src/theme/tokens.ts`.
 
@@ -19,7 +19,7 @@ Vybe est une application mobile iOS et Android pour découvrir, suivre et garder
 
 ## Règles absolues
 
-1. **Ne développe que le périmètre de la version en cours** (`docs/v1.3.md`). Si une demande en sort, signale-le avant d’agir.
+1. **Ne développe que le périmètre de la version en cours.** Fonctionnalités actuelles : `docs/v1.3.md` ; interface : `docs/design.md` (V1.3.1). Toute nouvelle version commence par son document de périmètre. Si une demande en sort, signale-le avant d’agir.
 2. **L’application lit uniquement la base Supabase.** Elle n’appelle jamais d’API externe (Ticketmaster ou autre). Seul le backend (fonctions Supabase, tâches planifiées) appelle les sources externes, à partir de la V1.1.
 3. **Aucun secret dans le code ni dans Git.** Les variables d’environnement vont dans `.env` (ignoré par Git), avec un `.env.example` à jour. L’application ne contient que l’URL Supabase et la clé publique (anon / publishable), jamais la clé `service_role`.
 4. **Row Level Security activée sur toutes les tables.** Catalogue (genres, villes, salles, artistes, événements) : lecture publique seule, aucune écriture depuis l’application. Tables utilisateur (V1.3) : un utilisateur connecté ne lit et n’écrit **que ses propres lignes** (`user_id = auth.uid()`), jamais celles des autres.
@@ -34,6 +34,7 @@ Vybe est une application mobile iOS et Android pour découvrir, suivre et garder
 - Navigation : Expo Router (navigation par fichiers).
 - Données : client `@supabase/supabase-js` ; requêtes et états de chargement/erreur avec TanStack Query.
 - Polices : Anton et Inter via `@expo-google-fonts`.
+- Interface (V1.3.1) : animations avec `react-native-reanimated` (valeurs partagées lues et écrites avec `.get()` / `.set()`, compatible React Compiler), retours haptiques avec `expo-haptics` (via `src/lib/haptics.ts`), verre dépoli avec `expo-blur` (via `src/components/Glass.tsx`).
 - Backend : Supabase (PostgreSQL), projet hébergé en Union européenne. Schéma géré par migrations avec la CLI Supabase.
 - Avant d’ajouter une nouvelle dépendance, explique pourquoi et demande validation.
 
@@ -41,7 +42,7 @@ Vybe est une application mobile iOS et Android pour découvrir, suivre et garder
 
 ```
 src/app/              Écrans et navigation (Expo Router) — uniquement des routes
-src/components/       Composants réutilisables (cartes, badges, boutons, états vides…)
+src/components/       Composants réutilisables (billet, pastilles, verre, boutons, états vides…)
 src/features/         Logique par domaine (events, artists, venues, search, discover, filters, nearby, infos ;
                       V1.3 : auth, follows, wishlist, preferences, account)
 src/lib/              Client Supabase, utilitaires (dates, formatage)
@@ -89,6 +90,7 @@ Conventions : noms en anglais et en `snake_case`, clés primaires `uuid`, colonn
 - Données du compte (V1.3) : clés TanStack Query toujours préfixées par `['me', userId, …]` (effacées à la déconnexion, jamais mélangées entre deux comptes) ; requêtes désactivées sans compte (`enabled: userId !== null`). Ne jamais envoyer `user_id` depuis l’app : la base le remplit (`default auth.uid()`). Actions (suivre, envie…) : mise à jour immédiate de l’écran puis retour à l’état précédent en cas d’échec.
 - Chaque écran gère ses états : chargement, vide, erreur, et données manquantes (photo, prix, description absents).
 - Accessibilité : libellés sur les boutons-icônes, zones tactiles d’au moins 44 × 44 points.
+- Interface (V1.3.1) : une liste de concerts = des billets `Ticket` (mise en forme via `describeEvent` de `src/features/events/eventView.ts`) ; statuts via `statusLooks` des tokens (jamais de couleur de statut codée dans un écran) ; tout élément posé sur une photo utilise `Glass` / `GlassPill` / `GlassIconButton` ou une pastille à fond opaque. Toute animation respecte « Réduire les animations » (`useReducedMotion`) ; pas d'animation en boucle. Une animation d'entrée (`entering`) ne se met jamais sur une vue qui a déjà un `transform` : l'envelopper dans une vue parente.
 
 ## Design
 
@@ -116,4 +118,4 @@ Respecter `docs/design.md`. En résumé : thème sombre, accent lime **utilisé 
 
 ## Définition de « terminé »
 
-Une version est terminée quand : toutes ses fonctionnalités sont testées sur iPhone et sur Android ; les états vides, chargements et erreurs sont gérés ; aucun plantage n’est constaté ; le code est sur GitHub avec un tag de version ; ce fichier et la documentation sont à jour ; le critère « Terminé quand » de la version (voir `docs/v1.3.md` pour la version en cours) est atteint.
+Une version est terminée quand : toutes ses fonctionnalités sont testées sur iPhone et sur Android ; les états vides, chargements et erreurs sont gérés ; aucun plantage n’est constaté ; le code est sur GitHub avec un tag de version ; ce fichier et la documentation sont à jour ; le critère « Terminé quand » de la version (dans son document `docs/v…md`) est atteint.

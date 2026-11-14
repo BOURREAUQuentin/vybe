@@ -8,7 +8,7 @@ type UndoRowProps = {
   onUndo: () => void;
 };
 
-// Ligne compacte « … retiré · Annuler », affichée quelques secondes après un retrait.
+// Mini-billet « … retiré de tes envies · Annuler », affiché quelques secondes après un retrait.
 export function UndoRow({ message, onUndo }: UndoRowProps) {
   return (
     <View style={styles.row} accessibilityLiveRegion="polite">
@@ -19,7 +19,7 @@ export function UndoRow({ message, onUndo }: UndoRowProps) {
         onPress={onUndo}
         accessibilityRole="button"
         accessibilityLabel={`Annuler : ${message}`}
-        hitSlop={spacing.xs}
+        hitSlop={spacing.sm}
         style={({ pressed }) => [styles.undo, pressed && styles.pressed]}>
         <Text style={styles.undoLabel}>Annuler</Text>
       </Pressable>
@@ -33,11 +33,13 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: spacing.sm,
-    paddingLeft: spacing.sm,
-    paddingRight: spacing.xs,
+    paddingVertical: spacing.xs,
+    paddingLeft: spacing.md,
+    paddingRight: spacing.sm,
     backgroundColor: colors.surface,
-    borderWidth: 1,
-    borderColor: colors.border,
+    borderWidth: StyleSheet.hairlineWidth,
+    borderColor: colors.hairlineStrong,
+    borderStyle: 'dashed',
     borderRadius: radius.md,
   },
   message: {
@@ -47,9 +49,11 @@ const styles = StyleSheet.create({
     color: colors.textSecondary,
   },
   undo: {
-    minHeight: touch.minSize,
     justifyContent: 'center',
-    paddingHorizontal: spacing.xs,
+    paddingVertical: spacing.xs,
+    paddingHorizontal: spacing.md,
+    borderRadius: radius.pill,
+    backgroundColor: colors.text,
   },
   pressed: {
     opacity: opacity.pressed,
@@ -57,7 +61,6 @@ const styles = StyleSheet.create({
   undoLabel: {
     fontFamily: fonts.bold,
     fontSize: fontSizes.sm,
-    color: colors.text,
-    textDecorationLine: 'underline',
+    color: colors.background,
   },
 });
