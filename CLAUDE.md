@@ -7,7 +7,7 @@ Ce fichier est lu au début de chaque session. Il décrit le projet, la stack et
 Vybe est une application mobile iOS et Android pour découvrir, suivre et garder en mémoire des concerts en France, avec le rap mis en avant.
 
 - Cahier des charges complet : `docs/cahier-des-charges.md` (le périmètre de chaque version est en section 12).
-- Dernière version livrée : **V1.3.3 (remontée en haut au toucher de l’onglet)**. Versions livrées : V1.0 (MVP, `docs/mvp.md`), V1.0.1 (logo), V1.2 (filtres, près de moi, fiche salle, `docs/v1.2.md`), V1.3 (compte et favoris, `docs/v1.3.md`), V1.3.1 (refonte de l’interface, direction « Hybride », `docs/v1.3.1.md`), V1.3.2 (photos des villes, `docs/v1.3.2.md`), V1.3.3 (re-toucher un onglet remonte sa page en haut : `src/lib/useTabScrollToTop.ts`, la remontée native ne trouvant pas nos listes). Prochaine version : à décider (V1.1 Ticketmaster ou V1.4 notifications).
+- Dernière version livrée : **V1.3.3 (remontée en haut au toucher de l’onglet)**. Versions livrées : V1.0 (MVP, `docs/mvp.md`), V1.0.1 (logo), V1.2 (filtres, près de moi, fiche salle, `docs/v1.2.md`), V1.3 (compte et favoris, `docs/v1.3.md`), V1.3.1 (refonte de l’interface, direction « Hybride », `docs/v1.3.1.md`), V1.3.2 (photos des villes, `docs/v1.3.2.md`), V1.3.3 (re-toucher un onglet remonte sa page en haut : `src/lib/useTabScrollToTop.ts`, la remontée native ne trouvant pas nos listes). Version en cours : **V1.1 (données réelles Ticketmaster)**, périmètre et décisions dans `docs/v1.1.md`.
 - **Ordre modifié** : V1.0 → V1.2 → V1.3 ; la V1.1 (données Ticketmaster) est faite plus tard. L’app fonctionne toujours sur les données de démonstration.
 - Direction artistique : `docs/design.md`. Valeurs de design : `src/theme/tokens.ts`.
 
