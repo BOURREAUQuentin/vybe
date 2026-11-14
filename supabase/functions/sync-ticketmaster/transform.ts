@@ -245,11 +245,26 @@ export function mapStatus(event: TmEvent, now: Date): ImportEvent['status'] {
   }
 }
 
-/** Festival si une classification l'indique (type ou sous-type « Festival »). */
+/** Mots du nom qui signalent un festival ou un pass de festival (« PASS 1 JOUR »). */
+const FESTIVAL_NAME = /\b(festival|fest|pass)\b/i;
+/** Formules de vente (packs VIP, hospitalité…) : pas des événements, ignorées à l'import. */
+const PACKAGE_NAME = /\bpackages?\b/i;
+
+/**
+ * Festival si une classification l'indique (type ou sous-type « Festival »), ou si le nom le dit
+ * (« … FESTIVAL 2026 », « PASS 1 JOUR ») : Ticketmaster classe souvent ces événements en simple
+ * « musique ». Les festivals sont enregistrés mais pas affichés avant la V2.3.
+ */
 export function isFestival(event: TmEvent): boolean {
-  return (event.classifications ?? []).some((c) =>
+  const byClassification = (event.classifications ?? []).some((c) =>
     [c.type?.name, c.subType?.name].some((name) => /festival/i.test(name ?? '')),
   );
+  return byClassification || FESTIVAL_NAME.test(event.name ?? '');
+}
+
+/** Formule de vente (« PACKAGE GOSPEL… », « VIP PACKAGE ») plutôt qu'un événement. */
+export function isPackage(event: TmEvent): boolean {
+  return PACKAGE_NAME.test(event.name ?? '');
 }
 
 // ---------------------------------------------------------------------------
@@ -277,6 +292,8 @@ export function toImportEvent(event: TmEvent, now: Date): ImportEvent | null {
   // Hors musique (film, théâtre, humour…) : ignoré, même s'il remonte avec le filtre « musique ».
   const segment = clean(classification?.segment?.name);
   if (segment && segment !== MUSIC_SEGMENT) return null;
+  // Formule de vente (pack VIP, hospitalité…) : doublon commercial d'un vrai concert, ignorée.
+  if (isPackage(event)) return null;
   const price = event.priceRanges?.find((range) => range.type === 'standard') ?? event.priceRanges?.[0];
   const priceMin = typeof price?.min === 'number' ? price.min : null;
   const priceMax = typeof price?.max === 'number' ? price.max : null;

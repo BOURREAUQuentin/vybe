@@ -136,6 +136,19 @@ test('hors musique (film, théâtre…) ignoré', () => {
   assert.equal(film, null);
 });
 
+test('festival, pass et package repérés par le nom (relevés du 14/11/2026)', () => {
+  const named = (name: string) => toImportEvent({ ...sample, name }, NOW);
+  assert.equal(named("FOUD'ROCK FESTIVAL 2026 - PASS 1 JOUR - FOUD'ROCK")?.type, 'festival');
+  assert.equal(named('METALFEST')?.type, 'concert'); // « Fest » collé au nom : non détecté (accepté)
+  assert.equal(named('HELLFEST - PASS 3 JOURS')?.type, 'festival');
+  assert.equal(named('PACKAGE GOSPEL POUR 100 VOIX - 14 NOVEMBRE'), null);
+  assert.equal(named('VIP PACKAGES - ORELSAN'), null);
+  // Pas de faux positifs sur des mots proches.
+  assert.equal(named('PASSION VOCALE')?.type, 'concert');
+  assert.equal(named('PASSENGER')?.type, 'concert');
+  assert.equal(named('JOSMAN')?.type, 'concert');
+});
+
 test('festival détecté par sa classification', () => {
   const festival = toImportEvent(
     { ...sample, classifications: [{ primary: true, genre: { name: 'Pop' }, type: { name: 'Festival' } }] },
