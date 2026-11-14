@@ -1,13 +1,21 @@
-import { keepPreviousData, useQuery } from '@tanstack/react-query';
+import { keepPreviousData, useInfiniteQuery, useQuery } from '@tanstack/react-query';
 
-import { fetchFilteredEvents, fetchFilterOptions } from './api';
+import { fetchFilteredEvents, fetchFilterOptions, FILTERED_PAGE_SIZE } from './api';
 import type { EventFilters } from './filters';
 
-/** Concerts filtrés. Les résultats précédents restent affichés pendant un changement de filtre. */
+/**
+ * Concerts filtrés, chargés par pages de 50 (« Voir plus » charge la suivante).
+ * Les résultats précédents restent affichés pendant un changement de filtre.
+ */
 export function useFilteredEvents(filters: EventFilters) {
-  return useQuery({
+  return useInfiniteQuery({
     queryKey: ['events', 'filtered', filters],
-    queryFn: () => fetchFilteredEvents(filters),
+    queryFn: ({ pageParam }) => fetchFilteredEvents(filters, pageParam),
+    initialPageParam: 0,
+    getNextPageParam: (lastPage, pages) => {
+      const loaded = pages.reduce((sum, page) => sum + page.events.length, 0);
+      return loaded < lastPage.total && lastPage.events.length === FILTERED_PAGE_SIZE ? loaded : undefined;
+    },
     placeholderData: keepPreviousData,
   });
 }

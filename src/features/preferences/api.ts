@@ -60,7 +60,9 @@ export async function fetchFavoriteVenues() {
     .select('venue_id, created_at, venue:venues ( id, name, city:cities ( id, name ) )')
     .order('created_at', { ascending: false });
   if (error) throw new Error(error.message);
-  return data;
+  // Salle masquée du catalogue (V1.1 : démonstration) : la base renvoie la ligne sans salle (null),
+  // alors que les types générés la supposent toujours présente. Ligne ignorée (reste exportable).
+  return data.filter((row) => (row.venue as typeof row.venue | null) !== null);
 }
 
 export type FavoriteVenue = Awaited<ReturnType<typeof fetchFavoriteVenues>>[number];

@@ -25,12 +25,16 @@ export function nearbyFilters(place: NearbyPlace, radiusKm: number): EventFilter
   };
 }
 
-/** Concerts à venir autour du lieu choisi (inactif tant qu'aucun lieu n'est choisi). */
+/** Concerts montrés dans « Près de chez toi » (le total renvoie vers « Concerts »). */
+export const NEARBY_PREVIEW_COUNT = 5;
+
+/** Premiers concerts à venir autour du lieu choisi, et leur nombre total (inactif sans lieu). */
 export function useNearbyEvents(place: NearbyPlace | null, radiusKm: number) {
   const filters = place ? nearbyFilters(place, radiusKm) : null;
   return useQuery({
     queryKey: ['events', 'nearby', filters],
-    queryFn: () => (filters ? fetchFilteredEvents(filters) : Promise.resolve([])),
+    queryFn: () =>
+      filters ? fetchFilteredEvents(filters, 0, NEARBY_PREVIEW_COUNT) : Promise.resolve({ events: [], total: 0 }),
     enabled: filters !== null,
   });
 }

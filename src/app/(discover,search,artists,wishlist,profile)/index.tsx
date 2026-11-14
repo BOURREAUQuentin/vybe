@@ -1,4 +1,5 @@
 import { useRouter } from 'expo-router';
+import { useQueryClient } from '@tanstack/react-query';
 import { useMemo, useRef, type ReactNode } from 'react';
 import { RefreshControl, ScrollView, SectionList, StyleSheet, Text, View } from 'react-native';
 import Animated, { useAnimatedScrollHandler, useSharedValue } from 'react-native-reanimated';
@@ -17,9 +18,19 @@ import { IconButton } from '@/components/IconButton';
 import { MonthHeader } from '@/components/MonthHeader';
 import { NearbySection } from '@/components/NearbySection';
 import { ScreenHeader } from '@/components/ScreenHeader';
+import { SecondaryButton } from '@/components/SecondaryButton';
 import { SectionTitle } from '@/components/SectionTitle';
 import { Ticket } from '@/components/Ticket';
-import { buildDiscoverSections, getCityPhotos, type DiscoverSections } from '@/features/discover/sections';
+import type { CityCount, GenreCount } from '@/features/discover/api';
+import { groupEventsByMonth } from '@/features/discover/sections';
+import {
+  discoverKeys,
+  useCityCounts,
+  useFeatured,
+  useGenreCounts,
+  useThisWeek,
+  useThisWeekCount,
+} from '@/features/discover/useDiscover';
 import type { EventListItem } from '@/features/events/api';
 import { describeEvent } from '@/features/events/eventView';
 import { useUpcomingEvents } from '@/features/events/useUpcomingEvents';
@@ -32,16 +43,34 @@ import { colors, fonts, fontSizes, spacing } from '@/theme/tokens';
 const AnimatedSectionList = Animated.createAnimatedComponent(SectionList<EventListItem>);
 
 const HERO_KICKER = 'Rap à l’affiche';
+const FEATURED_COUNT = 8; // grand visuel + carrousel
+const THIS_WEEK_COUNT = 10; // « Cette semaine » : les 10 premiers, rap d'abord
+const CITY_COUNT = 12; // tuiles « Villes »
 
-// Onglet Découvrir (direction Hybride) : grand visuel, À l'affiche (carrousel), Près de chez toi,
-// Cette semaine, Villes, Par genre, puis À venir par mois. Concerts en billets.
+// Onglet Découvrir (direction Hybride, V1.1 catalogue réel) : grand visuel, À l'affiche (carrousel),
+// Près de chez toi, Cette semaine, Villes, Par genre, puis un aperçu « À venir » par mois.
+// Chaque section a sa propre requête ; les listes complètes sont dans « Concerts » (« Tout voir »).
 export default function DiscoverScreen() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
-  const { data, error, isRefetching, refetch } = useUpcomingEvents();
-  const sections = useMemo(() => (data ? buildDiscoverSections(data) : null), [data]);
-  const cityPhotos = useMemo(() => (data ? getCityPhotos(data) : new Map<string, string>()), [data]);
+  const queryClient = useQueryClient();
+  const upcoming = useUpcomingEvents();
+  const featured = useFeatured(FEATURED_COUNT);
+  const thisWeek = useThisWeek(THIS_WEEK_COUNT);
+  const thisWeekCount = useThisWeekCount();
+  const cities = useCityCounts(CITY_COUNT);
+  const genres = useGenreCounts();
+  const { data, error } = upcoming;
+  const months = useMemo(() => (data ? groupEventsByMonth(data) : null), [data]);
   const { data: wishIds } = useWishlistIds();
+  const queries = [upcoming, featured, thisWeek, thisWeekCount, cities, genres];
+  const isRefetching = queries.some((query) => query.isRefetching);
+  // Échec d'actualisation : une section déjà affichée n'a pas pu être rechargée.
+  const refreshFailed = queries.some((query) => query.error && query.data !== undefined);
+  const refreshAll = () => {
+    void queryClient.invalidateQueries({ queryKey: discoverKeys.all });
+    void upcoming.refetch();
+  };
   // Le bas de la liste ne doit pas rester caché sous la barre d'onglets (iOS).
   const bottomSpace = useTabBarSpace();
 
@@ -72,11 +101,13 @@ export default function DiscoverScreen() {
   );
 
   // Premier chargement : squelette (sous la barre d'état, comme le grand visuel) ou erreur.
-  if (data === undefined || sections === null) {
+  // On attend aussi « À l'affiche » pour éviter que le grand visuel n'apparaisse après coup.
+  const featuredPending = featured.data === undefined && !featured.error;
+  if (data === undefined || months === null || featuredPending) {
     return error ? (
       <SafeAreaView style={styles.container} edges={['top']}>
         {plainHeader}
-        <ErrorState onRetry={() => refetch()} />
+        <ErrorState onRetry={refreshAll} />
       </SafeAreaView>
     ) : (
       <View style={styles.container}>
@@ -88,9 +119,7 @@ export default function DiscoverScreen() {
   const refreshControl = (
     <RefreshControl
       refreshing={isRefetching}
-      onRefresh={() => {
-        void refetch();
-      }}
+      onRefresh={refreshAll}
       tintColor={colors.text}
       progressViewOffset={insets.top}
     />
@@ -111,7 +140,7 @@ export default function DiscoverScreen() {
     );
   }
 
-  const [heroEvent, ...carouselEvents] = sections.featured;
+  const [heroEvent, ...carouselEvents] = featured.data ?? [];
 
   // Haut de la page : grand visuel (ou titre simple sans concert à l'affiche) + bouton Infos.
   const top = heroEvent ? (
@@ -140,7 +169,7 @@ export default function DiscoverScreen() {
     <View style={styles.container}>
       <AnimatedSectionList
         ref={listRef}
-        sections={sections.months}
+        sections={months}
         keyExtractor={(event) => event.id}
         stickySectionHeadersEnabled={false}
         onScroll={onScroll}
@@ -158,17 +187,33 @@ export default function DiscoverScreen() {
           <>
             {top}
             <DiscoverTopSections
-              sections={sections}
               carouselEvents={carouselEvents}
-              cityPhotos={cityPhotos}
-              refreshFailed={Boolean(error)}
+              thisWeek={thisWeek.data ?? []}
+              thisWeekTotal={thisWeekCount.data ?? null}
+              cities={cities.data ?? []}
+              genres={genres.data ?? []}
+              hasUpcoming={months.length > 0}
+              refreshFailed={refreshFailed}
               isWished={isWished}
               onOpenConcert={openConcert}
               onOpenCity={(id) => router.push({ pathname: '/concerts', params: { city: id } })}
               onOpenGenre={(id) => router.push({ pathname: '/concerts', params: { genres: id } })}
+              onOpenWeek={() => router.push({ pathname: '/concerts', params: { date: 'week' } })}
               onOpenAll={() => router.push('/concerts')}
             />
           </>
+        }
+        ListFooterComponent={
+          // Aperçu seulement : la suite du catalogue est dans « Concerts ».
+          months.length > 0 ? (
+            <View style={styles.seeMore}>
+              <SecondaryButton
+                label="Voir plus de concerts"
+                accessibilityHint="Ouvre tous les concerts, avec les filtres"
+                onPress={() => router.push('/concerts')}
+              />
+            </View>
+          ) : undefined
         }
       />
       {heroEvent ? <GlassHeader title="Découvrir" scrollY={scrollY} top={insets.top} /> : null}
@@ -177,33 +222,41 @@ export default function DiscoverScreen() {
 }
 
 type TopSectionsProps = {
-  sections: DiscoverSections;
   /** Concerts « À l'affiche » après celui du grand visuel. */
   carouselEvents: EventListItem[];
-  cityPhotos: Map<string, string>;
+  thisWeek: EventListItem[];
+  /** Nombre total de concerts cette semaine (null tant qu'il n'est pas connu). */
+  thisWeekTotal: number | null;
+  cities: CityCount[];
+  genres: GenreCount[];
+  hasUpcoming: boolean;
   refreshFailed: boolean;
   isWished: (id: string) => boolean;
   onOpenConcert: (id: string) => void;
   onOpenCity: (id: string) => void;
   onOpenGenre: (id: string) => void;
+  /** Ouvre « Concerts » filtré sur la semaine. */
+  onOpenWeek: () => void;
   /** Ouvre « Tous les concerts » (filtres). */
   onOpenAll: () => void;
 };
 
 // Sections entre le grand visuel et la liste par mois. Une section vide n'est pas affichée.
 function DiscoverTopSections({
-  sections,
   carouselEvents,
-  cityPhotos,
+  thisWeek,
+  thisWeekTotal,
+  cities,
+  genres,
+  hasUpcoming,
   refreshFailed,
   isWished,
   onOpenConcert,
   onOpenCity,
   onOpenGenre,
+  onOpenWeek,
   onOpenAll,
 }: TopSectionsProps) {
-  const { thisWeek, cities, genres, months } = sections;
-
   return (
     <View style={styles.topSections}>
       {refreshFailed ? (
@@ -221,7 +274,17 @@ function DiscoverTopSections({
       <NearbySection />
 
       {thisWeek.length > 0 ? (
-        <Section title="Cette semaine">
+        <Section
+          title="Cette semaine"
+          action={
+            thisWeekTotal !== null && thisWeekTotal > thisWeek.length
+              ? {
+                  label: `Tout voir (${thisWeekTotal})`,
+                  accessibilityLabel: `Voir les ${thisWeekTotal} concerts de la semaine`,
+                  onPress: onOpenWeek,
+                }
+              : undefined
+          }>
           <View style={styles.tickets}>
             {thisWeek.map((event) => (
               <Ticket
@@ -243,7 +306,7 @@ function DiscoverTopSections({
                 key={city.id}
                 name={city.name}
                 count={city.count}
-                imageUrl={cityPhotos.get(city.id) ?? null}
+                imageUrl={city.imageUrl}
                 onPress={() => onOpenCity(city.id)}
               />
             ))}
@@ -261,7 +324,7 @@ function DiscoverTopSections({
         </Section>
       ) : null}
 
-      {months.length > 0 ? (
+      {hasUpcoming ? (
         <SectionTitle
           title="À venir"
           action={{
@@ -275,10 +338,12 @@ function DiscoverTopSections({
   );
 }
 
-function Section({ title, children }: { title: string; children: ReactNode }) {
+type SectionAction = { label: string; accessibilityLabel?: string; onPress: () => void };
+
+function Section({ title, action, children }: { title: string; action?: SectionAction; children: ReactNode }) {
   return (
     <View style={styles.section}>
-      <SectionTitle title={title} />
+      <SectionTitle title={title} action={action} />
       {children}
     </View>
   );
@@ -365,6 +430,10 @@ const styles = StyleSheet.create({
   },
   separator: {
     height: spacing.sm,
+  },
+  seeMore: {
+    paddingHorizontal: spacing.md,
+    paddingTop: spacing.lg,
   },
   refreshError: {
     fontFamily: fonts.regular,

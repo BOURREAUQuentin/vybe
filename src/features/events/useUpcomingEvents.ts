@@ -1,16 +1,16 @@
 import { useQuery } from '@tanstack/react-query';
 
-import { fetchUpcomingEvents } from './api';
+import { fetchUpcomingEvents, UPCOMING_PREVIEW_LIMIT } from './api';
 
 export const eventKeys = {
-  upcoming: ['events', 'upcoming'] as const,
+  upcoming: (limit: number) => ['events', 'upcoming', limit] as const,
   detail: (id: string) => ['events', 'detail', id] as const,
 };
 
-/** Liste des concerts à venir, mise en cache par TanStack Query. */
-export function useUpcomingEvents() {
+/** Prochains concerts (aperçu « À venir » de Découvrir), mis en cache par TanStack Query. */
+export function useUpcomingEvents(limit: number = UPCOMING_PREVIEW_LIMIT) {
   return useQuery({
-    queryKey: eventKeys.upcoming,
-    queryFn: fetchUpcomingEvents,
+    queryKey: eventKeys.upcoming(limit),
+    queryFn: () => fetchUpcomingEvents(limit),
   });
 }

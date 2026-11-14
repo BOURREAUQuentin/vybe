@@ -23,6 +23,7 @@ export async function fetchArtistWithEvents(id: string) {
       .select(`${EVENT_LIST_SELECT}, artist_filter:event_artists!inner ( artist_id )` as const)
       .eq('artist_filter.artist_id', id)
       .eq('type', 'concert')
+      .is('withdrawn_at', null) // concert retiré par la source (V1.1)
       .gte('starts_at', new Date().toISOString())
       .order('starts_at', { ascending: true }),
   ]);

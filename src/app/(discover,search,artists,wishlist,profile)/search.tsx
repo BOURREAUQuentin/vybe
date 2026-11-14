@@ -1,5 +1,5 @@
 import { useRouter } from 'expo-router';
-import { useMemo, useRef, useState, type ReactNode } from 'react';
+import { useRef, useState, type ReactNode } from 'react';
 import { Pressable, ScrollView, StyleSheet, Text, View, type ScrollViewInstance } from 'react-native';
 import Animated, { FadeIn } from 'react-native-reanimated';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -16,12 +16,11 @@ import { SectionTitle } from '@/components/SectionTitle';
 import { Ticket } from '@/components/Ticket';
 import { TicketSkeleton } from '@/components/TicketSkeleton';
 import { VenueRow } from '@/components/VenueRow';
-import { buildDiscoverSections, filterByCity, getCityPhotos } from '@/features/discover/sections';
+import { useCityCounts, useTopArtists } from '@/features/discover/useDiscover';
 import type { EventListItem } from '@/features/events/api';
 import { describeEvent } from '@/features/events/eventView';
-import { useUpcomingEvents } from '@/features/events/useUpcomingEvents';
 import { MIN_QUERY_LENGTH, type SearchResults } from '@/features/search/api';
-import { getMatchNote, getTopArtists } from '@/features/search/suggestions';
+import { getMatchNote } from '@/features/search/suggestions';
 import { useSearch } from '@/features/search/useSearch';
 import { useWishlistIds } from '@/features/wishlist/useWishlist';
 import { haptics } from '@/lib/haptics';
@@ -83,18 +82,9 @@ function Suggestions() {
   // Re-toucher l'onglet Recherche remonte la page tout en haut.
   const scrollRef = useRef<ScrollViewInstance>(null);
   useTabScrollToTop(() => scrollRef.current?.scrollTo({ y: 0, animated: true }));
-  const { data: upcoming } = useUpcomingEvents();
-
-  const { artists, cities } = useMemo(() => {
-    if (!upcoming) return { artists: [], cities: [] };
-    const photos = getCityPhotos(upcoming);
-    return {
-      artists: getTopArtists(upcoming, TOP_ARTISTS),
-      cities: buildDiscoverSections(upcoming)
-        .cities.slice(0, TOP_CITIES)
-        .map((city) => ({ ...city, imageUrl: photos.get(city.id) ?? null })),
-    };
-  }, [upcoming]);
+  // Classements calculés sur tout le catalogue, côté base (V1.1).
+  const artists = useTopArtists(TOP_ARTISTS).data ?? [];
+  const cities = useCityCounts(TOP_CITIES).data ?? [];
 
   // Liste pas encore chargée (ou vide) : simple invitation.
   if (artists.length === 0 && cities.length === 0) {
@@ -168,8 +158,9 @@ type SearchResultsListProps = {
 
 function SearchResultsList({ results, query, stale, refreshFailed }: SearchResultsListProps) {
   const router = useRouter();
-  // Nombre de concerts par ville, si la liste de Découvrir est déjà en cache.
-  const { data: upcoming } = useUpcomingEvents();
+  // Nombre de concerts à venir par ville (classement mis en cache, partagé avec le filtre « Ville »).
+  const { data: cityCounts } = useCityCounts(null);
+  const countByCity = new Map((cityCounts ?? []).map((city) => [city.id, city.count]));
   const { data: wishIds } = useWishlistIds();
   const { artists, cities, venues, events } = results;
   const bottomSpace = useTabBarSpace();
@@ -246,7 +237,7 @@ function SearchResultsList({ results, query, stale, refreshFailed }: SearchResul
               key={city.id}
               icon={{ ios: 'building.2', android: 'location_city' }}
               title={city.name}
-              subtitle={upcoming ? concertsLabel(filterByCity(upcoming, city.id).length) : null}
+              subtitle={cityCounts ? concertsLabel(countByCity.get(city.id) ?? 0) : null}
               accessibilityHint="Ouvre les concerts de cette ville"
               onPress={() => router.push({ pathname: '/concerts', params: { city: city.id } })}
             />

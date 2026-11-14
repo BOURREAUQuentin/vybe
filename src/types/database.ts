@@ -22,6 +22,7 @@ export type Database = {
           genre_id: string | null
           id: string
           image_url: string | null
+          is_hidden: boolean
           name: string
           source: Database["public"]["Enums"]["data_source"]
           updated_at: string
@@ -34,6 +35,7 @@ export type Database = {
           genre_id?: string | null
           id?: string
           image_url?: string | null
+          is_hidden?: boolean
           name: string
           source: Database["public"]["Enums"]["data_source"]
           updated_at?: string
@@ -46,6 +48,7 @@ export type Database = {
           genre_id?: string | null
           id?: string
           image_url?: string | null
+          is_hidden?: boolean
           name?: string
           source?: Database["public"]["Enums"]["data_source"]
           updated_at?: string
@@ -527,6 +530,7 @@ export type Database = {
           created_at: string
           external_id: string | null
           id: string
+          is_hidden: boolean
           latitude: number | null
           longitude: number | null
           name: string
@@ -541,6 +545,7 @@ export type Database = {
           created_at?: string
           external_id?: string | null
           id?: string
+          is_hidden?: boolean
           latitude?: number | null
           longitude?: number | null
           name: string
@@ -555,6 +560,7 @@ export type Database = {
           created_at?: string
           external_id?: string | null
           id?: string
+          is_hidden?: boolean
           latitude?: number | null
           longitude?: number | null
           name?: string
@@ -578,7 +584,89 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      city_event_counts: {
+        Args: { p_limit?: number }
+        Returns: {
+          event_count: number
+          fallback_image_url: string
+          id: string
+          image_path: string
+          name: string
+        }[]
+      }
       delete_my_account: { Args: never; Returns: undefined }
+      discover_featured: {
+        Args: { p_genre_slug?: string; p_limit?: number }
+        Returns: {
+          created_at: string
+          created_by: string | null
+          currency: string
+          description: string | null
+          external_id: string | null
+          genre_id: string | null
+          id: string
+          image_url: string | null
+          is_hidden: boolean
+          last_seen_at: string | null
+          missed_syncs: number
+          name: string
+          on_sale_at: string | null
+          price_max: number | null
+          price_min: number | null
+          source: Database["public"]["Enums"]["data_source"]
+          starts_at: string
+          status: Database["public"]["Enums"]["event_status"]
+          ticket_url: string | null
+          time_tba: boolean
+          timezone: string
+          type: Database["public"]["Enums"]["event_type"]
+          updated_at: string
+          venue_id: string | null
+          withdrawn_at: string | null
+        }[]
+        SetofOptions: {
+          from: "*"
+          to: "events"
+          isOneToOne: false
+          isSetofReturn: true
+        }
+      }
+      discover_this_week: {
+        Args: { p_limit?: number; p_priority_slug?: string }
+        Returns: {
+          created_at: string
+          created_by: string | null
+          currency: string
+          description: string | null
+          external_id: string | null
+          genre_id: string | null
+          id: string
+          image_url: string | null
+          is_hidden: boolean
+          last_seen_at: string | null
+          missed_syncs: number
+          name: string
+          on_sale_at: string | null
+          price_max: number | null
+          price_min: number | null
+          source: Database["public"]["Enums"]["data_source"]
+          starts_at: string
+          status: Database["public"]["Enums"]["event_status"]
+          ticket_url: string | null
+          time_tba: boolean
+          timezone: string
+          type: Database["public"]["Enums"]["event_type"]
+          updated_at: string
+          venue_id: string | null
+          withdrawn_at: string | null
+        }[]
+        SetofOptions: {
+          from: "*"
+          to: "events"
+          isOneToOne: false
+          isSetofReturn: true
+        }
+      }
       distance_km: {
         Args: { lat1: number; lat2: number; lon1: number; lon2: number }
         Returns: number
@@ -636,6 +724,15 @@ export type Database = {
         }
         Returns: Json
       }
+      genre_event_counts: {
+        Args: never
+        Returns: {
+          event_count: number
+          id: string
+          name: string
+          slug: string
+        }[]
+      }
       import_ticketmaster_events: {
         Args: { p_events: Json; p_seen_at?: string }
         Returns: Json
@@ -659,6 +756,7 @@ export type Database = {
           genre_id: string | null
           id: string
           image_url: string | null
+          is_hidden: boolean
           name: string
           source: Database["public"]["Enums"]["data_source"]
           updated_at: string
@@ -737,6 +835,7 @@ export type Database = {
           created_at: string
           external_id: string | null
           id: string
+          is_hidden: boolean
           latitude: number | null
           longitude: number | null
           name: string
@@ -755,6 +854,15 @@ export type Database = {
       set_main_city: {
         Args: { p_city_id: string; p_radius_km?: number }
         Returns: undefined
+      }
+      top_artists: {
+        Args: { p_limit?: number }
+        Returns: {
+          event_count: number
+          id: string
+          image_url: string
+          name: string
+        }[]
       }
       trigger_ticketmaster_sync: {
         Args: { p_months?: number }

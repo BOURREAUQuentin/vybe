@@ -21,7 +21,7 @@ export type EventView = {
   day: string; // « 21 »
   month: string; // « MARS »
   time: string; // « 20H00 » ou « À CONF. »
-  imageUrl: string | null; // photo de la première tête d'affiche
+  imageUrl: string | null; // photo de la première tête d'affiche, sinon photo du concert (V1.1)
   status: EventListItem['status'];
   isCancelled: boolean;
   accessibilityLabel: string;
@@ -50,7 +50,7 @@ export function describeEvent(event: EventListItem | EventDetail): EventView {
     day: pad(paris.day),
     month: MONTHS[paris.month - 1],
     time: event.time_tba ? 'À CONF.' : `${pad(paris.hour)}H${pad(paris.minute)}`,
-    imageUrl: main?.image_url ?? null,
+    imageUrl: main?.image_url ?? event.image_url ?? null,
     status: event.status,
     isCancelled: event.status === 'cancelled',
     accessibilityLabel: [

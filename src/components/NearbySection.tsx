@@ -25,7 +25,6 @@ import {
   touch,
 } from '@/theme/tokens';
 
-const PREVIEW_COUNT = 5;
 
 /** Paramètres de l'écran « Concerts » pour voir tous les concerts proches. */
 function concertsParams(place: NearbyPlace, radiusKm: number) {
@@ -160,7 +159,7 @@ export function NearbySection() {
         <TicketSkeleton />
       </View>
     );
-  } else if (data.length === 0) {
+  } else if (data.total === 0) {
     content = (
       <Text style={styles.empty}>
         Aucun concert à moins de {nearbyRadius} km pour le moment.
@@ -170,7 +169,7 @@ export function NearbySection() {
     content = (
       <>
         <View style={styles.cards}>
-          {data.slice(0, PREVIEW_COUNT).map((event) => (
+          {data.events.map((event) => (
             <Ticket
               key={event.id}
               view={describeEvent(event)}
@@ -182,10 +181,10 @@ export function NearbySection() {
         <Pressable
           onPress={() => router.push({ pathname: '/concerts', params: concertsParams(place, nearbyRadius) })}
           accessibilityRole="link"
-          accessibilityLabel={`Voir les ${data.length} concerts à moins de ${nearbyRadius} km`}
+          accessibilityLabel={`Voir les ${data.total} concerts à moins de ${nearbyRadius} km`}
           style={({ pressed }) => [styles.seeAll, pressed && styles.pressed]}>
           <Text style={styles.seeAllLabel}>
-            Tout voir ({data.length}) ›
+            Tout voir ({data.total}) ›
           </Text>
         </Pressable>
       </>

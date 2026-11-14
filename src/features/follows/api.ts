@@ -10,14 +10,19 @@ const FOLLOWED_SELECT = `
   artist:artists ( id, name, image_url, genre:genres ( id, name ) )
 `;
 
-/** Artistes suivis par l'utilisateur connecté, du plus récent au plus ancien. */
+/**
+ * Artistes suivis par l'utilisateur connecté, du plus récent au plus ancien.
+ * Un artiste masqué du catalogue (V1.1 : démonstration) n'est pas renvoyé par la base : la ligne
+ * de suivi arrive alors sans artiste (null) et est ignorée ici (elle reste exportable et supprimable).
+ */
 export async function fetchFollowedArtists() {
   const { data, error } = await supabase
     .from('user_artist_follows')
     .select(FOLLOWED_SELECT)
     .order('created_at', { ascending: false });
   if (error) throw new Error(error.message);
-  return data;
+  // Les types générés supposent l'artiste toujours présent : la RLS peut pourtant le masquer.
+  return data.filter((row) => (row.artist as typeof row.artist | null) !== null);
 }
 
 export type FollowedArtist = Awaited<ReturnType<typeof fetchFollowedArtists>>[number];
@@ -48,6 +53,7 @@ export async function fetchFollowedArtistsEvents(artistIds: string[]) {
     .select(`${EVENT_LIST_SELECT}, artist_filter:event_artists!inner ( artist_id )` as const)
     .in('artist_filter.artist_id', artistIds)
     .eq('type', 'concert')
+    .is('withdrawn_at', null) // concert retiré par la source (V1.1)
     .gte('starts_at', new Date().toISOString())
     .order('starts_at', { ascending: true });
   if (error) throw new Error(error.message);

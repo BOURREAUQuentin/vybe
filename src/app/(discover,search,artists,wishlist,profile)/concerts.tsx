@@ -60,8 +60,20 @@ export default function ConcertsScreen() {
   const [filters, setFilters] = useState<EventFilters>(() => parseFilterParams(params));
   const [openSheet, setOpenSheet] = useState<SheetName | null>(null);
 
-  const { data, error, isRefetching, isPlaceholderData, refetch } = useFilteredEvents(filters);
+  const {
+    data: pages,
+    error,
+    isRefetching,
+    isPlaceholderData,
+    refetch,
+    hasNextPage,
+    fetchNextPage,
+    isFetchingNextPage,
+  } = useFilteredEvents(filters);
   const { data: options } = useFilterOptions();
+  // Concerts chargés (pages mises bout à bout) et nombre total de résultats.
+  const data = useMemo(() => pages?.pages.flatMap((page) => page.events), [pages]);
+  const total = pages?.pages[0]?.total ?? 0;
   const sections = useMemo(() => (data ? groupEventsByMonth(data) : []), [data]);
 
   const { data: wishIds } = useWishlistIds();
@@ -117,13 +129,9 @@ export default function ConcertsScreen() {
       </View>
 
       {/* Ligne de résumé : nombre de résultats à gauche, réinitialisation à droite. */}
-      {(data !== undefined && data.length > 0) || activeCount > 0 ? (
+      {total > 0 || activeCount > 0 ? (
         <View style={styles.summary}>
-          <Text style={styles.count}>
-            {data !== undefined && data.length > 0
-              ? `${data.length} concert${data.length > 1 ? 's' : ''}`
-              : ''}
-          </Text>
+          <Text style={styles.count}>{total > 0 ? `${total} concert${total > 1 ? 's' : ''}` : ''}</Text>
           {activeCount > 0 ? (
             <Pressable
               onPress={() => {
@@ -197,6 +205,22 @@ export default function ConcertsScreen() {
         )}
         ItemSeparatorComponent={Separator}
         ListEmptyComponent={<View style={styles.empty}>{emptyContent}</View>}
+        ListFooterComponent={
+          // Pagination : « Voir plus » charge les 50 concerts suivants (V1.1, catalogue réel).
+          hasNextPage ? (
+            <View style={styles.seeMore}>
+              <SecondaryButton
+                label={`Voir plus (${data?.length ?? 0} sur ${total})`}
+                accessibilityHint="Charge les concerts suivants"
+                loading={isFetchingNextPage}
+                onPress={() => {
+                  haptics.tap();
+                  void fetchNextPage();
+                }}
+              />
+            </View>
+          ) : undefined
+        }
         contentContainerStyle={[
           styles.listContent,
           { paddingBottom: bottomSpace },
@@ -395,6 +419,10 @@ const styles = StyleSheet.create({
   },
   separator: {
     height: spacing.sm,
+  },
+  seeMore: {
+    paddingHorizontal: spacing.md,
+    paddingTop: spacing.lg,
   },
   hint: {
     fontFamily: fonts.regular,
