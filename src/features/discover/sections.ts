@@ -102,6 +102,20 @@ export function buildDiscoverSections(
   };
 }
 
+/**
+ * Photo d'illustration de chaque ville : celle du premier artiste principal qui y joue bientôt
+ * et qui a une photo (tuiles « Villes »). Les villes sans photo n'apparaissent pas dans la table.
+ */
+export function getCityPhotos(events: EventListItem[]): Map<string, string> {
+  const photos = new Map<string, string>();
+  for (const event of events) {
+    const cityId = event.venue?.city.id;
+    const imageUrl = getMainArtist(event)?.image_url;
+    if (cityId && imageUrl && !photos.has(cityId)) photos.set(cityId, imageUrl);
+  }
+  return photos;
+}
+
 /** Concerts d'une ville (utilisé pour le compteur des pastilles de ville). */
 export function filterByCity(events: EventListItem[], cityId: string) {
   return events.filter((event) => event.venue?.city.id === cityId);

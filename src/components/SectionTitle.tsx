@@ -8,7 +8,7 @@ type SectionTitleProps = {
   action?: { label: string; onPress: () => void; accessibilityLabel?: string };
 };
 
-// Titre d'une section de la page Découvrir (Inter : Anton est réservé aux grands titres).
+// Titre de section (Inter gras 22 pt : Anton est réservé aux grands titres).
 export function SectionTitle({ title, action }: SectionTitleProps) {
   return (
     <View style={styles.row}>
@@ -40,7 +40,7 @@ const styles = StyleSheet.create({
   title: {
     flexShrink: 1,
     fontFamily: fonts.bold,
-    fontSize: fontSizes.lg,
+    fontSize: fontSizes.xl,
     color: colors.text,
   },
   action: {
