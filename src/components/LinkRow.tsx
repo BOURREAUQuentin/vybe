@@ -1,12 +1,15 @@
 import { SymbolView, type SymbolViewProps } from 'expo-symbols';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 
+import { haptics } from '@/lib/haptics';
+
 import {
   colors,
   fonts,
   fontSizes,
   iconSizes,
   opacity,
+  radius,
   spacing,
   touch,
 } from '@/theme/tokens';
@@ -20,16 +23,21 @@ type LinkRowProps = {
   accessibilityHint?: string;
 };
 
-// Ligne cliquable générique : icône, titre, sous-titre, chevron ›. Zone tactile ≥ 44 pt.
+// Ligne cliquable générique : icône sur pastille, titre, sous-titre, chevron ›. Zone tactile ≥ 44 pt.
 export function LinkRow({ icon, title, subtitle, onPress, accessibilityHint }: LinkRowProps) {
   return (
     <Pressable
-      onPress={onPress}
+      onPress={() => {
+        haptics.tap();
+        onPress();
+      }}
       accessibilityRole="button"
       accessibilityLabel={[title, subtitle].filter(Boolean).join(', ')}
       accessibilityHint={accessibilityHint}
       style={({ pressed }) => [styles.row, pressed && styles.pressed]}>
-      <SymbolView name={icon} size={iconSizes.md} tintColor={colors.textSecondary} />
+      <View style={styles.icon}>
+        <SymbolView name={icon} size={iconSizes.md} tintColor={colors.text} />
+      </View>
       <View style={styles.text}>
         <Text style={styles.title} numberOfLines={1}>
           {title}
@@ -38,7 +46,7 @@ export function LinkRow({ icon, title, subtitle, onPress, accessibilityHint }: L
       </View>
       <SymbolView
         name={{ ios: 'chevron.right', android: 'chevron_right' }}
-        size={iconSizes.md}
+        size={iconSizes.sm}
         tintColor={colors.textSecondary}
       />
     </Pressable>
@@ -56,8 +64,17 @@ const styles = StyleSheet.create({
   pressed: {
     opacity: opacity.pressed,
   },
+  icon: {
+    width: touch.minSize,
+    height: touch.minSize,
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderRadius: radius.md,
+    backgroundColor: colors.surface,
+  },
   text: {
     flex: 1,
+    gap: spacing.xxs,
   },
   title: {
     fontFamily: fonts.semibold,

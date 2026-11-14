@@ -2,6 +2,7 @@ import { SymbolView } from 'expo-symbols';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 
 import { ArtistAvatar } from '@/components/ArtistAvatar';
+import { haptics } from '@/lib/haptics';
 import {
   colors,
   fonts,
@@ -24,7 +25,10 @@ type ArtistRowProps = {
 export function ArtistRow({ name, imageUrl, subtitle, onPress }: ArtistRowProps) {
   return (
     <Pressable
-      onPress={onPress}
+      onPress={() => {
+        haptics.tap();
+        onPress();
+      }}
       accessibilityRole="button"
       accessibilityLabel={[name, subtitle].filter(Boolean).join(', ')}
       accessibilityHint="Ouvre la fiche de l’artiste"
@@ -38,7 +42,7 @@ export function ArtistRow({ name, imageUrl, subtitle, onPress }: ArtistRowProps)
       </View>
       <SymbolView
         name={{ ios: 'chevron.right', android: 'chevron_right' }}
-        size={iconSizes.md}
+        size={iconSizes.sm}
         tintColor={colors.textSecondary}
       />
     </Pressable>
@@ -58,6 +62,7 @@ const styles = StyleSheet.create({
   },
   text: {
     flex: 1,
+    gap: spacing.xxs,
   },
   name: {
     fontFamily: fonts.semibold,

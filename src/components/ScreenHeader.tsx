@@ -1,7 +1,7 @@
 import type { ReactNode } from 'react';
 import { StyleSheet, Text, View } from 'react-native';
 
-import { colors, fonts, fontSizes, lineHeights, maxFontScale, spacing } from '@/theme/tokens';
+import { colors, fonts, fontSizes, maxFontScale, spacing } from '@/theme/tokens';
 
 type ScreenHeaderProps = {
   title: string;
@@ -9,7 +9,7 @@ type ScreenHeaderProps = {
   action?: ReactNode;
 };
 
-// En-tête des écrans principaux : grand titre Anton en majuscules.
+// En-tête des écrans principaux : titre en Inter gras 34 pt (V1.3.1 : Anton est réservé aux noms d'artistes).
 export function ScreenHeader({ title, action }: ScreenHeaderProps) {
   return (
     <View style={styles.container}>
@@ -37,10 +37,8 @@ const styles = StyleSheet.create({
   },
   title: {
     flexShrink: 1,
-    fontFamily: fonts.display,
-    fontSize: fontSizes.display,
-    lineHeight: fontSizes.display * lineHeights.display,
+    fontFamily: fonts.bold,
+    fontSize: fontSizes.screenTitle,
     color: colors.text,
-    textTransform: 'uppercase',
   },
 });
