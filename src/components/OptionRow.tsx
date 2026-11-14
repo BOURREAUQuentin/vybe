@@ -7,6 +7,7 @@ import {
   fontSizes,
   iconSizes,
   opacity,
+  radius,
   spacing,
   touch,
 } from '@/theme/tokens';
@@ -20,7 +21,7 @@ type OptionRowProps = {
   onPress: () => void;
 };
 
-// Ligne de choix dans un panneau de filtre, avec une coche quand elle est sélectionnée.
+// Ligne de choix dans un panneau de filtre : surlignée, en gras et cochée quand elle est sélectionnée.
 export function OptionRow({ label, selected, multiple = false, disabled = false, onPress }: OptionRowProps) {
   return (
     <Pressable
@@ -28,7 +29,7 @@ export function OptionRow({ label, selected, multiple = false, disabled = false,
       disabled={disabled}
       accessibilityRole={multiple ? 'checkbox' : 'radio'}
       accessibilityState={{ checked: selected, disabled }}
-      style={({ pressed }) => [styles.row, (pressed || disabled) && styles.dimmed]}>
+      style={({ pressed }) => [styles.row, selected && styles.selected, (pressed || disabled) && styles.dimmed]}>
       <Text style={[styles.label, selected && styles.labelSelected]}>{label}</Text>
       <View style={styles.check}>
         {selected ? (
@@ -51,6 +52,11 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     gap: spacing.sm,
     paddingVertical: spacing.xs,
+    paddingHorizontal: spacing.sm,
+    borderRadius: radius.md,
+  },
+  selected: {
+    backgroundColor: colors.surfaceRaised,
   },
   dimmed: {
     opacity: opacity.pressed,

@@ -11,14 +11,15 @@ import {
 
 import { EmptyState } from '@/components/EmptyState';
 import { ErrorState } from '@/components/ErrorState';
-import { EventCard } from '@/components/EventCard';
-import { EventCardSkeleton } from '@/components/EventCardSkeleton';
 import { FilterChip } from '@/components/FilterChip';
 import { FilterSheet } from '@/components/FilterSheet';
 import { MonthHeader } from '@/components/MonthHeader';
 import { OptionRow } from '@/components/OptionRow';
 import { SecondaryButton } from '@/components/SecondaryButton';
+import { Ticket } from '@/components/Ticket';
+import { TicketSkeleton } from '@/components/TicketSkeleton';
 import { groupEventsByMonth } from '@/features/discover/sections';
+import { describeEvent } from '@/features/events/eventView';
 import {
   countActiveFilters,
   EMPTY_FILTERS,
@@ -28,15 +29,17 @@ import {
   type FilterParams,
 } from '@/features/filters/filters';
 import { useFilteredEvents, useFilterOptions } from '@/features/filters/useFilteredEvents';
+import { useWishlistIds } from '@/features/wishlist/useWishlist';
 import { datePresetLabels, type DatePreset } from '@/lib/dates';
+import { haptics } from '@/lib/haptics';
 import { useTabBarSpace } from '@/lib/useTabBarSpace';
 import {
   colors,
   fonts,
   fontSizes,
   lineHeights,
-  maxFontScale,
   opacity,
+  radius,
   spacing,
   touch,
 } from '@/theme/tokens';
@@ -46,7 +49,8 @@ type SheetName = 'date' | 'city' | 'genre' | 'radius';
 const DATE_PRESETS = Object.keys(datePresetLabels) as DatePreset[];
 const SKELETON_COUNT = 5;
 
-// Écran « Tous les concerts » (V1.2) : filtres combinables date, ville, genre, rayon.
+// Écran « Concerts » (V1.2, restylé V1.3.1) : filtres combinables date, ville, genre, rayon,
+// fixes en haut ; concerts en billets, par mois.
 // Les filtres de départ viennent de l'adresse (ex. ouvert depuis « Par ville » sur Découvrir).
 export default function ConcertsScreen() {
   const router = useRouter();
@@ -60,8 +64,13 @@ export default function ConcertsScreen() {
   const { data: options } = useFilterOptions();
   const sections = useMemo(() => (data ? groupEventsByMonth(data) : []), [data]);
 
-  const update = (changes: Partial<EventFilters>) =>
+  const { data: wishIds } = useWishlistIds();
+
+  // Chaque choix de filtre donne un petit retour haptique.
+  const update = (changes: Partial<EventFilters>) => {
+    haptics.select();
     setFilters((current) => ({ ...current, ...changes }));
+  };
   const close = () => setOpenSheet(null);
 
   // Libellés des pastilles.
@@ -79,12 +88,6 @@ export default function ConcertsScreen() {
 
   const header = (
     <View style={styles.header}>
-      <Text
-        style={styles.title}
-        accessibilityRole="header"
-        maxFontSizeMultiplier={maxFontScale.display}>
-        Concerts
-      </Text>
       {/* Pastilles sur une ou plusieurs lignes : toutes visibles sans faire défiler. */}
       <View style={styles.filterBar}>
         <FilterChip
@@ -123,10 +126,13 @@ export default function ConcertsScreen() {
           </Text>
           {activeCount > 0 ? (
             <Pressable
-              onPress={() => setFilters(EMPTY_FILTERS)}
+              onPress={() => {
+                haptics.select();
+                setFilters(EMPTY_FILTERS);
+              }}
               accessibilityRole="button"
               accessibilityLabel={`Réinitialiser les filtres (${activeCount} actif${activeCount > 1 ? 's' : ''})`}
-              hitSlop={spacing.xs}
+              hitSlop={spacing.sm}
               style={({ pressed }) => [styles.reset, pressed && styles.pressed]}>
               <Text style={styles.resetLabel}>Réinitialiser ({activeCount})</Text>
             </Pressable>
@@ -148,7 +154,7 @@ export default function ConcertsScreen() {
     ) : (
       <View style={styles.skeletons} accessibilityLabel="Chargement des concerts">
         {Array.from({ length: SKELETON_COUNT }, (_, index) => (
-          <EventCardSkeleton key={index} />
+          <TicketSkeleton key={index} />
         ))}
       </View>
     );
@@ -172,6 +178,8 @@ export default function ConcertsScreen() {
 
   return (
     <View style={styles.container}>
+      {/* Filtres et résumé fixes en haut : toujours visibles pendant que les billets défilent. */}
+      {header}
       <SectionList
         style={isPlaceholderData && styles.stale}
         sections={sections}
@@ -180,14 +188,14 @@ export default function ConcertsScreen() {
         renderSectionHeader={({ section }) => <MonthHeader title={section.title} />}
         renderItem={({ item }) => (
           <View style={styles.cardRow}>
-            <EventCard
-              event={item}
+            <Ticket
+              view={describeEvent(item)}
+              isWished={wishIds?.includes(item.id) ?? false}
               onPress={() => router.push({ pathname: '/concert/[id]', params: { id: item.id } })}
             />
           </View>
         )}
         ItemSeparatorComponent={Separator}
-        ListHeaderComponent={header}
         ListEmptyComponent={<View style={styles.empty}>{emptyContent}</View>}
         contentContainerStyle={[
           styles.listContent,
@@ -326,16 +334,12 @@ const styles = StyleSheet.create({
     flexGrow: 1,
   },
   header: {
-    gap: spacing.sm,
-    paddingTop: spacing.md,
-  },
-  title: {
-    fontFamily: fonts.display,
-    fontSize: fontSizes.display,
-    lineHeight: fontSizes.display * lineHeights.display,
-    color: colors.text,
-    textTransform: 'uppercase',
-    paddingHorizontal: spacing.md,
+    gap: spacing.xs,
+    paddingTop: spacing.xs,
+    paddingBottom: spacing.sm,
+    borderBottomWidth: StyleSheet.hairlineWidth,
+    borderBottomColor: colors.hairline,
+    backgroundColor: colors.background,
   },
   filterBar: {
     flexDirection: 'row',
@@ -352,8 +356,12 @@ const styles = StyleSheet.create({
     paddingHorizontal: spacing.md,
   },
   reset: {
-    minHeight: touch.minSize,
     justifyContent: 'center',
+    paddingVertical: spacing.xs,
+    paddingHorizontal: spacing.sm,
+    borderWidth: StyleSheet.hairlineWidth,
+    borderColor: colors.hairlineStrong,
+    borderRadius: radius.pill,
   },
   pressed: {
     opacity: opacity.pressed,
@@ -362,12 +370,11 @@ const styles = StyleSheet.create({
     fontFamily: fonts.semibold,
     fontSize: fontSizes.sm,
     color: colors.text,
-    textDecorationLine: 'underline',
   },
   count: {
-    fontFamily: fonts.regular,
-    fontSize: fontSizes.sm,
-    color: colors.textSecondary,
+    fontFamily: fonts.bold,
+    fontSize: fontSizes.md,
+    color: colors.text,
   },
   refreshError: {
     fontFamily: fonts.regular,
@@ -380,14 +387,14 @@ const styles = StyleSheet.create({
     paddingTop: spacing.lg,
   },
   skeletons: {
-    gap: spacing.xs,
+    gap: spacing.sm,
     paddingHorizontal: spacing.md,
   },
   cardRow: {
     paddingHorizontal: spacing.md,
   },
   separator: {
-    height: spacing.xs,
+    height: spacing.sm,
   },
   hint: {
     fontFamily: fonts.regular,

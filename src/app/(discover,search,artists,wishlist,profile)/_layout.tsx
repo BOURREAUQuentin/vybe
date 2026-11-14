@@ -60,7 +60,8 @@ export default function SharedStackLayout({ segment }: SharedStackLayoutProps) {
       <Stack.Screen name="concert/[id]" options={{ headerShown: false }} />
       <Stack.Screen name="artist/[id]" options={{ title: '' }} />
       <Stack.Screen name="venue/[id]" options={{ title: '' }} />
-      <Stack.Screen name="concerts" options={{ title: '' }} />
+      {/* Concerts : titre dans la barre, filtres fixes juste en dessous (V1.3.1). */}
+      <Stack.Screen name="concerts" options={{ title: 'Concerts' }} />
       {/* Préférences du Profil (V1.3). */}
       <Stack.Screen name="favorite-cities" options={{ title: 'Mes villes' }} />
       <Stack.Screen name="favorite-venues" options={{ title: 'Mes salles' }} />

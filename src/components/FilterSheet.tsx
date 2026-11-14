@@ -91,7 +91,7 @@ const styles = StyleSheet.create({
   },
   title: {
     fontFamily: fonts.bold,
-    fontSize: fontSizes.lg,
+    fontSize: fontSizes.xl,
     color: colors.text,
   },
   scroll: {
