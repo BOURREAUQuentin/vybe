@@ -756,6 +756,10 @@ export type Database = {
         Args: { p_city_id: string; p_radius_km?: number }
         Returns: undefined
       }
+      trigger_ticketmaster_sync: {
+        Args: { p_months?: number }
+        Returns: number
+      }
     }
     Enums: {
       artist_role: "headliner" | "support" | "guest" | "co_headliner"

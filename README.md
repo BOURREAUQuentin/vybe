@@ -76,6 +76,8 @@ Commandes courantes :
 | `npx supabase storage cp -r supabase/seed-assets/city-images ss:///city-images --remote` | Envoie les photos des villes dans Supabase Storage (bucket public `city-images`) |
 | `npx supabase functions deploy sync-ticketmaster --remote --use-api` | Déploie la fonction d’import Ticketmaster (V1.1) |
 | `node --test supabase/functions/sync-ticketmaster/transform.test.mts` | Teste la transformation des données Ticketmaster |
+| `npx supabase db query --remote --yes "select public.trigger_ticketmaster_sync(6)"` | Lance à la main l’import Ticketmaster complet (6 mois) |
+| `npx supabase db query --remote --yes "select started_at, status, api_calls, events_created, events_updated, errors from public.sync_runs order by started_at desc limit 7"` | Suivi des derniers imports (journal) |
 | `npx supabase gen types --lang typescript --remote --schema public > src/types/database.ts` | Régénère les types après une migration |
 | `npx supabase db query --remote --file supabase/tests/user-data-rls.sql --yes` | Teste la sécurité des données des comptes (transaction toujours annulée) ; bilan « n/n réussis » |
 
