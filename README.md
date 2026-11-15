@@ -2,7 +2,7 @@
 
 Application mobile (iOS et Android) pour découvrir, suivre et garder en mémoire des concerts en France, avec le rap mis en avant.
 
-Version : **V1.3.3** — fonctionnalités de la V1.3 (`docs/v1.3.md`) avec la direction artistique « Hybride » (`docs/v1.3.1.md`, `docs/design.md`) et de vraies photos de villes (`docs/v1.3.2.md`). Versions précédentes : `docs/v1.2.md`, `docs/mvp.md`. V1.1 (en cours, `docs/v1.1.md`) : les concerts affichés sont **réels**, importés chaque nuit depuis Ticketmaster (environ 5 400 concerts sur 6 mois) ; les données de démonstration sont masquées.
+Version : **V1.1** (app 1.4.0, `docs/v1.1.md`) — les concerts affichés sont **réels**, importés chaque nuit depuis Ticketmaster (environ 5 400 concerts sur 6 mois) ; recherche multi-mots, photos de plus de 450 villes. Elle s’ajoute aux fonctionnalités de la V1.3 (`docs/v1.3.md`) avec la direction artistique « Hybride » (`docs/v1.3.1.md`, `docs/design.md`). Versions précédentes : `docs/v1.3.2.md`, `docs/v1.2.md`, `docs/mvp.md`. Le numéro de l’app ne redescend jamais : la V1.1, livrée après la V1.3.3, porte le numéro 1.4.0.
 
 ## Interface
 
