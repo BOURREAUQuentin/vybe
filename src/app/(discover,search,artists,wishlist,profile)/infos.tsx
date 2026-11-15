@@ -1,13 +1,15 @@
 import Constants from 'expo-constants';
 import * as Linking from 'expo-linking';
-import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { useRouter } from 'expo-router';
+import { ScrollView, StyleSheet, Text, View } from 'react-native';
 
 import { DetailSection } from '@/components/DetailSection';
+import { LinkRow } from '@/components/LinkRow';
 import { SecondaryButton } from '@/components/SecondaryButton';
 import { usePhotoCredits } from '@/features/infos/api';
 import { about, legalNotice, privacyPolicy, publisher } from '@/features/infos/content';
 import { useTabBarSpace } from '@/lib/useTabBarSpace';
-import { colors, fonts, fontSizes, lineHeights, opacity, spacing, touch } from '@/theme/tokens';
+import { colors, fonts, fontSizes, lineHeights, spacing } from '@/theme/tokens';
 
 // Page Infos, ouverte depuis Découvrir : à propos, mentions légales, confidentialité.
 export default function InfosScreen() {
@@ -58,30 +60,22 @@ export default function InfosScreen() {
   );
 }
 
-// Crédits des photos de villes (Wikimedia Commons) : obligatoires pour les licences CC BY / BY-SA.
-// Toucher une ligne ouvre la page de la photo. Section masquée tant qu'il n'y a rien à créditer.
+// Crédits des photos de villes (Wikimedia Commons), obligatoires pour les licences CC BY / BY-SA.
+// V1.1 : près de 500 photos, listées sur un écran dédié pour ne pas allonger cette page.
 function PhotoCredits() {
+  const router = useRouter();
   const { data } = usePhotoCredits();
   if (!data || data.length === 0) return null;
 
   return (
     <DetailSection title="Crédits photos">
-      <Text style={styles.body}>Photos des villes : Wikimedia Commons, sous licences libres.</Text>
-      {data.map((credit) => (
-        <Pressable
-          key={credit.id}
-          disabled={!credit.image_source_url}
-          onPress={() => {
-            if (credit.image_source_url) Linking.openURL(credit.image_source_url).catch(() => undefined);
-          }}
-          accessibilityRole="link"
-          accessibilityLabel={`${credit.name} : ${credit.image_credit ?? ''}`}
-          accessibilityHint="Ouvre la page de la photo"
-          style={({ pressed }) => [styles.credit, pressed && styles.pressed]}>
-          <Text style={styles.creditCity}>{credit.name}</Text>
-          <Text style={styles.creditText}>{credit.image_credit} ›</Text>
-        </Pressable>
-      ))}
+      <LinkRow
+        icon={{ ios: 'photo.on.rectangle', android: 'photo_library' }}
+        title="Photos des villes"
+        subtitle={`Wikimedia Commons, licences libres · ${data.length} photos`}
+        accessibilityHint="Ouvre la liste des auteurs et des licences"
+        onPress={() => router.push('/credits')}
+      />
     </DetailSection>
   );
 }
@@ -130,24 +124,6 @@ const styles = StyleSheet.create({
   },
   contact: {
     alignItems: 'flex-start',
-  },
-  credit: {
-    minHeight: touch.minSize,
-    justifyContent: 'center',
-    gap: spacing.xxs,
-  },
-  pressed: {
-    opacity: opacity.pressed,
-  },
-  creditCity: {
-    fontFamily: fonts.semibold,
-    fontSize: fontSizes.sm,
-    color: colors.text,
-  },
-  creditText: {
-    fontFamily: fonts.regular,
-    fontSize: fontSizes.sm,
-    color: colors.textSecondary,
   },
   version: {
     fontFamily: fonts.regular,

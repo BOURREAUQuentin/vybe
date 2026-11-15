@@ -26,6 +26,17 @@ export const colors = {
 // Dégradé du bas des photos (texte lisible par-dessus).
 export const photoFade = `linear-gradient(to top, ${colors.background} 0%, ${colors.scrim} 40%, transparent 70%)`;
 
+// Tuile de ville sans photo (V1.1) : dégradé d'une teinte propre à chaque ville (toujours la même),
+// du coin haut gauche (plus clair) au coin bas droit (sombre, texte lisible). Les verts proches de
+// l'accent lime sont exclus : le lime reste réservé à l'action principale. Voir src/theme/cityGradient.ts.
+export const cityGradient = {
+  angle: '135deg',
+  start: { saturation: 55, lightness: 34 },
+  end: { saturation: 45, lightness: 13 },
+  hueShift: 35, // la fin du dégradé tourne un peu la teinte
+  excludedHues: { from: 60, to: 110 }, // degrés (jaune-vert → vert du lime)
+} as const;
+
 // Noms à faire correspondre avec le chargement des polices (@expo-google-fonts).
 export const fonts = {
   display: 'Anton_400Regular', // grands titres uniquement, jamais sous 22 pt

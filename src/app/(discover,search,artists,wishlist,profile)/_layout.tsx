@@ -55,6 +55,8 @@ export default function SharedStackLayout({ segment }: SharedStackLayoutProps) {
       }}>
       <Stack.Screen name={rootScreen} options={{ headerShown: false }} />
       <Stack.Screen name="infos" options={{ title: 'Infos' }} />
+      {/* V1.1 : crédits des photos de villes (ouvert depuis Infos). */}
+      <Stack.Screen name="credits" options={{ title: 'Crédits photos' }} />
       {/* Fiches à photo (V1.3.1) : barre masquée, remplacée par des boutons en verre (DetailTopBar). */}
       <Stack.Screen name="concert/[id]" options={{ headerShown: false }} />
       <Stack.Screen name="artist/[id]" options={{ headerShown: false }} />

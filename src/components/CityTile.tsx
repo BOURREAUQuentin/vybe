@@ -3,12 +3,13 @@ import { StyleSheet, Text, View, type DimensionValue } from 'react-native';
 
 import { PressableScale } from '@/components/PressableScale';
 import { haptics } from '@/lib/haptics';
+import { cityGradientFor } from '@/theme/cityGradient';
 import { colors, fonts, fontSizes, photoFade, radius, sizes, spacing } from '@/theme/tokens';
 
 type CityTileProps = {
   name: string;
   count: number;
-  /** Photo d'un artiste qui y joue bientôt (ou null : fond uni). */
+  /** Photo de la ville (ou null : dégradé propre à la ville). */
   imageUrl: string | null;
   onPress: () => void;
   /** Largeur : fixe dans un défilement horizontal, en % dans une grille. */
@@ -29,8 +30,15 @@ export function CityTile({ name, count, imageUrl, onPress, width = sizes.cityTil
       accessibilityLabel={`${name}, ${countLabel}`}
       accessibilityHint="Ouvre les concerts de cette ville"
       style={[styles.tile, { width }]}>
-      {imageUrl ? <Image source={imageUrl} style={StyleSheet.absoluteFill} contentFit="cover" accessible={false} /> : null}
-      <View style={[StyleSheet.absoluteFill, styles.fade]} />
+      {imageUrl ? (
+        <>
+          <Image source={imageUrl} style={StyleSheet.absoluteFill} contentFit="cover" accessible={false} />
+          <View style={[StyleSheet.absoluteFill, styles.fade]} />
+        </>
+      ) : (
+        // Sans photo : dégradé d'une teinte propre à la ville (sombre en bas, texte lisible).
+        <View style={[StyleSheet.absoluteFill, { experimental_backgroundImage: cityGradientFor(name) }]} />
+      )}
       <Text style={styles.name} numberOfLines={1}>
         {name}
       </Text>

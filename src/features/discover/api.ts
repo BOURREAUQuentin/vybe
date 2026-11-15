@@ -39,8 +39,8 @@ export async function fetchThisWeekCount() {
 export type CityCount = { id: string; name: string; count: number; imageUrl: string | null };
 
 /**
- * Villes classées par nombre de concerts à venir. Photo : celle de la ville (Storage, V1.3.2),
- * sinon celle d'un artiste qui y joue bientôt. `limit` null : toutes les villes qui ont des concerts.
+ * Villes classées par nombre de concerts à venir. Photo : celle de la ville (Storage), sinon aucune
+ * (la tuile affiche un dégradé propre à la ville, V1.1). `limit` null : toutes les villes qui ont des concerts.
  */
 export async function fetchCityCounts(limit: number | null): Promise<CityCount[]> {
   const { data, error } = await supabase.rpc('city_event_counts', limit === null ? {} : { p_limit: limit });
@@ -49,7 +49,7 @@ export async function fetchCityCounts(limit: number | null): Promise<CityCount[]
     id: city.id,
     name: city.name,
     count: Number(city.event_count),
-    imageUrl: cityImageUrl(city.image_path) ?? city.fallback_image_url,
+    imageUrl: cityImageUrl(city.image_path),
   }));
 }
 
