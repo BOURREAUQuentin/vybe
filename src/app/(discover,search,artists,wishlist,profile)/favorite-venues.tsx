@@ -1,15 +1,16 @@
 import { useRouter } from 'expo-router';
-import { ScrollView, StyleSheet, View } from 'react-native';
+import { ScrollView, StyleSheet, Text, View } from 'react-native';
 
 import { DetailSkeleton } from '@/components/DetailSkeleton';
 import { EmptyState } from '@/components/EmptyState';
 import { ErrorState } from '@/components/ErrorState';
+import { SecondaryButton } from '@/components/SecondaryButton';
 import { SignInPrompt } from '@/components/SignInPrompt';
 import { VenueRow } from '@/components/VenueRow';
 import { useAuth } from '@/features/auth/AuthContext';
 import { useFavoriteVenues } from '@/features/preferences/usePreferences';
 import { useTabBarSpace } from '@/lib/useTabBarSpace';
-import { colors, spacing } from '@/theme/tokens';
+import { colors, fonts, fontSizes, lineHeights, spacing } from '@/theme/tokens';
 
 // « Mes salles » (V1.3) : salles favorites (ajoutées depuis la fiche salle).
 export default function FavoriteVenuesScreen() {
@@ -49,7 +50,7 @@ export default function FavoriteVenuesScreen() {
         <EmptyState
           title="Aucune salle favorite"
           message="Ouvre la fiche d’une salle et touche « Ajouter à mes salles »."
-          action={{ label: 'Chercher une salle', onPress: () => router.navigate('/search') }}
+          action={{ label: 'Chercher une salle', onPress: () => router.push('/search') }}
         />
       </View>
     );
@@ -65,6 +66,15 @@ export default function FavoriteVenuesScreen() {
           onPress={() => router.push({ pathname: '/venue/[id]', params: { id: row.venue.id } })}
         />
       ))}
+      {/* Ajouter d'autres salles : depuis la Recherche, puis « Ajouter à mes salles » sur la fiche. */}
+      <View style={styles.add}>
+        <Text style={styles.help}>Ouvre la fiche d’une salle et touche « Ajouter à mes salles ».</Text>
+        <SecondaryButton
+          label="Chercher une salle"
+          accessibilityHint="Ouvre la recherche"
+          onPress={() => router.push('/search')}
+        />
+      </View>
     </ScrollView>
   );
 }
@@ -77,5 +87,15 @@ const styles = StyleSheet.create({
   content: {
     padding: spacing.md,
     paddingBottom: spacing.xxl,
+  },
+  add: {
+    gap: spacing.sm,
+    marginTop: spacing.lg,
+  },
+  help: {
+    fontFamily: fonts.regular,
+    fontSize: fontSizes.sm,
+    lineHeight: fontSizes.sm * lineHeights.normal,
+    color: colors.textSecondary,
   },
 });

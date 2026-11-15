@@ -1,9 +1,11 @@
+import { useState } from 'react';
 import { ScrollView, StyleSheet, Text, View } from 'react-native';
 
 import { DetailSection } from '@/components/DetailSection';
 import { DetailSkeleton } from '@/components/DetailSkeleton';
 import { ErrorState } from '@/components/ErrorState';
 import { OptionRow } from '@/components/OptionRow';
+import { SearchField } from '@/components/SearchField';
 import { SignInPrompt } from '@/components/SignInPrompt';
 import { ToggleChip } from '@/components/ToggleChip';
 import { useAuth } from '@/features/auth/AuthContext';
@@ -14,6 +16,7 @@ import {
   useFavoriteCities,
   useUpdateFavoriteCities,
 } from '@/features/preferences/usePreferences';
+import { matchesQuery } from '@/lib/text';
 import { useTabBarSpace } from '@/lib/useTabBarSpace';
 import { colors, fonts, fontSizes, lineHeights, spacing } from '@/theme/tokens';
 
@@ -26,6 +29,8 @@ export default function FavoriteCitiesScreen() {
   const options = useFilterOptions();
   const favorites = useFavoriteCities();
   const update = useUpdateFavoriteCities();
+  const [mainQuery, setMainQuery] = useState('');
+  const [otherQuery, setOtherQuery] = useState('');
 
   if (!userId) {
     return (
@@ -61,24 +66,47 @@ export default function FavoriteCitiesScreen() {
   const main = favorites.data.find((row) => row.is_main) ?? null;
   const favoriteIds = new Set(favorites.data.map((row) => row.city_id));
   const radiusKm = main?.radius_km ?? NEARBY_RADIUS_KM;
+  // Chaque section a sa recherche (plus de 400 villes : trop long à faire défiler). Sans
+  // recherche, une section ne montre que tes choix actuels.
+  const isSearchingMain = mainQuery.trim().length > 0;
+  const isSearchingOther = otherQuery.trim().length > 0;
+  const mainCities = isSearchingMain
+    ? options.data.cities.filter((city) => matchesQuery(city.name, mainQuery))
+    : options.data.cities.filter((city) => city.id === main?.city_id);
+  const otherCities = (
+    isSearchingOther
+      ? options.data.cities.filter((city) => matchesQuery(city.name, otherQuery))
+      : options.data.cities.filter((city) => favoriteIds.has(city.id))
+  ).filter((city) => city.id !== main?.city_id);
 
   return (
-    <ScrollView style={styles.container} contentContainerStyle={[styles.content, { paddingBottom: bottomSpace }]}>
+    <ScrollView
+      style={styles.container}
+      contentContainerStyle={[styles.content, { paddingBottom: bottomSpace }]}
+      keyboardDismissMode="on-drag"
+      keyboardShouldPersistTaps="handled">
       <DetailSection title="Ville principale">
         <Text style={styles.help}>
           Elle remplit automatiquement « Près de chez toi » sur Découvrir.
         </Text>
+        <SearchField value={mainQuery} onChangeText={setMainQuery} placeholder="Choisir une ville principale" />
+        {isSearchingMain && mainCities.length === 0 ? (
+          <Text style={styles.help}>Aucune ville ne correspond à « {mainQuery.trim()} ».</Text>
+        ) : null}
         <OptionRow
           label="Aucune"
           selected={main === null}
           onPress={() => update.mutate({ type: 'unsetMain' })}
         />
-        {options.data.cities.map((city) => (
+        {mainCities.map((city) => (
           <OptionRow
             key={city.id}
             label={city.name}
             selected={main?.city_id === city.id}
-            onPress={() => update.mutate({ type: 'setMain', cityId: city.id, radiusKm })}
+            onPress={() => {
+              update.mutate({ type: 'setMain', cityId: city.id, radiusKm });
+              setMainQuery(''); // une seule ville principale : la liste se referme sur ton choix
+            }}
           />
         ))}
       </DetailSection>
@@ -101,9 +129,15 @@ export default function FavoriteCitiesScreen() {
       ) : null}
 
       <DetailSection title="Autres villes favorites">
-        {options.data.cities
-          .filter((city) => city.id !== main?.city_id)
-          .map((city) => {
+        <SearchField value={otherQuery} onChangeText={setOtherQuery} placeholder="Ajouter une ville" />
+        {otherCities.length === 0 ? (
+          <Text style={styles.help}>
+            {isSearchingOther
+              ? `Aucune ville ne correspond à « ${otherQuery.trim()} ».`
+              : 'Aucune pour l’instant. Cherche une ville pour l’ajouter.'}
+          </Text>
+        ) : null}
+        {otherCities.map((city) => {
             const selected = favoriteIds.has(city.id);
             return (
               <OptionRow

@@ -60,12 +60,12 @@ end $$;
 -- Ville principale (V1.3, set_main_city) : changement en une seule opération.
 select public.set_main_city((select city2 from t_ids), 25::smallint);
 insert into t_results (test, ok) select
-  '7a. set_main_city : une seule ville principale (la nouvelle, rayon 25), l''ancienne reste favorite',
+  '7a. set_main_city : une seule ville principale (la nouvelle, rayon 25), l''ancienne retirée',
   (select count(*) from public.user_favorite_cities where is_main) = 1
   and (select city_id = (select city2 from t_ids) and radius_km = 25
        from public.user_favorite_cities where is_main)
-  and exists (select 1 from public.user_favorite_cities
-              where city_id = (select city1 from t_ids) and not is_main);
+  and not exists (select 1 from public.user_favorite_cities
+                  where city_id = (select city1 from t_ids));
 
 do $$ begin
   perform public.set_main_city((select city1 from t_ids), 999::smallint);

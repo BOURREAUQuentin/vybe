@@ -1,4 +1,4 @@
-import { useRouter } from 'expo-router';
+import { useRouter, useSegments } from 'expo-router';
 import { useRef, useState, type ReactNode } from 'react';
 import { Pressable, ScrollView, StyleSheet, Text, View, type ScrollViewInstance } from 'react-native';
 import Animated, { FadeIn } from 'react-native-reanimated';
@@ -51,6 +51,8 @@ const sectionTitle = (title: string, total: number) => (total > SEARCH_LIST_FIRS
 // Onglet Recherche (direction Hybride) : suggestions avant de taper, puis artistes, concerts
 // (en billets), salles et villes trouvés dans la base.
 export default function SearchScreen() {
+  // Écran d'accueil de l'onglet Recherche, ou poussé depuis un autre onglet (Mes salles).
+  const isTabRoot = useSegments()[0] === '(search)';
   const [text, setText] = useState('');
   const query = useDebouncedValue(text, DEBOUNCE_MS).trim();
   const isActive = query.length >= MIN_QUERY_LENGTH;
@@ -92,8 +94,9 @@ export default function SearchScreen() {
   }
 
   return (
-    <SafeAreaView style={styles.container} edges={['top']}>
-      <ScreenHeader title="Recherche" />
+    // Ouverte depuis un autre onglet, la barre de navigation (retour, titre) gère déjà le haut.
+    <SafeAreaView style={styles.container} edges={isTabRoot ? ['top'] : []}>
+      {isTabRoot ? <ScreenHeader title="Recherche" /> : null}
       <View style={styles.field}>
         <SearchField value={text} onChangeText={setText} />
       </View>

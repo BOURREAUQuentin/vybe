@@ -19,7 +19,7 @@ export async function fetchFavoriteCities() {
 
 export type FavoriteCity = Awaited<ReturnType<typeof fetchFavoriteCities>>[number];
 
-/** Définit la ville principale et son rayon (l'ancienne reste favorite) : fonction SQL atomique. */
+/** Définit la ville principale et son rayon (l'ancienne est retirée) : fonction SQL atomique. */
 export async function setMainCity(cityId: string, radiusKm: number): Promise<void> {
   const { error } = await supabase.rpc('set_main_city', {
     p_city_id: cityId,
@@ -28,12 +28,9 @@ export async function setMainCity(cityId: string, radiusKm: number): Promise<voi
   if (error) throw new Error(error.message);
 }
 
-/** Retire le statut « principale » (la ville reste favorite). */
+/** « Aucune » ville principale : la ville principale est retirée de tes villes. */
 export async function unsetMainCity(): Promise<void> {
-  const { error } = await supabase
-    .from('user_favorite_cities')
-    .update({ is_main: false })
-    .eq('is_main', true);
+  const { error } = await supabase.from('user_favorite_cities').delete().eq('is_main', true);
   if (error) throw new Error(error.message);
 }
 

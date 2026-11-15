@@ -64,6 +64,9 @@ export default function SharedStackLayout({ segment }: SharedStackLayoutProps) {
       {/* Préférences du Profil (V1.3). */}
       <Stack.Screen name="favorite-cities" options={{ title: 'Mes villes' }} />
       <Stack.Screen name="favorite-venues" options={{ title: 'Mes salles' }} />
+      {/* Recherche ouverte depuis un autre onglet (« Chercher une salle » dans Mes salles) :
+          barre avec retour et titre ; dans l'onglet Recherche, c'est l'écran d'accueil (sans barre). */}
+      {rootScreen !== ROOT_SCREENS.search ? <Stack.Screen name="search" options={{ title: 'Recherche' }} /> : null}
       {/* Connexion (V1.3) : fenêtre modale par-dessus l'onglet en cours. */}
       <Stack.Screen name="sign-in" options={{ title: '', presentation: 'modal' }} />
       {/* Onboarding « Suis quelques artistes » (V1.3) : modale aussi. */}

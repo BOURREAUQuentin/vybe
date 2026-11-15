@@ -137,13 +137,28 @@ function formatWord(word: string, isFirst: boolean): string {
  * « Le Havre » reste « Le Havre ». Les accents absents de la source ne peuvent pas être restitués.
  */
 export function normalizeCityName(name: string): string {
-  // « Cedex » (et son numéro) est une mention postale, pas une partie du nom : « Castres Cedex » → « Castres ».
-  const trimmed = name.trim().replace(/[\s-]*\bcedex\b[\s\d]*$/i, '').replace(/\s+/g, ' ');
+  // Tout ce qui suit une virgule n'est pas le nom (« Nantes, France » → « Nantes ») ; « Cedex » (et
+  // son numéro) est une mention postale : « Castres Cedex » → « Castres ».
+  const trimmed = name
+    .split(',')[0]
+    .trim()
+    .replace(/[\s-]*\bcedex\b[\s\d]*$/i, '')
+    .replace(/\s+/g, ' ');
   const base = trimmed === trimmed.toUpperCase() ? trimmed.toLowerCase() : trimmed;
   const words = base
     .split(/[\s-]+/)
     .filter(Boolean)
-    .map((word) => (/^st\.?$/i.test(word) ? 'Saint' : /^ste\.?$/i.test(word) ? 'Sainte' : word));
+    .map((word) => (/^st\.?$/i.test(word) ? 'Saint' : /^ste\.?$/i.test(word) ? 'Sainte' : word))
+    // Élision sans apostrophe ou détachée : « Sables D Olonne », « Sables D' Olonne » → « d'Olonne ».
+    .reduce<string[]>((acc, word) => {
+      const previous = acc[acc.length - 1];
+      if (previous !== undefined && /^[dl]['’]?$/i.test(previous)) {
+        acc[acc.length - 1] = `${previous.charAt(0)}'${word}`;
+      } else {
+        acc.push(word);
+      }
+      return acc;
+    }, []);
 
   const startsWithArticle = words.length > 1 && LEADING_ARTICLES.has(words[0].toLowerCase());
   const formatted = words.map((word, index) => formatWord(word, index === 0 || (startsWithArticle && index === 1)));

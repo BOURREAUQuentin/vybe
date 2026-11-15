@@ -3,17 +3,9 @@
 
 import type { EventListItem } from '@/features/events/api';
 import { roleLabels } from '@/lib/format';
+import { normalizeText as normalize } from '@/lib/text';
 
 const MAIN_ROLES = new Set(['headliner', 'co_headliner']);
-
-/** Minuscules sans accents, pour comparer une saisie à un nom (« beyonce » ↔ « Beyoncé »). */
-function normalize(text: string): string {
-  return text
-    .normalize('NFD')
-    .replace(/[̀-ͯ]/g, '')
-    .toLowerCase()
-    .trim();
-}
 
 /**
  * Si la recherche correspond à un artiste qui n'est pas tête d'affiche (première partie, invité),

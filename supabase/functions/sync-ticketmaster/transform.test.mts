@@ -175,6 +175,14 @@ test('utilitaires : villes, images, fuseau, tranches', () => {
   assert.equal(normalizeCityName('Ramonville St Agne'), 'Ramonville-Saint-Agne');
   assert.equal(normalizeCityName('Le Havre'), 'Le Havre');
   assert.equal(normalizeCityName('Castres Cedex'), 'Castres');
+  // Doublons relevés en base (novembre 2026) : « Nantes,-France », « Les Sables-d-Olonne ».
+  assert.equal(normalizeCityName('Nantes, France'), 'Nantes');
+  assert.equal(normalizeCityName('Nantes,France'), 'Nantes');
+  assert.equal(normalizeCityName('Les Sables D Olonne'), "Les Sables-d'Olonne");
+  assert.equal(normalizeCityName("Les Sables D' Olonne"), "Les Sables-d'Olonne");
+  assert.equal(normalizeCityName("Les Sables D'Olonne"), "Les Sables-d'Olonne");
+  assert.equal(normalizeCityName('Le Pouliguen'), 'Le Pouliguen');
+  assert.equal(normalizeCityName('L Isle Adam'), "L'Isle-Adam");
   assert.equal(normalizeCityName('SAVIGNY LE TEMPLE CEDEX 01'), 'Savigny-le-Temple');
   assert.equal(normalizeCityName('LA ROCHELLE'), 'La Rochelle');
   assert.equal(normalizeCityName("Les Sables D'Olonne"), "Les Sables-d'Olonne");
