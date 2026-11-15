@@ -74,7 +74,7 @@ Conçue dès le MVP pour les versions suivantes. Elle doit prévoir :
 
 Fonctions SQL appelées par l’app avec `supabase.rpc(...)`, toutes en `security invoker` (la RLS s’applique) :
 
-- recherche : `search_artists`, `search_cities`, `search_venues`, `search_events`, insensibles à la casse et aux accents (`unaccent`) ;
+- recherche : `search_artists`, `search_cities`, `search_venues`, `search_events`, insensibles à la casse et aux accents (`unaccent`) ; multi-mots depuis la V1.1 (`search_words` : chaque mot doit se trouver quelque part — « orelsan nantes » ; mots d’une lettre et mots vides ignorés). Aucune limite côté base : l’app pagine (`range` + total `count`) — artistes, salles et villes : 5 puis « Voir plus » (+10) ; concerts : 10 puis +20. Classement des artistes, salles et villes : les choix du compte d’abord (artistes suivis ; salles favorites puis salles de ses villes ; ses villes, lus par `my_followed_artist_ids`, `my_favorite_venue_ids`, `my_favorite_city_ids`, `security definer` limités à l’appelant, vides sans compte), puis le plus de concerts à venir, puis le nom ; la clé TanStack Query passe donc par `['me', userId, …]` avec un compte. Ordre des sections : Artistes, Salles, Villes, puis Concerts ;
 - filtres (V1.2) : `filter_events` (période, ville, genres, rayon autour d’une ville ou d’une position), distance calculée par `distance_km` (haversine) à partir des coordonnées des salles. Ne jamais enregistrer la position reçue ;
 - compte (V1.3) : `set_main_city` (ville principale atomique, `security invoker`) et `delete_my_account()` (`security definer` verrouillé : supprime uniquement le compte connecté, cascade sur toutes ses données).
 

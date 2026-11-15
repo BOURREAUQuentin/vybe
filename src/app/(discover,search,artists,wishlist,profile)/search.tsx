@@ -11,6 +11,7 @@ import { EmptyState } from '@/components/EmptyState';
 import { ErrorState } from '@/components/ErrorState';
 import { LinkRow } from '@/components/LinkRow';
 import { ScreenHeader } from '@/components/ScreenHeader';
+import { SecondaryButton } from '@/components/SecondaryButton';
 import { SearchField } from '@/components/SearchField';
 import { SectionTitle } from '@/components/SectionTitle';
 import { Ticket } from '@/components/Ticket';
@@ -19,9 +20,18 @@ import { VenueRow } from '@/components/VenueRow';
 import { useCityCounts, useTopArtists } from '@/features/discover/useDiscover';
 import type { EventListItem } from '@/features/events/api';
 import { describeEvent } from '@/features/events/eventView';
-import { MIN_QUERY_LENGTH, type SearchResults } from '@/features/search/api';
+import {
+  FIRST_SEARCH_LIMITS,
+  MIN_QUERY_LENGTH,
+  SEARCH_EVENTS_FIRST,
+  SEARCH_EVENTS_STEP,
+  SEARCH_LIST_FIRST,
+  SEARCH_LIST_STEP,
+  type SearchLimits,
+  type SearchResults,
+} from '@/features/search/api';
 import { getMatchNote } from '@/features/search/suggestions';
-import { useSearch } from '@/features/search/useSearch';
+import { useSearch, useSearchEvents } from '@/features/search/useSearch';
 import { useWishlistIds } from '@/features/wishlist/useWishlist';
 import { haptics } from '@/lib/haptics';
 import { useDebouncedValue } from '@/lib/useDebouncedValue';
@@ -35,6 +45,8 @@ const TOP_ARTISTS = 8; // « Artistes à l'affiche »
 const TOP_CITIES = 6; // « Parcourir les villes » (2 colonnes × 3)
 
 const concertsLabel = (count: number) => `${count} concert${count > 1 ? 's' : ''}`;
+// Titre de section avec le total quand il dépasse ce qu'une liste affiche d'emblée.
+const sectionTitle = (title: string, total: number) => (total > SEARCH_LIST_FIRST ? `${title} · ${total}` : title);
 
 // Onglet Recherche (direction Hybride) : suggestions avant de taper, puis artistes, concerts
 // (en billets), salles et villes trouvés dans la base.
@@ -42,7 +54,13 @@ export default function SearchScreen() {
   const [text, setText] = useState('');
   const query = useDebouncedValue(text, DEBOUNCE_MS).trim();
   const isActive = query.length >= MIN_QUERY_LENGTH;
-  const { data, error, refetch, isPlaceholderData } = useSearch(query);
+  // Résultats demandés par liste (5, puis +10 par « Voir plus ») ; une nouvelle recherche repart
+  // de 5 (comparaison avec la recherche mémorisée, sans effet).
+  const [shown, setShown] = useState({ query, limits: FIRST_SEARCH_LIMITS });
+  const limits = shown.query === query ? shown.limits : FIRST_SEARCH_LIMITS;
+  const showMore = (list: keyof SearchLimits) =>
+    setShown({ query, limits: { ...limits, [list]: limits[list] + SEARCH_LIST_STEP } });
+  const { data, error, refetch, isPlaceholderData } = useSearch(query, limits);
 
   let body: ReactNode;
   if (!isActive) {
@@ -59,7 +77,17 @@ export default function SearchScreen() {
     );
   } else {
     body = (
-      <SearchResultsList results={data} query={query} stale={isPlaceholderData} refreshFailed={Boolean(error)} />
+      // key : une nouvelle recherche repart de 10 concerts (« Voir plus » remis à zéro).
+      <SearchResultsList
+        key={query.toLowerCase()}
+        results={data}
+        query={query}
+        // Atténué seulement pendant qu'une AUTRE recherche charge (pas pendant « Voir plus »).
+        stale={isPlaceholderData && data.query !== query}
+        loadingMore={isPlaceholderData && data.query === query}
+        onShowMore={showMore}
+        refreshFailed={Boolean(error)}
+      />
     );
   }
 
@@ -153,25 +181,51 @@ type SearchResultsListProps = {
   query: string;
   /** Vrai pendant qu'une nouvelle recherche remplace des résultats précédents. */
   stale: boolean;
+  /** Vrai pendant le chargement d'un « Voir plus » (artistes, salles ou villes). */
+  loadingMore: boolean;
+  onShowMore: (list: keyof SearchLimits) => void;
   refreshFailed: boolean;
 };
 
-function SearchResultsList({ results, query, stale, refreshFailed }: SearchResultsListProps) {
+function SearchResultsList({ results, query, stale, loadingMore, onShowMore, refreshFailed }: SearchResultsListProps) {
   const router = useRouter();
   // Nombre de concerts à venir par ville (classement mis en cache, partagé avec le filtre « Ville »).
   const { data: cityCounts } = useCityCounts(null);
   const countByCity = new Map((cityCounts ?? []).map((city) => [city.id, city.count]));
   const { data: wishIds } = useWishlistIds();
-  const { artists, cities, venues, events } = results;
+  const artists = results.artists.items;
+  const venues = results.venues.items;
+  const cities = results.cities.items;
+  // Bouton « Voir plus » d'une liste courte, s'il reste des résultats.
+  const moreButton = (list: keyof SearchLimits, hint: string) => {
+    const { items, total } = results[list];
+    return total > items.length ? (
+      <SecondaryButton
+        label={`Voir plus (${items.length} sur ${total})`}
+        accessibilityHint={hint}
+        loading={loadingMore}
+        onPress={() => {
+          haptics.tap();
+          onShowMore(list);
+        }}
+      />
+    ) : null;
+  };
+  // Concerts : 10 d'abord, « Voir plus » en ajoute 20 (V1.1 : « zenith » en donne plus de 500).
+  const [eventLimit, setEventLimit] = useState(SEARCH_EVENTS_FIRST);
+  const eventsQuery = useSearchEvents(query, eventLimit);
+  const events = eventsQuery.data?.events ?? [];
+  const eventsTotal = eventsQuery.data?.total ?? 0;
   const bottomSpace = useTabBarSpace();
   const scrollRef = useRef<ScrollViewInstance>(null);
   useTabScrollToTop(() => scrollRef.current?.scrollTo({ y: 0, animated: true }));
 
-  if (!stale && artists.length + cities.length + venues.length + events.length === 0) {
+  const eventsLoaded = eventsQuery.data !== undefined;
+  if (!stale && eventsLoaded && artists.length + cities.length + venues.length + eventsTotal === 0) {
     return (
       <EmptyState
         title={`Aucun résultat pour « ${query} »`}
-        message="Vérifie l’orthographe, ou essaie le nom d’un artiste, d’une salle ou d’une ville."
+        message="Vérifie l’orthographe, ou essaie le nom d’un artiste, d’une salle ou d’une ville. Tu peux combiner : « orelsan nantes »."
       />
     );
   }
@@ -185,12 +239,13 @@ function SearchResultsList({ results, query, stale, refreshFailed }: SearchResul
       contentContainerStyle={[styles.results, { paddingBottom: bottomSpace }]}
       keyboardDismissMode="on-drag"
       keyboardShouldPersistTaps="handled">
-      {refreshFailed ? (
+      {refreshFailed || eventsQuery.error ? (
         <Text style={styles.refreshError}>La recherche a échoué. Résultats précédents affichés.</Text>
       ) : null}
 
+      {/* Listes courtes d'abord (5, puis « Voir plus ») : elles mènent souvent ailleurs (fiche). */}
       {artists.length > 0 ? (
-        <ResultSection title="Artistes">
+        <ResultSection title={sectionTitle('Artistes', results.artists.total)}>
           {artists.map((artist) => (
             <ArtistRow
               key={artist.id}
@@ -200,25 +255,12 @@ function SearchResultsList({ results, query, stale, refreshFailed }: SearchResul
               onPress={() => router.push({ pathname: '/artist/[id]', params: { id: artist.id } })}
             />
           ))}
-        </ResultSection>
-      ) : null}
-
-      {events.length > 0 ? (
-        <ResultSection title="Concerts" spaced>
-          {events.map((event: EventListItem) => (
-            <Ticket
-              key={event.id}
-              view={describeEvent(event)}
-              note={getMatchNote(event, query)}
-              isWished={wishIds?.includes(event.id) ?? false}
-              onPress={() => router.push({ pathname: '/concert/[id]', params: { id: event.id } })}
-            />
-          ))}
+          {moreButton('artists', 'Affiche les artistes suivants')}
         </ResultSection>
       ) : null}
 
       {venues.length > 0 ? (
-        <ResultSection title="Salles">
+        <ResultSection title={sectionTitle('Salles', results.venues.total)}>
           {venues.map((venue) => (
             <VenueRow
               key={venue.id}
@@ -227,11 +269,12 @@ function SearchResultsList({ results, query, stale, refreshFailed }: SearchResul
               onPress={() => router.push({ pathname: '/venue/[id]', params: { id: venue.id } })}
             />
           ))}
+          {moreButton('venues', 'Affiche les salles suivantes')}
         </ResultSection>
       ) : null}
 
       {cities.length > 0 ? (
-        <ResultSection title="Villes">
+        <ResultSection title={sectionTitle('Villes', results.cities.total)}>
           {cities.map((city) => (
             <LinkRow
               key={city.id}
@@ -242,6 +285,38 @@ function SearchResultsList({ results, query, stale, refreshFailed }: SearchResul
               onPress={() => router.push({ pathname: '/concerts', params: { city: city.id } })}
             />
           ))}
+          {moreButton('cities', 'Affiche les villes suivantes')}
+        </ResultSection>
+      ) : null}
+
+      {/* Concerts en dernier : la liste longue. */}
+      {!eventsLoaded ? (
+        <ResultSection title="Concerts" spaced>
+          <TicketSkeleton />
+          <TicketSkeleton />
+        </ResultSection>
+      ) : events.length > 0 ? (
+        <ResultSection title={sectionTitle('Concerts', eventsTotal)} spaced>
+          {events.map((event: EventListItem) => (
+            <Ticket
+              key={event.id}
+              view={describeEvent(event)}
+              note={getMatchNote(event, query)}
+              isWished={wishIds?.includes(event.id) ?? false}
+              onPress={() => router.push({ pathname: '/concert/[id]', params: { id: event.id } })}
+            />
+          ))}
+          {eventsTotal > events.length ? (
+            <SecondaryButton
+              label={`Voir plus (${events.length} sur ${eventsTotal})`}
+              accessibilityHint="Affiche les concerts suivants"
+              loading={eventsQuery.isFetching}
+              onPress={() => {
+                haptics.tap();
+                setEventLimit((limit) => limit + SEARCH_EVENTS_STEP);
+              }}
+            />
+          ) : null}
         </ResultSection>
       ) : null}
     </ScrollView>

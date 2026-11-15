@@ -738,6 +738,9 @@ export type Database = {
         Returns: Json
       }
       is_in_my_wishlist: { Args: { p_event_id: string }; Returns: boolean }
+      my_favorite_city_ids: { Args: never; Returns: string[] }
+      my_favorite_venue_ids: { Args: never; Returns: string[] }
+      my_followed_artist_ids: { Args: never; Returns: string[] }
       normalize_search: { Args: { value: string }; Returns: string }
       resolve_genre: {
         Args: {
@@ -851,6 +854,7 @@ export type Database = {
           isSetofReturn: true
         }
       }
+      search_words: { Args: { search_query: string }; Returns: string[] }
       set_main_city: {
         Args: { p_city_id: string; p_radius_km?: number }
         Returns: undefined
@@ -868,6 +872,7 @@ export type Database = {
         Args: { p_months?: number }
         Returns: number
       }
+      word_pattern: { Args: { word: string }; Returns: string }
     }
     Enums: {
       artist_role: "headliner" | "support" | "guest" | "co_headliner"
