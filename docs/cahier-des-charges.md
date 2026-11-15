@@ -671,11 +671,15 @@ Une version est terminée lorsque tous les points suivants sont vérifiés :
 
 - Historique : après la date, une confirmation légère (« Tu y étais ? ») fait passer le concert dans l’historique. Seuls les concerts confirmés y entrent, ce qui garantit un historique fiable pour les souvenirs (V2.1).
 
-- Ajout manuel d’un concert passé : saisie libre (artiste, date, salle, ville), enregistrée comme un événement créé par l’utilisateur et non relié à la source, car Ticketmaster fournit surtout des événements à venir.
+- Ajout d’un concert passé (« J’y étais »), en deux couches (décision du 15/11/2026) :
+  1. **Concert déjà dans Vybe** : bouton « J’y étais » sur un concert passé (envies, fiches) ; rien à saisir. La purge des concerts importés (V1.1, 30 jours) épargne déjà tout concert présent dans les événements d’un utilisateur : ces souvenirs sont conservés.
+  2. **Concert absent de Vybe** (souvent plus ancien) : saisie manuelle **assistée** — artiste, salle et ville choisis par autocomplétion dans le catalogue existant (évite doublons et fautes), date libre ; création d’un nouvel artiste ou d’une nouvelle salle seulement si introuvable. Enregistré comme un événement créé par l’utilisateur (source « user »), non relié à une source.
+  - **Écarté** : import des concerts passés depuis Ticketmaster (API centrée sur l’à-venir, conservation limitée par ses conditions) et setlist.fm (concerts réels du porteur introuvables lors d’un test, intégration jugée trop lourde).
+  - Données personnelles : l’historique rejoint la table des événements de l’utilisateur (déjà exportée et supprimée avec le compte) ; à mentionner dans la politique de confidentialité.
 
 **Navigation :** les cinq onglets prévus en section 4.
 
-> **Terminé quand :** un concert passe de l’agenda à l’historique après confirmation, les rappels sont reçus, et un concert ajouté à la main apparaît dans l’historique.
+> **Terminé quand :** un concert passe de l’agenda à l’historique après confirmation, les rappels sont reçus, un concert passé déjà dans Vybe s’ajoute à l’historique d’un toucher, et un concert ajouté par la saisie assistée apparaît dans l’historique.
 
 ## 12.7 V2.0 : historique enrichi
 
