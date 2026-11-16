@@ -309,8 +309,10 @@ export type Database = {
       sync_runs: {
         Row: {
           api_calls: number
+          changes: Json
           created_at: string
           errors: Json
+          events_changed: number
           events_created: number
           events_purged: number
           events_removed: number
@@ -324,8 +326,10 @@ export type Database = {
         }
         Insert: {
           api_calls?: number
+          changes?: Json
           created_at?: string
           errors?: Json
+          events_changed?: number
           events_created?: number
           events_purged?: number
           events_removed?: number
@@ -339,8 +343,10 @@ export type Database = {
         }
         Update: {
           api_calls?: number
+          changes?: Json
           created_at?: string
           errors?: Json
+          events_changed?: number
           events_created?: number
           events_purged?: number
           events_removed?: number

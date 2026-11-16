@@ -12,7 +12,8 @@ import { createTicketmasterClient, QuotaExceededError } from './ticketmaster.ts'
 import { buildWindows, toApiDate, toImportEvent, type ImportEvent } from './transform.ts';
 
 const MAX_MONTHS = 6;
-const IMPORT_BATCH_SIZE = 100; // concerts par appel à import_ticketmaster_events
+const IMPORT_BATCH_SIZE = 100;
+const MAX_CHANGE_SAMPLES = 20; // exemples de changements gardés dans le journal // concerts par appel à import_ticketmaster_events
 
 type SyncSummary = {
   status: 'success' | 'partial' | 'failed';
@@ -22,6 +23,9 @@ type SyncSummary = {
   importable: number;
   created: number;
   updated: number;
+  /** Concerts déjà connus dont le statut ou la date a vraiment changé, et quelques exemples. */
+  changed: number;
+  changes: unknown[];
   /** Fin d'import (étape 4) : concerts passés, retirés, purgés (et artistes / salles purgés). */
   past: number;
   withdrawn: number;
@@ -72,6 +76,8 @@ Deno.serve(async (request) => {
     importable: 0,
     created: 0,
     updated: 0,
+    changed: 0,
+    changes: [],
     past: 0,
     withdrawn: 0,
     purged: 0,
@@ -128,6 +134,9 @@ Deno.serve(async (request) => {
       }
       summary.created += data?.created ?? 0;
       summary.updated += data?.updated ?? 0;
+      summary.changed += data?.changed ?? 0;
+      // Exemples de changements : 20 au maximum dans le journal.
+      if (Array.isArray(data?.samples)) summary.changes.push(...data.samples.slice(0, MAX_CHANGE_SAMPLES - summary.changes.length));
     }
   }
 
@@ -160,6 +169,8 @@ Deno.serve(async (request) => {
         api_calls: summary.apiCalls,
         events_created: summary.created,
         events_updated: summary.updated,
+        events_changed: summary.changed,
+        changes: summary.changes,
         events_removed: summary.withdrawn,
         events_purged: summary.purged,
         errors: summary.errors,

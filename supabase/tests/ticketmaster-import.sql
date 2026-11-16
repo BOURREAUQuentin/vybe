@@ -62,7 +62,7 @@ reset role;
 
 insert into t_results (test, ok) select
   '1. Import n° 1 : 2 créés, 0 modifié',
-  (select result from t_out where step = 'import1') = '{"created": 2, "updated": 0}'::jsonb;
+  (select result - 'changed' - 'samples' from t_out where step = 'import1') = '{"created": 2, "updated": 0}'::jsonb;
 
 insert into t_results (test, ok) select
   '2. Ville inconnue créée avec les coordonnées de la salle',
@@ -118,10 +118,17 @@ reset role;
 
 insert into t_results (test, ok) select
   '8. Import n° 2 : 0 créé, 1 modifié ; aucun doublon',
-  (select result from t_out where step = 'import2') = '{"created": 0, "updated": 1}'::jsonb
+  (select result - 'changed' - 'samples' from t_out where step = 'import2') = '{"created": 0, "updated": 1}'::jsonb
   and (select count(*) from public.events where external_id like 'TEST-EV-%') = 2
   and (select count(*) from public.venues where external_id = 'TEST-VE-1') = 1
   and (select count(*) from public.cities where name = 'Testville') = 1;
+
+insert into t_results (test, ok) select
+  '8b. Changements comptés : concert 1 (en vente → annulé, nouvelle date) ; concert revu sans changement non compté',
+  (select (result ->> 'changed')::int from t_out where step = 'import2') = 1
+  and (select result #>> '{samples,0,old_status}' from t_out where step = 'import2') = 'on_sale'
+  and (select result #>> '{samples,0,new_status}' from t_out where step = 'import2') = 'cancelled'
+  and (select (result ->> 'changed')::int from t_out where step = 'import3') = 0;
 
 insert into t_results (test, ok) select
   '9. Concert 1 répercuté : annulé, nouvelle date, nouveaux prix ; image conservée',
@@ -148,7 +155,7 @@ insert into t_results (test, ok) select
 
 insert into t_results (test, ok) select
   '13. Concert masqué à la main reste masqué après un nouvel import',
-  (select result from t_out where step = 'import3') = '{"created": 0, "updated": 1}'::jsonb
+  (select result - 'changed' - 'samples' from t_out where step = 'import3') = '{"created": 0, "updated": 1}'::jsonb
   and exists (select 1 from public.events where external_id = 'TEST-EV-2' and is_hidden);
 
 -- ===================== Cycle de vie (étape 4) =====================
