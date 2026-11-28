@@ -12,7 +12,7 @@ type ExportAccount = { email: string | null; createdAt: string | null };
  * (même si un concert a été retiré du catalogue entre-temps).
  */
 export async function collectMyData(account: ExportAccount) {
-  const [follows, events, cities, venues, genres] = await Promise.all([
+  const [follows, events, cities, venues, genres, settings, devices, notifications] = await Promise.all([
     supabase.from('user_artist_follows').select('artist_id, created_at, artist:artists ( name )'),
     supabase
       .from('user_events')
@@ -24,9 +24,27 @@ export async function collectMyData(account: ExportAccount) {
       .select('city_id, is_main, radius_km, created_at, city:cities ( name )'),
     supabase.from('user_venue_follows').select('venue_id, created_at, venue:venues ( name )'),
     supabase.from('user_genre_preferences').select('genre_id, created_at, genre:genres ( name )'),
+    // Notifications (V1.4).
+    supabase
+      .from('user_notification_settings')
+      .select('followed_artist, favorite_city, favorite_venue, wishlist_change, updated_at')
+      .maybeSingle(),
+    supabase.from('user_push_tokens').select('token, platform, created_at, updated_at'),
+    supabase
+      .from('notification_log')
+      .select('kind, detail, status, title, body, sent_at, created_at, event_id, event:events ( name )')
+      .order('created_at', { ascending: false }),
   ]);
 
-  const error = follows.error ?? events.error ?? cities.error ?? venues.error ?? genres.error;
+  const error =
+    follows.error ??
+    events.error ??
+    cities.error ??
+    venues.error ??
+    genres.error ??
+    settings.error ??
+    devices.error ??
+    notifications.error;
   if (error) throw new Error(error.message);
 
   return {
@@ -64,7 +82,39 @@ export async function collectMyData(account: ExportAccount) {
       name: row.genre?.name ?? null,
       addedAt: row.created_at,
     })),
+    // Sans ligne de réglages, tous les types sont activés.
+    notificationSettings: {
+      newConcertsOfFollowedArtists: settings.data?.followed_artist ?? true,
+      newConcertsInFavoriteCities: settings.data?.favorite_city ?? true,
+      newConcertsInFavoriteVenues: settings.data?.favorite_venue ?? true,
+      wishlistChanges: settings.data?.wishlist_change ?? true,
+      updatedAt: settings.data?.updated_at ?? null,
+    },
+    notificationDevices: (devices.data ?? []).map((row) => ({
+      platform: row.platform,
+      // Jeton masqué : il suffit à reconnaître le téléphone, pas à lui écrire.
+      token: maskToken(row.token),
+      registeredAt: row.created_at,
+      lastUpdatedAt: row.updated_at,
+    })),
+    notifications: (notifications.data ?? []).map((row) => ({
+      kind: row.kind,
+      detail: row.detail || null,
+      status: row.status,
+      eventId: row.event_id,
+      event: row.event?.name ?? null,
+      title: row.title,
+      body: row.body,
+      createdAt: row.created_at,
+      sentAt: row.sent_at,
+    })),
   };
+}
+
+/** « ExponentPushToken[abcdef…] » → « ExponentPushToken[…cdef] ». */
+function maskToken(token: string): string {
+  const inner = token.match(/\[(.+)\]$/)?.[1] ?? token;
+  return `${token.split('[')[0]}[…${inner.slice(-4)}]`;
 }
 
 export type MyDataExport = Awaited<ReturnType<typeof collectMyData>>;

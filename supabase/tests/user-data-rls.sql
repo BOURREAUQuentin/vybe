@@ -1,4 +1,4 @@
--- Test de sécurité des tables utilisateur (V1.3). TOUT est annulé à la fin :
+-- Test de sécurité des tables utilisateur (V1.3, notifications V1.4). TOUT est annulé à la fin :
 -- le dernier bloc lève volontairement une erreur qui affiche le bilan et annule la transaction.
 begin;
 
@@ -74,6 +74,62 @@ exception when invalid_parameter_value then
   insert into t_results (test, ok) values ('7b. set_main_city : rayon invalide refusé', true);
 end $$;
 
+-- Notifications (V1.4) : jetons, réglages, journal.
+select public.register_push_token('ExponentPushToken[test-phone-1]', 'android');
+select public.register_push_token('ExponentPushToken[test-phone-2]', 'android');
+select public.register_push_token('ExponentPushToken[test-phone-2]', 'android'); -- 2e fois : sans doublon
+insert into t_results (test, ok) select
+  '8a. A enregistre deux téléphones (sans doublon), à son nom',
+  (select count(*) from public.user_push_tokens) = 2
+  and (select bool_and(user_id = 'aaaaaaaa-0000-4000-8000-00000000000a') from public.user_push_tokens);
+
+insert into public.user_notification_settings (followed_artist) values (false);
+insert into t_results (test, ok) select
+  '8b. A désactive un type de notification',
+  (select not followed_artist and favorite_city from public.user_notification_settings);
+
+do $$ begin
+  perform public.register_push_token('pas-un-jeton', 'android');
+  insert into t_results (test, ok) values ('8c. Jeton mal formé refusé', false);
+exception when check_violation then
+  insert into t_results (test, ok) values ('8c. Jeton mal formé refusé', true);
+end $$;
+
+do $$ begin
+  insert into public.user_push_tokens (user_id, token, platform)
+    values ('bbbbbbbb-0000-4000-8000-00000000000b', 'ExponentPushToken[pirate]', 'ios');
+  insert into t_results (test, ok) values ('8d. A ne peut pas écrire un jeton directement (au nom de B)', false);
+exception when insufficient_privilege then
+  insert into t_results (test, ok) values ('8d. A ne peut pas écrire un jeton directement (au nom de B)', true);
+end $$;
+
+do $$ begin
+  insert into public.notification_log (user_id, kind, event_id)
+    select 'aaaaaaaa-0000-4000-8000-00000000000a', 'followed_artist', event_id from t_ids;
+  insert into t_results (test, ok) values ('8e. L''app ne peut pas écrire dans le journal', false);
+exception when insufficient_privilege then
+  insert into t_results (test, ok) values ('8e. L''app ne peut pas écrire dans le journal', true);
+end $$;
+
+-- Le serveur (rôle propriétaire) inscrit deux notifications pour A, puis tente un doublon.
+reset role;
+insert into public.notification_log (user_id, kind, event_id)
+  select 'aaaaaaaa-0000-4000-8000-00000000000a', 'followed_artist', event_id from t_ids;
+insert into public.notification_log (user_id, kind, event_id, detail)
+  select 'aaaaaaaa-0000-4000-8000-00000000000a', 'wishlist_change', event_id, 'status:on_sale' from t_ids;
+do $$ begin
+  insert into public.notification_log (user_id, kind, event_id)
+    select 'aaaaaaaa-0000-4000-8000-00000000000a', 'followed_artist', event_id from t_ids;
+  insert into t_results (test, ok) values ('8f. Même notification inscrite deux fois : refusée (anti-doublon)', false);
+exception when unique_violation then
+  insert into t_results (test, ok) values ('8f. Même notification inscrite deux fois : refusée (anti-doublon)', true);
+end $$;
+set local role authenticated;
+select set_config('request.jwt.claims', '{"sub":"aaaaaaaa-0000-4000-8000-00000000000a","role":"authenticated"}', true);
+
+insert into t_results (test, ok) select
+  '8g. A lit ses 2 notifications (export)', (select count(*) from public.notification_log) = 2;
+
 -- ===================== En tant que B =====================
 select set_config('request.jwt.claims', '{"sub":"bbbbbbbb-0000-4000-8000-00000000000b","role":"authenticated"}', true);
 
@@ -102,6 +158,27 @@ insert into t_results (test, ok) select '2d. B ne peut pas supprimer les lignes 
 insert into public.user_genre_preferences (genre_id) select genre_id from t_ids;
 insert into t_results (test, ok) select
   '2e. B peut gérer ses propres lignes', (select count(*) from public.user_genre_preferences) = 1;
+
+insert into t_results (test, ok) select
+  '8h. B ne voit ni les jetons, ni les réglages, ni les notifications de A',
+  (select count(*) from public.user_push_tokens) = 0
+  and (select count(*) from public.user_notification_settings) = 0
+  and (select count(*) from public.notification_log) = 0;
+
+with removed as (delete from public.user_push_tokens returning 1)
+insert into t_results (test, ok) select '8i. B ne peut pas supprimer les jetons de A', count(*) = 0 from removed;
+
+-- B se connecte sur le téléphone n° 1 de A : le jeton change de compte.
+select public.register_push_token('ExponentPushToken[test-phone-1]', 'android');
+reset role;
+insert into t_results (test, ok) select
+  '8j. Téléphone repris par B : le jeton est à B, A garde seulement son autre téléphone',
+  (select user_id = 'bbbbbbbb-0000-4000-8000-00000000000b' from public.user_push_tokens
+   where token = 'ExponentPushToken[test-phone-1]')
+  and (select count(*) from public.user_push_tokens
+       where user_id = 'aaaaaaaa-0000-4000-8000-00000000000a') = 1;
+set local role authenticated;
+select set_config('request.jwt.claims', '{"sub":"bbbbbbbb-0000-4000-8000-00000000000b","role":"authenticated"}', true);
 
 -- B pose sa propre ville principale : celle de A ne bouge pas.
 select public.set_main_city((select city1 from t_ids), 10::smallint);
@@ -142,6 +219,13 @@ exception when insufficient_privilege then
 end $$;
 
 do $$ begin
+  perform public.register_push_token('ExponentPushToken[anon]', 'android');
+  insert into t_results (test, ok) values ('8k. Visiteur non connecté : register_push_token() refusé', false);
+exception when insufficient_privilege then
+  insert into t_results (test, ok) values ('8k. Visiteur non connecté : register_push_token() refusé', true);
+end $$;
+
+do $$ begin
   perform public.delete_my_account();
   insert into t_results (test, ok) values ('6. Visiteur non connecté : delete_my_account() refusé', false);
 exception when insufficient_privilege then
@@ -167,9 +251,18 @@ insert into t_results (test, ok) select
   + (select count(*) from public.user_favorite_cities where user_id = 'aaaaaaaa-0000-4000-8000-00000000000a')
   + (select count(*) from public.user_genre_preferences where user_id = 'aaaaaaaa-0000-4000-8000-00000000000a') = 0;
 insert into t_results (test, ok) select
+  '8l. Jetons, réglages et notifications de A supprimés avec le compte',
+  (select count(*) from public.user_push_tokens where user_id = 'aaaaaaaa-0000-4000-8000-00000000000a')
+  + (select count(*) from public.user_notification_settings where user_id = 'aaaaaaaa-0000-4000-8000-00000000000a')
+  + (select count(*) from public.notification_log where user_id = 'aaaaaaaa-0000-4000-8000-00000000000a') = 0;
+insert into t_results (test, ok) select
   '5c. B et ses données intacts',
   exists (select 1 from auth.users where id = 'bbbbbbbb-0000-4000-8000-00000000000b')
   and (select count(*) from public.user_genre_preferences where user_id = 'bbbbbbbb-0000-4000-8000-00000000000b') = 1;
+insert into t_results (test, ok) select
+  '8m. Le téléphone repris par B reste à B', exists (
+    select 1 from public.user_push_tokens
+    where token = 'ExponentPushToken[test-phone-1]' and user_id = 'bbbbbbbb-0000-4000-8000-00000000000b');
 
 -- Bilan + annulation de TOUT (erreur volontaire). Bilan compact (la CLI tronque les longs
 -- messages) : nombre de réussites, puis uniquement les cas en échec.

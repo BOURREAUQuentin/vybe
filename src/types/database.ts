@@ -306,6 +306,62 @@ export type Database = {
         }
         Relationships: []
       }
+      notification_log: {
+        Row: {
+          body: string | null
+          created_at: string
+          detail: string
+          error: string | null
+          event_id: string
+          id: string
+          kind: Database["public"]["Enums"]["notification_kind"]
+          push_ticket_id: string | null
+          sent_at: string | null
+          status: Database["public"]["Enums"]["notification_status"]
+          title: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          body?: string | null
+          created_at?: string
+          detail?: string
+          error?: string | null
+          event_id: string
+          id?: string
+          kind: Database["public"]["Enums"]["notification_kind"]
+          push_ticket_id?: string | null
+          sent_at?: string | null
+          status?: Database["public"]["Enums"]["notification_status"]
+          title?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          body?: string | null
+          created_at?: string
+          detail?: string
+          error?: string | null
+          event_id?: string
+          id?: string
+          kind?: Database["public"]["Enums"]["notification_kind"]
+          push_ticket_id?: string | null
+          sent_at?: string | null
+          status?: Database["public"]["Enums"]["notification_status"]
+          title?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "notification_log_event_id_fkey"
+            columns: ["event_id"]
+            isOneToOne: false
+            referencedRelation: "events"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       sync_runs: {
         Row: {
           api_calls: number
@@ -496,6 +552,66 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      user_notification_settings: {
+        Row: {
+          created_at: string
+          favorite_city: boolean
+          favorite_venue: boolean
+          followed_artist: boolean
+          id: string
+          updated_at: string
+          user_id: string
+          wishlist_change: boolean
+        }
+        Insert: {
+          created_at?: string
+          favorite_city?: boolean
+          favorite_venue?: boolean
+          followed_artist?: boolean
+          id?: string
+          updated_at?: string
+          user_id?: string
+          wishlist_change?: boolean
+        }
+        Update: {
+          created_at?: string
+          favorite_city?: boolean
+          favorite_venue?: boolean
+          followed_artist?: boolean
+          id?: string
+          updated_at?: string
+          user_id?: string
+          wishlist_change?: boolean
+        }
+        Relationships: []
+      }
+      user_push_tokens: {
+        Row: {
+          created_at: string
+          id: string
+          platform: string
+          token: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          platform: string
+          token: string
+          updated_at?: string
+          user_id?: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          platform?: string
+          token?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
       }
       user_venue_follows: {
         Row: {
@@ -748,6 +864,10 @@ export type Database = {
       my_favorite_venue_ids: { Args: never; Returns: string[] }
       my_followed_artist_ids: { Args: never; Returns: string[] }
       normalize_search: { Args: { value: string }; Returns: string }
+      register_push_token: {
+        Args: { p_platform: string; p_token: string }
+        Returns: undefined
+      }
       resolve_genre: {
         Args: {
           p_genre: string
@@ -891,6 +1011,12 @@ export type Database = {
         | "cancelled"
         | "past"
       event_type: "concert" | "festival"
+      notification_kind:
+        | "followed_artist"
+        | "favorite_city"
+        | "favorite_venue"
+        | "wishlist_change"
+      notification_status: "pending" | "sent" | "failed" | "skipped"
       user_event_status: "wishlist" | "going" | "attended"
     }
     CompositeTypes: {
@@ -1030,6 +1156,13 @@ export const Constants = {
         "past",
       ],
       event_type: ["concert", "festival"],
+      notification_kind: [
+        "followed_artist",
+        "favorite_city",
+        "favorite_venue",
+        "wishlist_change",
+      ],
+      notification_status: ["pending", "sent", "failed", "skipped"],
       user_event_status: ["wishlist", "going", "attended"],
     },
   },
